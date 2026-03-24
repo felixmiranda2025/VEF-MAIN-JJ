@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: vef-erp
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        value: entorno-1.cx6c6s6i0ith.us-east-2.rds.amazonaws.com
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASS
+        value: Vef_prueba1
+      - key: JWT_SECRET
+        value: vef_erp_secret_2025_xZ9k
+      - key: SMTP_HOST
+        value: smtp.zoho.com
+      - key: SMTP_PORT
+        value: 465
+      - key: SMTP_USER
+        value: soporte.ventas@vef-automatizacion.com
+      - key: SMTP_PASS
+        value: Brabata2323!
+      - key: FRONTEND_URL
+        value: "*"
+      - key: LOGO_FILE
+        value: logo.png

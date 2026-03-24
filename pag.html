@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEF Automatización - Presentación Corporativa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            line-height: 1.3;
+        }
+
+        .slide {
+            width: 297mm;
+            height: 210mm;
+            margin: 0 auto 20px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .slide:last-child {
+            page-break-after: auto;
+        }
+
+        /* PALETA CORPORATIVA VEF */
+        :root {
+            --vef-verde-botella: #0d4a3a;
+            --vef-verde-oscuro: #093628;
+            --vef-verde-claro: #1a6b54;
+            --vef-verde-accent: #2d8a6e;
+            --vef-gris-industrial: #4a4a4a;
+            --vef-gris-claro: #f8f9fa;
+            --vef-blanco: #ffffff;
+            --vef-negro: #1a1a1a;
+        }
+
+        /* SLIDE 1: PORTADA */
+        .slide-portada {
+            background: linear-gradient(135deg, var(--vef-verde-botella) 0%, var(--vef-verde-oscuro) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: var(--vef-blanco);
+        }
+
+        .logo-vef {
+            font-size: 72px;
+            font-weight: 800;
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tagline-portada {
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            margin-bottom: 60px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .lema-portada {
+            font-size: 24px;
+            font-weight: 400;
+            font-style: italic;
+            border-top: 2px solid rgba(255,255,255,0.3);
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding: 20px 60px;
+            margin-top: 40px;
+        }
+
+        .icono-industrial {
+            width: 120px;
+            height: 120px;
+            border: 3px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+            font-size: 60px;
+        }
+
+        /* SLIDES DE CONTENIDO */
+        .slide-contenido {
+            padding: 50px 70px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-slide {
+            display: flex;
+            align-items: center;
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+            border-bottom: 4px solid var(--vef-verde-botella);
+        }
+
+        .numero-slide {
+            width: 60px;
+            height: 60px;
+            background: var(--vef-verde-botella);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-right: 25px;
+            flex-shrink: 0;
+        }
+
+        .titulo-slide {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--vef-verde-botella);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .subtitulo-slide {
+            font-size: 18px;
+            color: var(--vef-gris-industrial);
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        .cuerpo-slide {
+            flex: 1;
+            display: flex;
+            gap: 40px;
+        }
+
+        .columna-principal {
+            flex: 2;
+        }
+
+        .columna-secundaria {
+            flex: 1;
+            background: var(--vef-gris-claro);
+            padding: 30px;
+            border-left: 4px solid var(--vef-verde-accent);
+        }
+
+        .texto-destacado {
+            font-size: 22px;
+            color: var(--vef-verde-botella);
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .lista-ejecutiva {
+            list-style: none;
+        }
+
+        .lista-ejecutiva li {
+            font-size: 18px;
+            margin-bottom: 18px;
+            padding-left: 35px;
+            position: relative;
+            color: var(--vef-gris-industrial);
+            line-height: 1.4;
+        }
+
+        .lista-ejecutiva li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--vef-verde-accent);
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .highlight-box {
+            background: var(--vef-verde-botella);
+            color: white;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 0;
+        }
+
+        .highlight-box h4 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .card-tecnologia {
+            border: 2px solid #e0e0e0;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .card-tecnologia:hover {
+            border-color: var(--vef-verde-accent);
+        }
+
+        .card-tecnologia h4 {
+            color: var(--vef-verde-botella);
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-tecnologia p {
+            font-size: 15px;
+            color: var(--vef-gris-industrial);
+            line-height: 1.5;
+        }
+
+        .icono-card {
+            width: 30px;
+            height: 30px;
+            background: var(--vef-verde-accent);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        /* SLIDE ESPECIAL MANTENIMIENTO */
+        .slide-especial {
+            background: linear-gradient(to right, white 60%, var(--vef-gris-claro) 60%);
+        }
+
+        .alerta-legacy {
+            background: var(--vef-verde-oscuro);
+            color: white;
+            padding: 20px 30px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .alerta-legacy .icono {
+            font-size: 40px;
+        }
+
+        .alerta-legacy .texto {
+            font-size: 18px;
+        }
+
+        .marcas-legacy {
+            display: flex;
+            gap: 20px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .marca-box {
+            background: white;
+            border: 3px solid var(--vef-verde-botella);
+            padding: 20px 25px;
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .marca-box .nombre {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--vef-verde-botella);
+            margin-bottom: 8px;
+        }
+
+        .marca-box .modelos {
+            font-size: 14px;
+            color: var(--vef-gris-industrial);
+        }
+
+        /* FOOTER */
+        .footer-slide {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: var(--vef-verde-botella);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 70px;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+
+        .footer-logo {
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* SLIDE CONTACTO */
+        .slide-contacto {
+            background: var(--vef-verde-botella);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .contacto-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 50px;
+            margin-top: 50px;
+        }
+
+        .contacto-item {
+            padding: 30px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .contacto-item .label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .contacto-item .valor {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .frase-cierre {
+            font-size: 28px;
+            font-style: italic;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+            max-width: 800px;
+        }
+
+        /* UTILIDADES */
+        .badge {
+            display: inline-block;
+            background: var(--vef-verde-accent);
+            color: white;
+            padding: 5px 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .texto-grande {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--vef-verde-botella);
+            margin: 20px 0;
+        }
+
+        .metricas-linea {
+            display: flex;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .metrica {
+            text-align: center;
+        }
+
+        .metrica .numero {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--vef-verde-botella);
+        }
+
+        .metrica .label {
+            font-size: 14px;
+            color: var(--vef-gris-industrial);
+            text-transform: uppercase;
+        }
+
+        @media print {
+            .slide {
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SLIDE 1: PORTADA -->
+    <div class="slide slide-portada">
+        <div class="icono-industrial">⚙</div>
+        <div class="logo-vef">VEF</div>
+        <div class="tagline-portada">Valor · Eficiencia · Futuro</div>
+        <div class="lema-portada">"Control Preciso. Resultados Medibles."</div>
+    </div>
+
+    <!-- SLIDE 2: QUIÉNES SOMOS -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">01</div>
+            <div>
+                <div class="titulo-slide">Quiénes Somos</div>
+                <div class="subtitulo-slide">Arquitectos de Continuidad Productiva</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide">
+            <div class="columna-principal">
+                <div class="texto-destacado">
+                    Empresa mexicana fundada en 2026, especializada en el desarrollo integral de máquinas especiales y sistemas de automatización de alta complejidad.
+                </div>
+                <ul class="lista-ejecutiva">
+                    <li>Integración mecánica, eléctrica y software en un solo proveedor</li>
+                    <li>Ingeniería concurrente que elimina interfaces problemáticas</li>
+                    <li>Responsabilidad única desde el concepto hasta la puesta en marcha</li>
+                    <li>Documentación técnica completa y transferencia de conocimiento</li>
+                </ul>
+                <div class="metricas-linea">
+                    <div class="metrica">
+                        <div class="numero">4</div>
+                        <div class="label">Marcas PLC<br>Certificadas</div>
+                    </div>
+                    <div class="metrica">
+                        <div class="numero">100%</div>
+                        <div class="label">Proyectos<br>Documentados</div>
+                    </div>
+                    <div class="metrica">
+                        <div class="numero">24h</div>
+                        <div class="label">Respuesta<br>Emergencias</div>
+                    </div>
+                </div>
+            </div>
+            <div class="columna-secundaria">
+                <div class="badge">Nuestra Misión</div>
+                <p style="font-size: 16px; line-height: 1.6; margin-top: 15px;">
+                    Transformar la industria mediante soluciones inteligentes que maximicen eficiencia operativa, minimicen errores de proceso y garanticen continuidad productiva.
+                </p>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>www.vef-automatizacion.com</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: MÁQUINAS ESPECIALES -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">02</div>
+            <div>
+                <div class="titulo-slide">Máquinas Especiales</div>
+                <div class="subtitulo-slide">Fabricación Integral a Medida</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide" style="flex-direction: column;">
+            <div class="texto-destacado" style="text-align: center; max-width: 900px; margin: 0 auto 30px;">
+                Diseñamos y construimos equipos customizados desde cero: concepto, mecanizado CNC, ensamble, programación y puesta en marcha productiva.
+            </div>
+            <div class="grid-2x2">
+                <div class="card-tecnologia">
+                    <h4><span class="icono-card">1</span> Diseño Mecánico 3D</h4>
+                    <p>Modelado paramétrico en SolidWorks e Inventor. Análisis FEA para validación estructural. Diseño para manufactura (DFM) y ensamble (DFA).</p>
+                </div>
+                <div class="card-tecnologia">
+                    <h4><span class="icono-card">2</span> Maquinado CNC</h4>
+                    <p>Centros de mecanizado de precisión. Piezas especiales, prototipos funcionales y componentes críticos con acabados industriales certificados.</p>
+                </div>
+                <div class="card-tecnologia">
+                    <h4><span class="icono-card">3</span> Integración Mecatrónica</h4>
+                    <p>Sistemas servo-hidráulicos, neumáticos de precisión y mecanismos customizados. Validación FAT/SAT documentada.</p>
+                </div>
+                <div class="card-tecnologia">
+                    <h4><span class="icono-card">4</span> Entrega Llave en Mano</h4>
+                    <p>Un solo responsable: manuales mecánicos, eléctricos y de software. Capacitación al personal de planta. Garantía de operación.</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>De la idea a la producción, sin intermediarios</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: PROGRAMACIÓN PLC -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">03</div>
+            <div>
+                <div class="titulo-slide">Programación de PLCs</div>
+                <div class="subtitulo-slide">Multimarca Certificada · Código Robusto</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide">
+            <div class="columna-principal">
+                <div class="texto-destacado">
+                    Especialistas en arquitecturas de control estándar IEC 61131-3: Ladder, SFC, Structured Text y FBD.
+                </div>
+                <div class="grid-2x2" style="margin-top: 20px;">
+                    <div class="card-tecnologia">
+                        <h4><span class="icono-card">S</span> Siemens</h4>
+                        <p>S7-1200/1500, S7-300/400, ET200SP<br>TIA Portal, STEP 7 Professional, WinCC</p>
+                    </div>
+                    <div class="card-tecnologia">
+                        <h4><span class="icono-card">AB</span> Allen-Bradley</h4>
+                        <p>ControlLogix, CompactLogix, Micro800<br>Studio 5000, RSLogix 5000, FactoryTalk</p>
+                    </div>
+                    <div class="card-tecnologia">
+                        <h4><span class="icono-card">M</span> Mitsubishi</h4>
+                        <p>MELSEC iQ-R, iQ-F, Q Series<br>GX Works3, GT Designer, CC-Link IE</p>
+                    </div>
+                    <div class="card-tecnologia">
+                        <h4><span class="icono-card">B</span> Bosch Rexroth</h4>
+                        <p>IndraControl, ctrlX AUTOMATION<br>MTX CNC, IndraMotion, SERCOS III</p>
+                    </div>
+                </div>
+            </div>
+            <div class="columna-secundaria" style="display: flex; flex-direction: column; justify-content: center;">
+                <div class="highlight-box" style="margin: 0;">
+                    <h4>Diagnósticos Avanzados</h4>
+                    <p style="font-size: 15px; line-height: 1.6;">Gestión estructurada de variables de error (#errWord), alarmas inteligentes, trazabilidad de eventos y protocolos de recuperación automática.</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>Código probado, documentado y escalable</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 5: MANTENIMIENTO OBSOLETOS (DESTACADO) -->
+    <div class="slide slide-contenido slide-especial">
+        <div class="header-slide">
+            <div class="numero-slide">04</div>
+            <div>
+                <div class="titulo-slide">Mantenimiento Correctivo</div>
+                <div class="subtitulo-slide">Especialistas en Sistemas Legacy</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide" style="flex-direction: column; gap: 20px;">
+            <div class="alerta-legacy">
+                <div class="icono">⚠</div>
+                <div class="texto">
+                    <strong>¿Su línea de producción depende de PLCs que otros no quieren tocar?</strong><br>
+                    Rescatamos sistemas obsoletos cuando otros proveedores no pueden. Respuesta de emergencia en 24-48 horas.
+                </div>
+            </div>
+            
+            <div class="marcas-legacy">
+                <div class="marca-box">
+                    <div class="nombre">SIEMENS</div>
+                    <div class="modelos">STEP5<br>S7-200<br>S7-300/400<br>WinCC flexible</div>
+                </div>
+                <div class="marca-box">
+                    <div class="nombre">BOSCH REXROTH</div>
+                    <div class="modelos">CL400<br>CL350<br>CL200<br>IndraLogic L20/L40</div>
+                </div>
+                <div class="marca-box">
+                    <div class="nombre">HMI LEGACY</div>
+                    <div class="modelos">Reparación<br>Reprogramación<br>Migración<br>Modernización</div>
+                </div>
+                <div class="marca-box">
+                    <div class="nombre">OTRAS MARCAS</div>
+                    <div class="modelos">GE Fanuc<br>Schneider<br>Omron<br>Panasonic</div>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 10px;">
+                <h4>Servicios de Emergencia y Migración Controlada</h4>
+                <p style="font-size: 16px; line-height: 1.6;">
+                    • Diagnóstico remoto y presencial de fallas críticas<br>
+                    • Reposición de componentes discontinuados (mercado gris certificado)<br>
+                    • Migración planificada de legacy a tecnología actual sin paradas prolongadas<br>
+                    • Backup y documentación de sistemas sin registros técnicos
+                </p>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>Su producción no puede detenerse. Nosotros tampoco.</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 6: BOSCH REXROTH COMPLETO -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">05</div>
+            <div>
+                <div class="titulo-slide">Tecnología Bosch Rexroth</div>
+                <div class="subtitulo-slide">Distribución y Integración Completa</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide" style="flex-direction: column;">
+            <div class="texto-destacado">
+                Expertos certificados en la línea completa de automatización Bosch Rexroth: desde controladores hasta sistemas de transporte inteligente.
+            </div>
+            <div style="display: flex; gap: 30px; margin-top: 20px;">
+                <div style="flex: 1;">
+                    <ul class="lista-ejecutiva">
+                        <li><strong>ctrlX AUTOMATION:</strong> Plataforma abierta, app-based, IoT-ready</li>
+                        <li><strong>IndraDrive:</strong> Servoaccionamientos de precisión con safety integrada</li>
+                        <li><strong>IndraMotion:</strong> Control de movimiento para aplicaciones complejas</li>
+                        <li><strong>Hidráulica Proporcional:</strong> Sistemas inteligentes con electrónica integrada</li>
+                    </ul>
+                </div>
+                <div style="flex: 1;">
+                    <ul class="lista-ejecutiva">
+                        <li><strong>MTX CNC:</strong> Control numérico para máquinas herramienta</li>
+                        <li><strong>ActiveMover:</strong> Sistemas de transporte linear de alta dinámica</li>
+                        <li><strong>TS 2plus:</strong> Sistemas de paletización flexible</li>
+                        <li><strong>SERCOS III:</strong> Comunicación en tiempo real deterministic</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="metricas-linea" style="justify-content: center; margin-top: 30px;">
+                <div class="metrica">
+                    <div class="numero">100%</div>
+                    <div class="label">Portfolio Bosch<br>Rexroth</div>
+                </div>
+                <div class="metrica">
+                    <div class="numero">Open</div>
+                    <div class="label">Arquitectura<br>App-based</div>
+                </div>
+                <div class="metrica">
+                    <div class="numero">IIoT</div>
+                    <div class="label">Conectividad<br>Nativa</div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>Partner tecnológico Bosch Rexroth</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 7: DISEÑO ELÉCTRICO -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">06</div>
+            <div>
+                <div class="titulo-slide">Diseño Eléctrico Industrial</div>
+                <div class="subtitulo-slide">Normativo · Seguro · Documentado</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide">
+            <div class="columna-principal">
+                <div class="texto-destacado">
+                    Ingeniería eléctrica que cumple normativas NOM, NEMA, IEC y estándares de seguridad funcional.
+                </div>
+                <div class="grid-2x2">
+                    <div class="card-tecnologia">
+                        <h4><span class="icono-card">⚡</span> Esquemas de Fuerza</h4>
+                        <p>Diagramas unifilares, balanceo de cargas, coordinación de protecciones, selección de conductores.</p>
+                    </div>
+                    <div class="card-tecnologia">
+                        <h4><span class="icono-card">🎛</span> Esquemas de Control</h4>
+                        <p>Lógica cableada, diagramas de control, esquemas de mando, secuencias de operación.</p>
+                    </div>
+                    <div class="card-tecnologia">
+                        <h4><span class="icono-card">📋</span> Tableros de Control</h4>
+                        <p>Diseño 3D de tableros, distribución térmica, selección de componentes, fabricación supervisada.</p>
+                    </div>
+                    <div class="card-tecnologia">
+                        <h4><span class="icono-card">🛡</span> Seguridad Funcional</h4>
+                        <p>ISO 13849, IEC 62061, categorías de seguridad, validación de circuitos de parada de emergencia.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="columna-secundaria">
+                <div class="badge">Software de Diseño</div>
+                <p style="margin-top: 15px; font-size: 16px; line-height: 1.6;">
+                    <strong>EPLAN Electric P8:</strong> Esquemas inteligentes, generación automática de listados de materiales, documentación consistente para fabricación y mantenimiento.
+                </p>
+                <div class="highlight-box" style="margin-top: 20px; padding: 15px;">
+                    <p style="font-size: 14px; margin: 0;">Todas nuestras entregas incluyen: diagramas en PDF, archivos fuente editables, listado de materiales con códigos de fabricante y manuales de operación del tablero.</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>Cumplimiento normativo garantizado</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 8: SOFTWARE INDUSTRIAL -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">07</div>
+            <div>
+                <div class="titulo-slide">Desarrollo de Software</div>
+                <div class="subtitulo-slide">SCADA · MES · IIoT · Conectividad</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide" style="flex-direction: column;">
+            <div class="texto-destacado">
+                Capa visual y de gestión que transforma datos de proceso en decisiones de negocio. Conectamos su planta con la empresa.
+            </div>
+            <div style="display: flex; gap: 40px; margin-top: 20px;">
+                <div style="flex: 1; background: var(--vef-gris-claro); padding: 30px; border-top: 4px solid var(--vef-verde-botella);">
+                    <h4 style="color: var(--vef-verde-botella); font-size: 20px; margin-bottom: 15px;">Visualización y Control</h4>
+                    <ul class="lista-ejecutiva">
+                        <li>WinCC (Siemens), FactoryTalk (AB), GT Designer (Mitsubishi)</li>
+                        <li>WebIQ, ctrlX HMI (Bosch Rexroth)</li>
+                        <li>Dashboards en tiempo real, históricos de tendencias</li>
+                        <li>Gestión de alarmas inteligente, notificaciones automáticas</li>
+                    </ul>
+                </div>
+                <div style="flex: 1; background: var(--vef-gris-claro); padding: 30px; border-top: 4px solid var(--vef-verde-botella);">
+                    <h4 style="color: var(--vef-verde-botella); font-size: 20px; margin-bottom: 15px;">Integración y Datos</h4>
+                    <ul class="lista-ejecutiva">
+                        <li>Trazabilidad completa: materia prima → producto terminado</li>
+                        <li>Bases de datos SQL, reportes automáticos (OE, disponibilidad)</li>
+                        <li>Comunicación OPC UA, MQTT para IIoT</li>
+                        <li>Integración ERP-MES-PLC: manufactura conectada</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 30px;">
+                <h4>Arquitectura de Comunicación Industrial</h4>
+                <p style="font-size: 15px;">Profinet · EtherNet/IP · CC-Link IE · Modbus TCP · SERCOS III · OPC UA · MQTT · AMQP</p>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>De la señal al dato, del dato a la decisión</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 9: PROPUESTA DE VALOR -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">08</div>
+            <div>
+                <div class="titulo-slide">Propuesta de Valor</div>
+                <div class="subtitulo-slide">¿Por qué VEF vs. Integradores Tradicionales?</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide" style="flex-direction: column; justify-content: center;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 18px;">
+                <thead>
+                    <tr style="background: var(--vef-verde-botella); color: white;">
+                        <th style="padding: 20px; text-align: left; width: 50%;">Enfoque Tradicional</th>
+                        <th style="padding: 20px; text-align: left; width: 50%;">Solución VEF Integral</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 18px; color: var(--vef-gris-industrial);">4-5 proveedores por proyecto (mecánico, eléctrico, software)</td>
+                        <td style="padding: 18px; font-weight: 600; color: var(--vef-verde-botella);">1 responsable único: mecánica, eléctrica y software</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd; background: #fafafa;">
+                        <td style="padding: 18px; color: var(--vef-gris-industrial);">Interfaces problemáticas entre disciplinas</td>
+                        <td style="padding: 18px; font-weight: 600; color: var(--vef-verde-botella);">Ingeniería concurrente desde el diseño conceptual</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 18px; color: var(--vef-gris-industrial);">Documentación dispersa y desactualizada</td>
+                        <td style="padding: 18px; font-weight: 600; color: var(--vef-verde-botella);">Entrega unificada: manuales técnicos completos y actualizados</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd; background: #fafafa;">
+                        <td style="padding: 18px; color: var(--vef-gris-industrial);">Soporte por áreas: "no es mi parte"</td>
+                        <td style="padding: 18px; font-weight: 600; color: var(--vef-verde-botella);">Ingeniero asignado con conocimiento total de su sistema</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 18px; color: var(--vef-gris-industrial);">PLCs obsoletos sin soporte</td>
+                        <td style="padding: 18px; font-weight: 600; color: var(--vef-verde-botella);">Especialistas en rescatar sistemas legacy otros no tocan</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="texto-destacado" style="text-align: center; margin-top: 40px; font-size: 26px;">
+                "No vendemos automatización. Vendemos tranquilidad operativa medible en horas de producción recuperadas."
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>Responsabilidad única, resultados garantizados</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 10: ENTREGABLES -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">09</div>
+            <div>
+                <div class="titulo-slide">Entregables Garantizados</div>
+                <div class="subtitulo-slide">Calidad Documentada en Cada Proyecto</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide">
+            <div class="columna-principal">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                    <div class="card-tecnologia" style="border-left: 4px solid var(--vef-verde-botella);">
+                        <h4 style="margin-bottom: 10px;">01. Máquina Validada</h4>
+                        <p style="font-size: 14px;">Pruebas FAT (fábrica) y SAT (sitio) documentadas. Checklist de funcionalidad firmado.</p>
+                    </div>
+                    <div class="card-tecnologia" style="border-left: 4px solid var(--vef-verde-botella);">
+                        <h4 style="margin-bottom: 10px;">02. Código PLC</h4>
+                        <p style="font-size: 14px;">Programa comentado, estructurado, con manual de arquitectura y diagnósticos.</p>
+                    </div>
+                    <div class="card-tecnologia" style="border-left: 4px solid var(--vef-verde-botella);">
+                        <h4 style="margin-bottom: 10px;">03. Tableros Certificados</h4>
+                        <p style="font-size: 14px;">Diseño eléctrico normativo, pruebas de aislamiento, protocolo de puesta a tierra.</p>
+                    </div>
+                    <div class="card-tecnologia" style="border-left: 4px solid var(--vef-verde-botella);">
+                        <h4 style="margin-bottom: 10px;">04. Software Funcional</h4>
+                        <p style="font-size: 14px;">SCADA/MES operativo, bases de datos configuradas, reportes automáticos activos.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="columna-secundaria" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="highlight-box" style="margin: 0;">
+                    <h4>Documentación Técnica</h4>
+                    <p style="font-size: 14px; line-height: 1.6;">Manuales de operación, mantenimiento preventivo/correctivo, diagramas mecánicos, eléctricos y de tubería/instrumentación (P&ID).</p>
+                </div>
+                <div class="highlight-box" style="margin: 0; background: var(--vef-verde-claro);">
+                    <h4>Transferencia de Conocimiento</h4>
+                    <p style="font-size: 14px; line-height: 1.6;">Capacitación práctica al personal de planta: operadores autónomos en manejo de alarmas de primer nivel.</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>Nada queda en manos de la intuición</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 11: COMPROMISOS -->
+    <div class="slide slide-contenido">
+        <div class="header-slide">
+            <div class="numero-slide">10</div>
+            <div>
+                <div class="titulo-slide">Compromisos Medibles</div>
+                <div class="subtitulo-slide">KPIs Contractuales de Nuestros Proyectos</div>
+            </div>
+        </div>
+        <div class="cuerpo-slide" style="flex-direction: column; justify-content: center; align-items: center;">
+            <div style="display: flex; gap: 60px; margin-bottom: 50px;">
+                <div style="text-align: center; padding: 40px; background: var(--vef-gris-claro); min-width: 200px;">
+                    <div style="font-size: 56px; font-weight: 800; color: var(--vef-verde-botella);">-40%</div>
+                    <div style="font-size: 16px; color: var(--vef-gris-industrial); margin-top: 10px; text-transform: uppercase;">Reducción Downtime<br>No Planificado<br><small>(primeros 6 meses)</small></div>
+                </div>
+                <div style="text-align: center; padding: 40px; background: var(--vef-gris-claro); min-width: 200px;">
+                    <div style="font-size: 56px; font-weight: 800; color: var(--vef-verde-botella);">&lt;2h</div>
+                    <div style="font-size: 16px; color: var(--vef-gris-industrial); margin-top: 10px; text-transform: uppercase;">Respuesta Remota<br>Emergencias<br><small>(garantizada 24/7)</small></div>
+                </div>
+                <div style="text-align: center; padding: 40px; background: var(--vef-gris-claro); min-width: 200px;">
+                    <div style="font-size: 56px; font-weight: 800; color: var(--vef-verde-botella);">99.5%</div>
+                    <div style="font-size: 16px; color: var(--vef-gris-industrial); margin-top: 10px; text-transform: uppercase;">Precisión<br>Módulos de Medición<br><small>(calibrados certificados)</small></div>
+                </div>
+                <div style="text-align: center; padding: 40px; background: var(--vef-gris-claro); min-width: 200px;">
+                    <div style="font-size: 56px; font-weight: 800; color: var(--vef-verde-botella);">100%</div>
+                    <div style="font-size: 16px; color: var(--vef-gris-industrial); margin-top: 10px; text-transform: uppercase;">Proyectos<br>Documentados<br><small>(técnicamente completos)</small></div>
+                </div>
+            </div>
+            <div class="highlight-box" style="width: 100%; text-align: center;">
+                <p style="font-size: 20px; font-style: italic;">"La calidad no es un acto, es un hábito documentado en cada línea de código y cada conexión cableada."</p>
+            </div>
+        </div>
+        <div class="footer-slide">
+            <span class="footer-logo">VEF AUTOMATIZACIÓN</span>
+            <span>Resultados medibles, tranquilidad operativa</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 12: CONTACTO -->
+    <div class="slide slide-contacto">
+        <div class="logo-vef" style="font-size: 60px; margin-bottom: 10px;">VEF</div>
+        <div class="tagline-portada" style="font-size: 22px; margin-bottom: 40px;">Valor · Eficiencia · Futuro</div>
+        
+        <div class="contacto-grid">
+            <div class="contacto-item">
+                <div class="label">Email</div>
+                <div class="valor">contacto@vef-automatizacion.com</div>
+            </div>
+            <div class="contacto-item">
+                <div class="label">Web</div>
+                <div class="valor">www.vef-automatizacion.com</div>
+            </div>
+            <div class="contacto-item">
+                <div class="label">Teléfono</div>
+                <div class="valor">[Número directo]</div>
+            </div>
+        </div>
+
+        <div class="frase-cierre">
+            "Control Preciso. Resultados Medibles.<br>Arquitectos de Continuidad Productiva."
+        </div>
+
+        <div style="margin-top: 40px; font-size: 16px; opacity: 0.7;">
+            VEF Automatización S.A. de C.V. · 2026
+        </div>
+    </div>
+
+</body>
+</html>
