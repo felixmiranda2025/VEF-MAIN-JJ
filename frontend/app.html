@@ -299,7 +299,7 @@ tbody td{padding:11px 14px;vertical-align:middle;}
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <img id="sidebarLogo" src="/logo.png" alt="VEF Logo"
+    <img id="sidebarLogo" src="/api/logo" alt="Logo"
          onerror="this.style.display='none';document.getElementById('sidebarBrand').style.display='block'"
          onload="document.getElementById('sidebarBrand').style.display='none'"
          style="max-width:180px;max-height:90px;object-fit:contain;display:block;margin:0 auto 6px;">
@@ -353,7 +353,7 @@ tbody td{padding:11px 14px;vertical-align:middle;}
   <div class="page-title" id="pageTitle">Dashboard</div>
   <div style="flex:1"></div>
   <!-- Logo en header — visible en pantallas medianas/grandes -->
-  <img id="headerLogo" src="/logo.png" alt="VEF"
+  <img id="headerLogo" src="/api/logo" alt="VEF"
        style="max-height:38px;max-width:120px;object-fit:contain;opacity:.9;margin-right:12px;"
        onerror="this.style.display='none'">
   <div class="contact-bar">
@@ -437,6 +437,12 @@ if(TOKEN){
       // Esto previene que alguien manipule el rol en sessionStorage
       var serverUser = d.user;
       var currentUser = JSON.parse(sessionStorage.getItem('vef_user')||'{}');
+      // Actualizar logos con token para aislamiento por empresa
+      var tok = sessionStorage.getItem('vef_token')||'';
+      var logoUrl = '/api/logo?t='+Date.now()+'&token='+encodeURIComponent(tok);
+      ['sidebarLogo','headerLogo'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.src=logoUrl;
+      });
       // Sincronizar rol y datos del servidor (fuente de verdad = JWT del servidor)
       currentUser.rol = serverUser.rol || 'usuario';
       currentUser.nombre = serverUser.nombre || currentUser.nombre;
@@ -3130,7 +3136,7 @@ async function configuracion(){
             <label style="font-size:.8rem;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.5px">Vista Previa</label>
             <div style="margin-top:8px;min-height:200px;display:flex;align-items:center;justify-content:center;background:#f4f6fa;border-radius:8px;border:2px dashed #ccc;padding:20px">
               ${logo.found
-                ? `<img src="/logo.png?t=${Date.now()}" style="max-height:180px;max-width:100%;object-fit:contain"
+                ? `<img src="/api/logo?t=${Date.now()}" style="max-height:180px;max-width:100%;object-fit:contain"
                        onerror="this.parentElement.innerHTML='<span style=color:#aaa>Error al cargar logo</span>'">`
                 : '<span style="color:#aaa;font-size:.9rem;text-align:center">⚠️ Sin logo<br>Los PDFs usarán encabezado azul</span>'}
             </div>
@@ -5894,6 +5900,20 @@ async function cambiarEmpresa(empresaId) {
     if(btn) btn.disabled = false;
   }
 }
+
+async function satIniciarPython(){
+  try {
+    toast('⏳ Intentando iniciar el servicio SAT...');
+    // Llamar endpoint que auto-inicia y espera
+    var r = await api('/api/sat/health');
+    if(r.ok){
+      toast('✅ Servicio SAT iniciado correctamente');
+      setTimeout(satDescarga, 500);
+    } else {
+      toast('⚠️ No se pudo iniciar automáticamente. Usa INICIAR_VEF_ERP.bat','err');
+    }
+  } catch(e){ toast(e.message,'err'); }
+}
 /* ══════════════ INIT ══════════════ */
 // Modal solo se cierra con botón ✕ o botones explícitos — no al hacer click fuera
 dashboard();
@@ -5906,6 +5926,50 @@ var _satToken=null, _satCer=null, _satKey=null, _satPass=null;
 
 async function satDescarga(){
   setPage('Descarga SAT');
+
+  // Verificar servicio Python SAT — mostrar spinner mientras verifica
+  setContent('<div class="card"><div class="card-body" style="text-align:center;padding:50px">'+
+    '<div style="font-size:2rem;margin-bottom:12px">⏳</div>'+
+    '<div style="font-weight:600;color:#0D2B55">Verificando servicio SAT...</div>'+
+    '<div style="font-size:.82rem;color:#64748b;margin-top:6px">Esto puede tardar unos segundos</div>'+
+  '</div></div>');
+
+  var satHealth = await api('/api/sat/health').catch(function(){ return {ok:false}; });
+
+  if(!satHealth.ok){
+    var isWin = navigator.userAgent.toLowerCase().includes('windows') || navigator.platform.toLowerCase().includes('win');
+    setContent(
+      '<div class="card"><div class="card-header"><div class="card-title">🏛 Descarga Masiva SAT</div></div>'+
+      '<div class="card-body">'+
+      '<div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:12px;padding:28px;text-align:center;max-width:600px;margin:0 auto">'+
+        '<div style="font-size:2.5rem;margin-bottom:10px">⚠️</div>'+
+        '<div style="font-size:1.05rem;font-weight:700;color:#dc2626;margin-bottom:6px">Servicio SAT no está corriendo</div>'+
+        '<div style="color:#64748b;font-size:.85rem;margin-bottom:20px">El módulo SAT requiere un servicio Python auxiliar en el puerto 5050.</div>'+
+        '<div style="background:#fff;border-radius:8px;padding:16px;text-align:left;font-size:.84rem;border:1px solid #fecaca">'+
+          '<strong style="color:#0D2B55">'+(isWin?'Pasos para Windows:':'Pasos para Linux/Mac:')+'</strong>'+
+          '<ol style="margin:10px 0 0 18px;line-height:2.1">'+
+          (isWin?
+            '<li>Usa el archivo <strong>INICIAR_VEF_ERP.bat</strong> — inicia todo automáticamente</li>'+
+            '<li>O manualmente: abre <strong>CMD</strong> en la carpeta del proyecto</li>'+
+            '<li>Primera vez: <code style="background:#f1f5f9;padding:1px 7px;border-radius:4px">pip install flask requests lxml pyOpenSSL chilkat2</code></li>'+
+            '<li>Inicia: <code style="background:#f1f5f9;padding:1px 7px;border-radius:4px">python sat_service\sat_api.py</code></li>'+
+            '<li>Deja esa ventana CMD abierta y da click en Reintentar</li>'
+          :
+            '<li>Abre una terminal en la carpeta del proyecto</li>'+
+            '<li>Primera vez: <code style="background:#f1f5f9;padding:1px 7px;border-radius:4px">pip3 install flask requests lxml pyOpenSSL chilkat2</code></li>'+
+            '<li>Inicia: <code style="background:#f1f5f9;padding:1px 7px;border-radius:4px">python3 sat_service/sat_api.py</code></li>'+
+            '<li>Deja esa terminal abierta y da click en Reintentar</li>')+
+          '</ol>'+
+        '</div>'+
+        '<div style="display:flex;gap:10px;justify-content:center;margin-top:18px">'+
+          '<button class="btn btn-primary" onclick="satDescarga()">🔄 Reintentar conexión</button>'+
+          '<button class="btn btn-secondary" onclick="satIniciarPython()">🐍 Iniciar Python ahora</button>'+
+        '</div>'+
+      '</div></div></div>'
+    );
+    return;
+  }
+
   var solicitudes = await api('/api/sat/solicitudes').catch(function(){return [];});
   var cfdis       = await api('/api/sat/cfdis').catch(function(){return [];});
   window._satCfdis = cfdis;

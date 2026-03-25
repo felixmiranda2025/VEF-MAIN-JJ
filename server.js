@@ -152,7 +152,7 @@ async function crearSchemaEmpresa(slug, nombreEmpresa) {
       `CREATE TABLE IF NOT EXISTS tareas (id SERIAL PRIMARY KEY,titulo VARCHAR(300) NOT NULL,descripcion TEXT,proyecto_id INTEGER,asignado_a INTEGER,creado_por INTEGER,prioridad VARCHAR(20) DEFAULT 'normal',estatus VARCHAR(30) DEFAULT 'pendiente',fecha_inicio DATE,fecha_vencimiento DATE,notas TEXT,created_at TIMESTAMP DEFAULT NOW())`,
       `CREATE TABLE IF NOT EXISTS egresos (id SERIAL PRIMARY KEY,fecha DATE NOT NULL DEFAULT CURRENT_DATE,proveedor_nombre VARCHAR(200),categoria VARCHAR(100),descripcion TEXT,subtotal NUMERIC(15,2) DEFAULT 0,iva NUMERIC(15,2) DEFAULT 0,total NUMERIC(15,2) DEFAULT 0,metodo VARCHAR(50) DEFAULT 'Transferencia',referencia VARCHAR(100),numero_factura VARCHAR(100),factura_pdf BYTEA,factura_nombre TEXT,notas TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
       `CREATE TABLE IF NOT EXISTS pdfs_guardados (id SERIAL PRIMARY KEY,tipo VARCHAR(30) NOT NULL,referencia_id INTEGER NOT NULL,numero_doc VARCHAR(100),cliente_proveedor VARCHAR(200),nombre_archivo VARCHAR(200),tamanio_bytes INTEGER,pdf_data BYTEA,generado_por INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
-      `CREATE TABLE IF NOT EXISTS empresa_config (id SERIAL PRIMARY KEY,nombre VARCHAR(200) NOT NULL DEFAULT 'Mi Empresa',razon_social VARCHAR(200),rfc VARCHAR(30),regimen_fiscal VARCHAR(100),contacto VARCHAR(100),telefono VARCHAR(50),email VARCHAR(100),direccion TEXT,ciudad VARCHAR(100),estado VARCHAR(100),cp VARCHAR(10),pais VARCHAR(50) DEFAULT 'México',moneda_default VARCHAR(10) DEFAULT 'USD',iva_default NUMERIC(5,2) DEFAULT 16.00,margen_ganancia NUMERIC(5,2) DEFAULT 0,smtp_host VARCHAR(100),smtp_port INTEGER DEFAULT 465,smtp_user VARCHAR(100),smtp_pass VARCHAR(200),notas_factura TEXT,notas_cotizacion TEXT,updated_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS empresa_config (id SERIAL PRIMARY KEY,nombre VARCHAR(200) NOT NULL DEFAULT 'Mi Empresa',razon_social VARCHAR(200),rfc VARCHAR(30),regimen_fiscal VARCHAR(100),contacto VARCHAR(100),telefono VARCHAR(50),email VARCHAR(100),direccion TEXT,ciudad VARCHAR(100),estado VARCHAR(100),cp VARCHAR(10),pais VARCHAR(50) DEFAULT 'México',moneda_default VARCHAR(10) DEFAULT 'USD',iva_default NUMERIC(5,2) DEFAULT 16.00,margen_ganancia NUMERIC(5,2) DEFAULT 0,smtp_host VARCHAR(100),smtp_port INTEGER DEFAULT 465,smtp_user VARCHAR(100),smtp_pass VARCHAR(200),notas_factura TEXT,notas_cotizacion TEXT,logo_data BYTEA,logo_mime VARCHAR(30) DEFAULT 'image/png',updated_at TIMESTAMP DEFAULT NOW())`,
     ];
     for (const sql of tablas) await client.query(sql);
     await client.query(`INSERT INTO empresa_config (nombre) VALUES ($1)`,[nombreEmpresa||'Mi Empresa']);
@@ -314,15 +314,23 @@ const C = { AZUL:'#0D2B55', AZUL_MED:'#1A4A8A', AZUL_SUV:'#D6E4F7',
 
 function pdfHeader(doc, titulo, subs=[], emp={}) {
   const M=28, W=539, H=96;
-  const _lp=getLogoPath();
-  const hasLogo = !!_lp;
+  // Logo: preferir logo_data de empresa_config (por empresa), fallback a archivo en disco
+  const _logoBuf = emp._logo_data || null;  // Buffer desde BD
+  const _lp = !_logoBuf ? getLogoPath() : null;
+  const hasLogo = !!(_logoBuf || _lp);
   const LW = 130;
 
   doc.rect(M, 14, W, H).fill(C.AZUL);
 
   if (hasLogo) {
     doc.rect(M, 14, LW, H).fill(C.BLANCO);
-    try { doc.image(_lp, M+6, 18, { fit:[LW-12, H-8], align:'center', valign:'center' }); } catch(e){}
+    try {
+      if (_logoBuf) {
+        doc.image(_logoBuf, M+6, 18, { fit:[LW-12, H-8], align:'center', valign:'center' });
+      } else {
+        doc.image(_lp, M+6, 18, { fit:[LW-12, H-8], align:'center', valign:'center' });
+      }
+    } catch(e){}
   }
 
   const tx = hasLogo ? M+LW+10 : M+14;
@@ -365,10 +373,16 @@ function pdfHeader(doc, titulo, subs=[], emp={}) {
   doc.y = 14 + H + 10;
 }
 
-function pdfWatermark(doc) {
-  const _lp=getLogoPath(); if (!_lp) return;
-  try { doc.save(); doc.opacity(0.07); doc.image(_lp, 158, 270, { fit:[280,280] }); doc.restore(); }
-  catch(e){}
+function pdfWatermark(doc, emp={}) {
+  const _logoBuf = emp?._logo_data || null;
+  const _lp = !_logoBuf ? getLogoPath() : null;
+  if (!_logoBuf && !_lp) return;
+  try {
+    doc.save(); doc.opacity(0.07);
+    if (_logoBuf) doc.image(_logoBuf, 158, 270, { fit:[280,280] });
+    else doc.image(_lp, 158, 270, { fit:[280,280] });
+    doc.restore();
+  } catch(e){}
 }
 
 function pdfPie(doc, emp={}) {
@@ -497,8 +511,23 @@ function pdfCondiciones(doc, conds) {
 // Obtener empresa_config del schema del usuario
 async function getEmpConfig(schema) {
   try {
-    const rows = await Q('SELECT * FROM empresa_config ORDER BY id LIMIT 1', [], schema||global._defaultSchema);
-    return rows[0] || {};
+    const sch = schema || global._defaultSchema;
+    const rows = await Q('SELECT * FROM empresa_config ORDER BY id LIMIT 1', [], sch);
+    const cfg = rows[0] || {};
+    // logo_data ya viene como Buffer de PostgreSQL (BYTEA)
+    // Si no tiene logo en BD, intentar desde archivo de disco
+    if (!cfg._logo_data && !cfg.logo_data) {
+      const logoFile = require('path').join(__dirname, 'logo_'+sch+'.png');
+      const logoGeneral = getLogoPath();
+      if (require('fs').existsSync(logoFile)) {
+        cfg._logo_data = require('fs').readFileSync(logoFile);
+      } else if (logoGeneral) {
+        cfg._logo_data = require('fs').readFileSync(logoGeneral);
+      }
+    } else if (cfg.logo_data && !cfg._logo_data) {
+      cfg._logo_data = cfg.logo_data;  // alias para el PDF
+    }
+    return cfg;
   } catch(e) { return {}; }
 }
 
@@ -507,7 +536,7 @@ async function buildPDFCotizacion(cot, items, schema=null) {
   return new Promise((res,rej)=>{
     const doc=new PDFKit({margin:28,size:'A4'});
     const ch=[]; doc.on('data',c=>ch.push(c)); doc.on('end',()=>res(Buffer.concat(ch))); doc.on('error',rej);
-    pdfWatermark(doc);
+    pdfWatermark(doc, emp);
     pdfHeader(doc,'COTIZACIÓN COMERCIAL',[
       `No. ${cot.numero_cotizacion||'—'}  |  Fecha: ${fmt(cot.fecha_emision||cot.created_at)}  |  Válida hasta: ${fmt(cot.validez_hasta)||'N/A'}`,
       `Proyecto: ${cot.proyecto_nombre||'—'}`
@@ -546,7 +575,7 @@ async function buildPDFOrden(oc, items, schema=null) {
   return new Promise((res,rej)=>{
     const doc=new PDFKit({margin:28,size:'A4'});
     const ch=[]; doc.on('data',c=>ch.push(c)); doc.on('end',()=>res(Buffer.concat(ch))); doc.on('error',rej);
-    pdfWatermark(doc);
+    pdfWatermark(doc, emp);
     pdfHeader(doc,'ORDEN DE COMPRA',[
       `No. ${oc.numero_op||oc.numero_oc||'—'}  |  Emisión: ${fmt(oc.fecha_emision||oc.created_at)}  |  Entrega: ${fmt(oc.fecha_entrega)||'Por definir'}`,
     ], emp);
@@ -603,7 +632,7 @@ async function buildPDFFactura(f, items=[], schema=null) {
   return new Promise((res,rej)=>{
     const doc=new PDFKit({margin:28,size:'A4'});
     const ch=[]; doc.on('data',c=>ch.push(c)); doc.on('end',()=>res(Buffer.concat(ch))); doc.on('error',rej);
-    pdfWatermark(doc);
+    pdfWatermark(doc, emp);
     pdfHeader(doc,'FACTURA',[
       `No. ${f.numero_factura||'—'}  |  Fecha: ${fmt(f.fecha_emision)}  |  Estatus: ${(f.estatus||'pendiente').toUpperCase()}`,
     ], emp);
@@ -848,7 +877,7 @@ app.get('/api/fix', async (req,res)=>{
     try {
       await sc.query(`SET search_path TO emp_vef`);
       const tbls=[
-        `CREATE TABLE IF NOT EXISTS empresa_config (id SERIAL PRIMARY KEY,nombre VARCHAR(200) DEFAULT 'VEF Automatización',razon_social VARCHAR(200),rfc VARCHAR(30),regimen_fiscal VARCHAR(100),contacto VARCHAR(100),telefono VARCHAR(50),email VARCHAR(100),direccion TEXT,ciudad VARCHAR(100),estado VARCHAR(100),cp VARCHAR(10),pais VARCHAR(50) DEFAULT 'México',sitio_web VARCHAR(150),moneda_default VARCHAR(10) DEFAULT 'USD',iva_default NUMERIC(5,2) DEFAULT 16,margen_ganancia NUMERIC(5,2) DEFAULT 0,smtp_host VARCHAR(100),smtp_port INTEGER DEFAULT 465,smtp_user VARCHAR(100),smtp_pass VARCHAR(200),notas_factura TEXT,notas_cotizacion TEXT,updated_at TIMESTAMP DEFAULT NOW())`,
+        `CREATE TABLE IF NOT EXISTS empresa_config (id SERIAL PRIMARY KEY,nombre VARCHAR(200) DEFAULT 'VEF Automatización',razon_social VARCHAR(200),rfc VARCHAR(30),regimen_fiscal VARCHAR(100),contacto VARCHAR(100),telefono VARCHAR(50),email VARCHAR(100),direccion TEXT,ciudad VARCHAR(100),estado VARCHAR(100),cp VARCHAR(10),pais VARCHAR(50) DEFAULT 'México',sitio_web VARCHAR(150),moneda_default VARCHAR(10) DEFAULT 'USD',iva_default NUMERIC(5,2) DEFAULT 16,margen_ganancia NUMERIC(5,2) DEFAULT 0,smtp_host VARCHAR(100),smtp_port INTEGER DEFAULT 465,smtp_user VARCHAR(100),smtp_pass VARCHAR(200),notas_factura TEXT,notas_cotizacion TEXT,logo_data BYTEA,logo_mime VARCHAR(30) DEFAULT 'image/png',updated_at TIMESTAMP DEFAULT NOW())`,
         `CREATE TABLE IF NOT EXISTS clientes (id SERIAL PRIMARY KEY,nombre TEXT NOT NULL,contacto TEXT,direccion TEXT,telefono TEXT,email TEXT,rfc TEXT,regimen_fiscal TEXT,cp TEXT,ciudad TEXT,tipo_persona VARCHAR(10) DEFAULT 'moral',activo BOOLEAN DEFAULT true,constancia_pdf BYTEA,constancia_nombre TEXT,constancia_fecha TIMESTAMP,estado_cuenta_pdf BYTEA,estado_cuenta_nombre TEXT,estado_cuenta_fecha TIMESTAMP,created_at TIMESTAMP DEFAULT NOW())`,
         `CREATE TABLE IF NOT EXISTS proveedores (id SERIAL PRIMARY KEY,nombre TEXT NOT NULL,contacto TEXT,direccion TEXT,telefono TEXT,email TEXT,rfc TEXT,condiciones_pago TEXT,tipo_persona VARCHAR(10) DEFAULT 'moral',activo BOOLEAN DEFAULT true,constancia_pdf BYTEA,constancia_nombre TEXT,constancia_fecha TIMESTAMP,estado_cuenta_pdf BYTEA,estado_cuenta_nombre TEXT,estado_cuenta_fecha TIMESTAMP,created_at TIMESTAMP DEFAULT NOW())`,
         `CREATE TABLE IF NOT EXISTS proyectos (id SERIAL PRIMARY KEY,nombre TEXT NOT NULL,cliente_id INTEGER,responsable TEXT,fecha_creacion DATE DEFAULT CURRENT_DATE,estatus TEXT DEFAULT 'activo',created_at TIMESTAMP DEFAULT NOW())`,
@@ -1283,6 +1312,8 @@ async function autoSetup() {
       "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS smtp_user VARCHAR(100)",
       "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS smtp_pass VARCHAR(200)",
       "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS sat_fiel_rfc VARCHAR(20)",
+      "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS logo_data BYTEA",
+      "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS logo_mime VARCHAR(30) DEFAULT 'image/png'",
       "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS sat_fiel_configurado BOOLEAN DEFAULT false",
       // SAT tables
       `CREATE TABLE IF NOT EXISTS sat_solicitudes (
@@ -3442,9 +3473,49 @@ app.get('/api/reportes-servicio/:id/pdf', auth, async (req,res)=>{
 // ================================================================
 // LOGO
 // ================================================================
-app.get('/api/logo/status', auth, (req,res)=>{
-  const lp=getLogoPath();
-  res.json({found:!!lp, filename:lp?path.basename(lp):null});
+app.get('/api/logo/status', auth, async (req,res)=>{
+  try {
+    // Verificar logo en empresa_config del schema del usuario
+    const rows = await QR(req,'SELECT logo_data IS NOT NULL AS has_logo, logo_mime FROM empresa_config LIMIT 1');
+    const hasLogo = rows[0]?.has_logo || false;
+    // Fallback al archivo en disco
+    const lp = getLogoPath();
+    res.json({ found: hasLogo || !!lp, source: hasLogo ? 'db' : (lp ? 'file' : 'none') });
+  } catch(e) {
+    const lp=getLogoPath();
+    res.json({found:!!lp, source: lp?'file':'none'});
+  }
+});
+
+// ── Servir logo por schema (dinámico por empresa) ────────────────
+app.get('/api/logo', async (req,res)=>{
+  try {
+    // Token puede venir como query param o header
+    const t = req.headers.authorization?.split(' ')[1] || req.query.token;
+    let schema = global._defaultSchema || 'emp_vef';
+    if (t) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const dec = jwt.verify(t, process.env.JWT_SECRET || 'vef_secret_2025');
+        schema = dec.schema || dec.schema_name || schema;
+      } catch {}
+    }
+    const rows = await Q('SELECT logo_data, logo_mime FROM empresa_config WHERE logo_data IS NOT NULL LIMIT 1', [], schema);
+    if (rows.length && rows[0].logo_data) {
+      const mime = rows[0].logo_mime || 'image/png';
+      res.setHeader('Content-Type', mime);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.send(rows[0].logo_data);
+    }
+    // Fallback: archivo en disco
+    const lp = getLogoPath();
+    if (lp) return res.sendFile(lp);
+    res.status(404).send('No logo');
+  } catch(e) {
+    const lp = getLogoPath();
+    if (lp) return res.sendFile(lp);
+    res.status(404).send('No logo');
+  }
 });
 
 // ── Lista de empresas (para selector en formulario de usuarios) ──
@@ -3591,22 +3662,46 @@ app.post('/api/logo/upload', auth, adminOnly, async (req,res)=>{
   try {
     const { data, mime, ext } = req.body;
     if (!data) return res.status(400).json({ error: 'data requerido' });
-    const allowed = ['png','jpg','jpeg'];
-    const extension = (ext||'png').toLowerCase().replace('jpeg','jpg');
-    if (!allowed.includes(extension)) return res.status(400).json({ error: 'Solo PNG o JPG' });
+    const mimeType = mime || (ext==='jpg'||ext==='jpeg' ? 'image/jpeg' : 'image/png');
     const buf = Buffer.from(data, 'base64');
     if (buf.length > 3 * 1024 * 1024) return res.status(400).json({ error: 'Archivo muy grande (máx 3MB)' });
-    // Eliminar logos anteriores
-    for (const n of ['logo.png','logo.jpg','logo.jpeg','logo.PNG','logo.JPG']) {
-      const p = path.join(__dirname, n);
-      if (fs.existsSync(p)) try { fs.unlinkSync(p); } catch {}
+
+    const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
+
+    // Guardar logo en empresa_config del schema de esta empresa
+    const colRes = await pool.query(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema=$1 AND table_name='empresa_config'
+       AND column_name IN ('logo_data','logo_mime')`, [schema]);
+    const hasCols = colRes.rows.map(r=>r.column_name);
+
+    if (hasCols.includes('logo_data')) {
+      // Guardar en BD (por empresa)
+      const ex = await Q('SELECT id FROM empresa_config LIMIT 1', [], schema);
+      if (ex.length) {
+        let upSql = `UPDATE empresa_config SET logo_data=$1`;
+        const upVals = [buf];
+        if (hasCols.includes('logo_mime')) { upSql += `,logo_mime=$2 WHERE id=$3`; upVals.push(mimeType, ex[0].id); }
+        else { upSql += ` WHERE id=$2`; upVals.push(ex[0].id); }
+        await Q(upSql, upVals, schema);
+      } else {
+        await Q(`INSERT INTO empresa_config(nombre,logo_data,logo_mime) VALUES('Mi Empresa',$1,$2)`, [buf, mimeType], schema);
+      }
+      console.log('🖼  Logo guardado en BD para schema:', schema, buf.length, 'bytes');
+    } else {
+      // Fallback: guardar en disco (compatibilidad)
+      const dest = path.join(__dirname, 'logo.png');
+      fs.writeFileSync(dest, buf);
+      global._logoPathOverride = dest;
     }
-    const dest = path.join(__dirname, 'logo.png');
-    fs.writeFileSync(dest, buf);
-    // Actualizar LOGO_PATH en memoria (para PDFs inmediatos)
-    global._logoPathOverride = dest;
-    console.log('🖼  Logo subido:', dest, buf.length, 'bytes');
-    res.json({ ok: true, path: dest, size: buf.length });
+
+    // También guardar en disco como respaldo (para PDFs)
+    try {
+      const dest = path.join(__dirname, 'logo_'+schema+'.png');
+      fs.writeFileSync(dest, buf);
+    } catch {}
+
+    res.json({ ok: true, size: buf.length, schema });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -4865,8 +4960,14 @@ function satProxy(endpoint, body) {
       });
     });
     req.on('error', (e) => {
-      if (e.code === 'ECONNREFUSED') {
-        reject(new Error('El servicio SAT Python no está corriendo. Ejecuta: python3 sat_service/sat_api.py'));
+      if (e.code === 'ECONNREFUSED' || e.code === 'ECONNRESET') {
+        console.warn('⚠️  SAT Python no responde, intentando reiniciar...');
+        global._satPythonOk = false;
+        startSatService(); // reiniciar automáticamente
+        reject(new Error(
+          'El servicio SAT se está iniciando. Espera 5 segundos e intenta de nuevo. ' +
+          'Si persiste, abre una terminal y ejecuta: python sat_service/sat_api.py'
+        ));
       } else {
         reject(e);
       }
@@ -4876,6 +4977,28 @@ function satProxy(endpoint, body) {
     req.end();
   });
 }
+
+app.get('/api/sat/health', auth, async (req, res) => {
+  checkSatHealth((ok) => {
+    if (!ok) {
+      // Intentar iniciar automáticamente y esperar un poco
+      startSatService();
+      setTimeout(() => {
+        checkSatHealth((ok2) => {
+          res.json({
+            ok: ok2,
+            mensaje: ok2
+              ? '✅ Servicio SAT Python corriendo en puerto 5050'
+              : '❌ Servicio SAT no disponible',
+            auto_iniciado: !ok && ok2,
+          });
+        }, 0); // sin retries extra aquí
+      }, 4000); // dar 4s para que Python arranque
+    } else {
+      res.json({ ok: true, mensaje: '✅ Servicio SAT Python corriendo en puerto 5050' });
+    }
+  });
+});
 
 app.post('/api/sat/login', auth, async (req, res) => {
   try {
@@ -4971,29 +5094,171 @@ app.get('/api/sat/solicitudes', auth, async (req, res) => {
 
 
 // ── Auto-iniciar microservicio SAT Python ──────────────────────
-(function startSatService() {
-  const { spawn, execSync } = require('child_process');
-  const path = require('path');
-  const satScript = path.join(__dirname, 'sat_service', 'sat_api.py');
-  
-  // Verificar si ya está corriendo
-  try {
-    const http = require('http');
-    http.get('http://127.0.0.1:5050/health', () => {
-      console.log('✅ SAT Python service ya está corriendo en puerto 5050');
-    }).on('error', () => {
-      // No está corriendo, iniciarlo
-      console.log('🐍 Iniciando SAT microservicio Python en puerto 5050...');
-      const py = spawn('python3', [satScript], {
-        detached: true, stdio: 'pipe',
-        cwd: __dirname
-      });
-      py.stdout.on('data', d => console.log('SAT:', d.toString().trim()));
-      py.stderr.on('data', d => { if(!d.toString().includes('Address already')) console.log('SAT:', d.toString().trim()); });
-      py.unref();
+// ── SAT Python auto-start ────────────────────────────────────────
+global._satPythonOk = false;
+
+function checkSatHealth(cb, retries=0) {
+  const http = require('http');
+  const req = http.request(
+    { hostname:'127.0.0.1', port:5050, path:'/health', method:'GET', timeout:3000 },
+    (res) => {
+      let body = '';
+      res.on('data', d => body += d);
+      res.on('end', () => { global._satPythonOk = true; if(cb) cb(true); });
+    }
+  );
+  req.on('error', () => {
+    global._satPythonOk = false;
+    // Reintentar hasta 2 veces con 2s de espera
+    if (retries < 2) {
+      setTimeout(() => checkSatHealth(cb, retries+1), 2000);
+    } else {
+      if(cb) cb(false);
+    }
+  });
+  req.on('timeout', () => {
+    req.destroy();
+    global._satPythonOk = false;
+    if (retries < 2) {
+      setTimeout(() => checkSatHealth(cb, retries+1), 2000);
+    } else {
+      if(cb) cb(false);
+    }
+  });
+  req.end();
+}
+
+function startSatService() {
+  const { spawn }  = require('child_process');
+  const path       = require('path');
+  const fs         = require('fs');
+  const satScript  = path.join(__dirname, 'sat_service', 'sat_api.py');
+  const isWin      = process.platform === 'win32';
+
+  if (!fs.existsSync(satScript)) {
+    console.warn('⚠️  SAT: No se encontró sat_service/sat_api.py');
+    return;
+  }
+  if (global._satStarting) return;   // evitar arranques dobles
+  global._satStarting = true;
+
+  // En Windows usar shell:true + cmd /c para que funcione con cualquier PATH
+  const launchCmd  = isWin ? 'cmd'   : null;
+  const launchArgs = isWin
+    ? ['/c', 'python', satScript]    // cmd /c python sat_api.py
+    : null;
+
+  const candidates = isWin
+    ? [
+        { cmd:'cmd', args:['/c','python',  satScript] },
+        { cmd:'cmd', args:['/c','python3', satScript] },
+        { cmd:'cmd', args:['/c','py',      satScript] },
+      ]
+    : [
+        { cmd:'python3', args:[satScript] },
+        { cmd:'python',  args:[satScript] },
+      ];
+
+  let attemptIdx = 0;
+
+  function tryLaunch() {
+    if (attemptIdx >= candidates.length) {
+      console.warn('⚠️  SAT: No se encontró Python. Instala desde https://python.org');
+      console.warn('   Luego ejecuta manualmente: python sat_service\\sat_api.py');
+      global._satStarting = false;
+      return;
+    }
+    const { cmd, args } = candidates[attemptIdx++];
+    console.log('🐍 SAT: probando', cmd, args.join(' '));
+
+    const opts = {
+      stdio : ['ignore', 'pipe', 'pipe'],
+      cwd   : __dirname,
+      shell : isWin,          // shell:true en Windows = usa PATH del sistema
+      windowsHide: false,     // visible para depuración
+    };
+    if (!isWin) opts.detached = true;
+
+    let proc;
+    try { proc = spawn(cmd, args, opts); }
+    catch(e) { console.warn('  spawn error:', e.message); tryLaunch(); return; }
+
+    let started = false;
+    let errBuf  = '';
+
+    proc.stdout.on('data', d => {
+      const t = d.toString().trim();
+      if (!t || t.includes('WARNING')) return;
+      console.log('  SAT:', t);
+      if (t.includes('5050') || t.includes('Running')) started = true;
     });
-  } catch(e) {}
-})();
+
+    proc.stderr.on('data', d => {
+      const t = d.toString().trim();
+      if (!t) return;
+      // Werkzeug log normal (no es error)
+      if (t.includes('Running on') || t.includes('werkzeug') || t.includes('WARNING')) {
+        console.log('  SAT:', t.slice(0,100));
+        started = true;
+        return;
+      }
+      // Error real de Python (no encontrado)
+      if (t.includes('not recognized') || t.includes('not found') || t.includes('No such file')) {
+        tryLaunch(); return;
+      }
+      if (t.includes('Address already')) {
+        console.log('  SAT: puerto 5050 ya en uso — OK');
+        started = true;
+        return;
+      }
+      errBuf += t + ' ';
+      console.log('  SAT err:', t.slice(0,120));
+    });
+
+    proc.on('error', (e) => {
+      // Error al ejecutar el comando — probar siguiente
+      tryLaunch();
+    });
+
+    proc.on('exit', (code) => {
+      global._satStarting = false;
+      if (!started && code !== 0) {
+        console.warn('  SAT terminó código', code, errBuf.slice(0,100));
+        if (attemptIdx < candidates.length) tryLaunch();
+        else global._satPythonOk = false;
+      }
+    });
+
+    if (!isWin) proc.unref();
+
+    // Verificar después de 4 segundos que responde
+    setTimeout(() => {
+      checkSatHealth((ok) => {
+        global._satStarting = false;
+        if (ok) {
+          console.log('  ✅ SAT Python corriendo correctamente en puerto 5050');
+          global._satPythonOk = true;
+        } else {
+          console.warn('  ⚠️  SAT no respondió. Revisa: python sat_service/sat_api.py');
+          // Intentar siguiente candidato si este no funcionó
+          if (!started && attemptIdx < candidates.length) tryLaunch();
+        }
+      });
+    }, 4000);
+  }
+
+  console.log('🐍 Iniciando SAT Python (puerto 5050)...');
+  tryLaunch();
+}
+
+// Verificar si ya está corriendo; si no, iniciar
+checkSatHealth(function(running) {
+  if (running) {
+    console.log('✅ SAT Python ya estaba corriendo en puerto 5050');
+  } else {
+    startSatService();
+  }
+});
 
 app.listen(PORT, async ()=>{
   console.log(`\n${'═'.repeat(50)}`);
