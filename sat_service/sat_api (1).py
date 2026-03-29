@@ -88,16 +88,13 @@ def get_signer(data: dict) -> Signer:
 
 
 def parse_cfdi_xml(xml_str, filename=''):
-    """Parsea CFDI 4.0/3.3 extrayendo todos los campos incluyendo conceptos, forma/método pago, claves."""
     try:
         from lxml import etree
-        NS4 = 'http://www.sat.gob.mx/cfd/4'
-        NS3 = 'http://www.sat.gob.mx/cfd/3'
-        TFD = 'http://www.sat.gob.mx/TimbreFiscalDigital'
+        NS4='http://www.sat.gob.mx/cfd/4'; NS3='http://www.sat.gob.mx/cfd/3'
+        TFD='http://www.sat.gob.mx/TimbreFiscalDigital'
         raw  = xml_str.encode('utf-8') if isinstance(xml_str, str) else xml_str
-        if raw.startswith(b'\xef\xbb\xbf'): raw = raw[3:]
         root = etree.fromstring(raw)
-        def g(el, *attrs):
+        def g(el,*attrs):
             if el is None: return ''
             for a in attrs:
                 v = el.get(a)
@@ -105,77 +102,28 @@ def parse_cfdi_xml(xml_str, filename=''):
             return ''
         em  = root.find(f'.//{{{NS4}}}Emisor')   or root.find(f'.//{{{NS3}}}Emisor')
         rec = root.find(f'.//{{{NS4}}}Receptor')  or root.find(f'.//{{{NS3}}}Receptor')
-        tf  = root.find(f'.//{{{TFD}}}TimbreFiscalDigital') or root.find('.//TimbreFiscalDigital')
+        tf  = root.find(f'.//{{{TFD}}}TimbreFiscalDigital')
         imp = root.find(f'.//{{{NS4}}}Impuestos') or root.find(f'.//{{{NS3}}}Impuestos')
-
         iva = isr = '0'
         if imp is not None:
             tr = imp.find(f'.//{{{NS4}}}Traslado')  or imp.find('.//Traslado')
             rt = imp.find(f'.//{{{NS4}}}Retencion') or imp.find('.//Retencion')
             if tr is not None: iva = g(tr,'Importe','importe') or '0'
             if rt is not None: isr = g(rt,'Importe','importe') or '0'
-
-        # Extraer todos los conceptos con sus claves
-        conceptos = []
-        for ns in [NS4, NS3, '']:
-            tag = f'{{{ns}}}Concepto' if ns else 'Concepto'
-            items = root.findall(f'.//{tag}')
-            if items:
-                for c in items:
-                    c_iva = '0'
-                    c_imp = c.find(f'.//{{{NS4}}}Traslado') or c.find('.//Traslado')
-                    if c_imp is not None: c_iva = g(c_imp,'Importe','importe') or '0'
-                    conceptos.append({
-                        'descripcion':     g(c,'Descripcion','descripcion'),
-                        'cantidad':        g(c,'Cantidad','cantidad'),
-                        'unidad':          g(c,'Unidad','unidad'),
-                        'clave_unidad':    g(c,'ClaveUnidad','claveUnidad'),
-                        'clave_prod_serv': g(c,'ClaveProdServ','claveProdServ'),
-                        'valor_unitario':  g(c,'ValorUnitario','valorUnitario'),
-                        'importe':         g(c,'Importe','importe'),
-                        'descuento':       g(c,'Descuento','descuento') or '0',
-                        'objeto_imp':      g(c,'ObjetoImp','objetoImp'),
-                        'iva_concepto':    c_iva,
-                    })
-                break
-
-        xml_out = xml_str if isinstance(xml_str, str) else xml_str.decode('utf-8','replace')
         return {
-            'archivo':          filename,
-            'uuid':             g(tf,'UUID','Uuid') if tf is not None else '',
-            'fecha':            g(root,'Fecha','fecha'),
-            'fecha_timbrado':   g(tf,'FechaTimbrado') if tf is not None else '',
-            'tipo':             g(root,'TipoDeComprobante','tipoDeComprobante'),
-            'serie':            g(root,'Serie','serie'),
-            'folio':            g(root,'Folio','folio'),
-            'subtotal':         g(root,'SubTotal','subTotal'),
-            'descuento':        g(root,'Descuento','descuento') or '0',
-            'iva':              iva,
-            'isr_ret':          isr,
-            'total':            g(root,'Total','total'),
-            'moneda':           g(root,'Moneda','moneda') or 'MXN',
-            'tipo_cambio':      g(root,'TipoCambio','tipoCambio') or '1',
-            'forma_pago':       g(root,'FormaPago','formaPago'),
-            'metodo_pago':      g(root,'MetodoPago','metodoPago'),
-            'uso_cfdi':         g(rec,'UsoCFDI','usoCFDI') if rec is not None else '',
-            'lugar_expedicion': g(root,'LugarExpedicion','lugarExpedicion'),
-            'exportacion':      g(root,'Exportacion','exportacion'),
-            'emisor_rfc':       g(em,'Rfc','rfc')           if em  is not None else '',
-            'emisor_nombre':    g(em,'Nombre','nombre')     if em  is not None else '',
-            'emisor_regimen':   g(em,'RegimenFiscal')       if em  is not None else '',
-            'receptor_rfc':     g(rec,'Rfc','rfc')          if rec is not None else '',
-            'receptor_nombre':  g(rec,'Nombre','nombre')    if rec is not None else '',
-            'receptor_regimen': g(rec,'RegimenFiscalReceptor') if rec is not None else '',
-            'receptor_cp':      g(rec,'DomicilioFiscalReceptor') if rec is not None else '',
-            'pac_rfc':          g(tf,'RfcProvCertif')       if tf is not None else '',
-            'no_certificado':   g(root,'NoCertificado','noCertificado'),
-            'no_cert_sat':      g(tf,'NoCertificadoSAT')   if tf is not None else '',
-            'conceptos':        conceptos,
-            'num_conceptos':    len(conceptos),
-            'xml':              xml_out,
+            'archivo': filename, 'uuid': g(tf,'UUID','Uuid') if tf is not None else '',
+            'fecha': g(root,'Fecha','fecha'), 'tipo': g(root,'TipoDeComprobante','tipoDeComprobante'),
+            'subtotal': g(root,'SubTotal','subTotal'), 'iva': iva, 'isr_ret': isr,
+            'total': g(root,'Total','total'), 'moneda': g(root,'Moneda','moneda') or 'MXN',
+            'emisor_rfc': g(em,'Rfc','rfc') if em is not None else '',
+            'emisor_nombre': g(em,'Nombre','nombre') if em is not None else '',
+            'receptor_rfc': g(rec,'Rfc','rfc') if rec is not None else '',
+            'receptor_nombre': g(rec,'Nombre','nombre') if rec is not None else '',
+            'uso_cfdi': g(rec,'UsoCFDI','usoCFDI') if rec is not None else '',
+            'xml': xml_str if isinstance(xml_str, str) else xml_str.decode('utf-8','replace'),
         }
     except Exception as e:
-        logger.exception('Error al parsear CFDI')
+        logger.exception('Error parseando CFDI')
         return {'archivo': filename, 'uuid': '', 'error': str(e),
                 'xml': xml_str if isinstance(xml_str, str) else ''}
 

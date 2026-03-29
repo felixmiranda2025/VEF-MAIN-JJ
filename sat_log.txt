@@ -1,0 +1,124 @@
+2026-03-26 19:32:19,655 - sat_api - INFO - SAT (satcfdi) iniciando en puerto 5050...
+2026-03-26 19:32:19,658 - sat_api - INFO - ======== Running on http://0.0.0.0:5050 ========
+(Press CTRL+C to quit)
+2026-03-26 19:32:53,670 - sat_api - INFO - Login OK: MIGF7707129X3
+2026-03-26 19:32:53,672 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:32:51 -0600] "POST /login HTTP/1.1" 200 604 "-" "-"
+2026-03-26 19:33:00,319 - sat_api - ERROR - Error /solicitar
+Traceback (most recent call last):
+  File "D:\VEF\VEF14\vef-erp\sat_service\sat_api.py", line 202, in solicitar
+    r = await loop.run_in_executor(None, _solicitar)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "D:\VEF\VEF14\vef-erp\sat_service\sat_api.py", line 200, in _solicitar
+    return sat._execute_req(req, needs_token_fn=sat._get_token_comprobante)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Siemens\AppData\Roaming\Python\Python314\site-packages\satcfdi\pacs\sat.py", line 424, in _execute_req
+    xml = self._request(
+        soap_url=req.soap_url,
+    ...<3 lines>...
+        needs_token_fn=needs_token_fn
+    )
+  File "C:\Users\Siemens\AppData\Roaming\Python\Python314\site-packages\satcfdi\pacs\sat.py", line 392, in _request
+    raise ResponseError(response)
+satcfdi.exceptions.ResponseError: <Response [500]>
+2026-03-26 19:33:00,348 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:32:55 -0600] "POST /solicitar HTTP/1.1" 500 220 "-" "-"
+2026-03-26 19:35:45,584 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:35:45 -0600] "GET /health HTTP/1.1" 200 251 "-" "-"
+2026-03-26 19:36:01,012 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:36:01 -0600] "GET /health HTTP/1.1" 200 251 "-" "-"
+2026-03-26 19:36:18,119 - sat_api - INFO - Login OK: MIGF7707129X3
+2026-03-26 19:36:18,120 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:36:16 -0600] "POST /login HTTP/1.1" 200 604 "-" "-"
+2026-03-26 19:36:23,158 - sat_api - ERROR - Error /solicitar
+Traceback (most recent call last):
+  File "D:\VEF\VEF14\vef-erp\sat_service\sat_api.py", line 202, in solicitar
+    r = await loop.run_in_executor(None, _solicitar)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "D:\VEF\VEF14\vef-erp\sat_service\sat_api.py", line 200, in _solicitar
+    return sat._execute_req(req, needs_token_fn=sat._get_token_comprobante)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Siemens\AppData\Roaming\Python\Python314\site-packages\satcfdi\pacs\sat.py", line 424, in _execute_req
+    xml = self._request(
+        soap_url=req.soap_url,
+    ...<3 lines>...
+        needs_token_fn=needs_token_fn
+    )
+  File "C:\Users\Siemens\AppData\Roaming\Python\Python314\site-packages\satcfdi\pacs\sat.py", line 392, in _request
+    raise ResponseError(response)
+satcfdi.exceptions.ResponseError: <Response [500]>
+2026-03-26 19:36:23,175 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:36:20 -0600] "POST /solicitar HTTP/1.1" 500 220 "-" "-"
+2026-03-26 19:36:44,188 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:36:41 -0600] "POST /descargar HTTP/1.1" 400 226 "-" "-"
+2026-03-26 19:36:51,949 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:36:49 -0600] "POST /descargar HTTP/1.1" 400 226 "-" "-"
+2026-03-26 19:36:57,609 - sat_api - INFO - Verificar eb8ad46e-d3f5-49b4-8ca2-d1a8328cfd1a: 0 paq=0
+2026-03-26 19:36:57,611 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:36:53 -0600] "POST /verificar HTTP/1.1" 200 324 "-" "-"
+2026-03-26 19:37:00,787 - sat_api - INFO - Verificar eb8ad46e-d3f5-49b4-8ca2-d1a8328cfd1a: 0 paq=0
+2026-03-26 19:37:00,788 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:36:57 -0600] "POST /verificar HTTP/1.1" 200 324 "-" "-"
+2026-03-26 19:37:13,702 - sat_api - INFO - Verificar eb8ad46e-d3f5-49b4-8ca2-d1a8328cfd1a: 0 paq=0
+2026-03-26 19:37:13,702 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:37:09 -0600] "POST /verificar HTTP/1.1" 200 324 "-" "-"
+2026-03-26 19:37:14,446 - sat_api - INFO - Verificar eb8ad46e-d3f5-49b4-8ca2-d1a8328cfd1a: 0 paq=0
+2026-03-26 19:37:14,446 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:37:10 -0600] "POST /verificar HTTP/1.1" 200 324 "-" "-"
+2026-03-26 19:38:01,561 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:38:01 -0600] "GET /health HTTP/1.1" 200 251 "-" "-"
+2026-03-26 19:38:17,709 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:38:17 -0600] "GET /health HTTP/1.1" 200 251 "-" "-"
+2026-03-26 19:38:41,389 - sat_api - INFO - Login OK: MIGF7707129X3
+2026-03-26 19:38:41,390 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:38:39 -0600] "POST /login HTTP/1.1" 200 604 "-" "-"
+2026-03-26 19:38:49,828 - sat_api - INFO - Solicitud:  | 301 | XML Mal Formado:La solicitud de descarga no es válida. Fecha final invalida
+2026-03-26 19:38:49,829 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:38:46 -0600] "POST /solicitar HTTP/1.1" 200 319 "-" "-"
+2026-03-26 19:38:55,235 - sat_api - INFO - Solicitud:  | 301 | XML Mal Formado:La solicitud de descarga no es válida. Fecha final invalida
+2026-03-26 19:38:55,236 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:38:51 -0600] "POST /solicitar HTTP/1.1" 200 319 "-" "-"
+2026-03-26 19:39:17,291 - sat_api - INFO - Solicitud:  | 301 | XML Mal Formado:La solicitud de descarga no es válida. Fecha final invalida
+2026-03-26 19:39:17,293 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:39:14 -0600] "POST /solicitar HTTP/1.1" 200 319 "-" "-"
+2026-03-26 19:40:32,995 - sat_api - INFO - Verificar 8e5a63a4-453c-4b18-99eb-65a80a0206f6: Terminada paq=1
+2026-03-26 19:40:32,996 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:40:29 -0600] "POST /verificar HTTP/1.1" 200 377 "-" "-"
+2026-03-26 19:40:43,845 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:40:39 -0600] "POST /descargar HTTP/1.1" 400 226 "-" "-"
+2026-03-26 19:42:52,863 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:42:52 -0600] "GET /health HTTP/1.1" 200 251 "-" "-"
+2026-03-26 19:43:05,540 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:43:05 -0600] "GET /health HTTP/1.1" 200 251 "-" "-"
+2026-03-26 19:43:22,357 - sat_api - INFO - Login OK: MIGF7707129X3
+2026-03-26 19:43:22,358 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:43:20 -0600] "POST /login HTTP/1.1" 200 604 "-" "-"
+2026-03-26 19:43:30,973 - sat_api - ERROR - Error /solicitar
+Traceback (most recent call last):
+  File "D:\VEF\VEF14\vef-erp\sat_service\sat_api.py", line 202, in solicitar
+    r = await loop.run_in_executor(None, _solicitar)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "D:\VEF\VEF14\vef-erp\sat_service\sat_api.py", line 200, in _solicitar
+    return sat._execute_req(req, needs_token_fn=sat._get_token_comprobante)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Siemens\AppData\Roaming\Python\Python314\site-packages\satcfdi\pacs\sat.py", line 424, in _execute_req
+    xml = self._request(
+        soap_url=req.soap_url,
+    ...<3 lines>...
+        needs_token_fn=needs_token_fn
+    )
+  File "C:\Users\Siemens\AppData\Roaming\Python\Python314\site-packages\satcfdi\pacs\sat.py", line 392, in _request
+    raise ResponseError(response)
+satcfdi.exceptions.ResponseError: <Response [500]>
+2026-03-26 19:43:30,998 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:43:28 -0600] "POST /solicitar HTTP/1.1" 500 220 "-" "-"
+2026-03-26 19:43:36,519 - sat_api - ERROR - Error /solicitar
+Traceback (most recent call last):
+  File "D:\VEF\VEF14\vef-erp\sat_service\sat_api.py", line 202, in solicitar
+    r = await loop.run_in_executor(None, _solicitar)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "D:\VEF\VEF14\vef-erp\sat_service\sat_api.py", line 200, in _solicitar
+    return sat._execute_req(req, needs_token_fn=sat._get_token_comprobante)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Siemens\AppData\Roaming\Python\Python314\site-packages\satcfdi\pacs\sat.py", line 424, in _execute_req
+    xml = self._request(
+        soap_url=req.soap_url,
+    ...<3 lines>...
+        needs_token_fn=needs_token_fn
+    )
+  File "C:\Users\Siemens\AppData\Roaming\Python\Python314\site-packages\satcfdi\pacs\sat.py", line 392, in _request
+    raise ResponseError(response)
+satcfdi.exceptions.ResponseError: <Response [500]>
+2026-03-26 19:43:36,526 - aiohttp.access - INFO - 127.0.0.1 [26/Mar/2026:19:43:32 -0600] "POST /solicitar HTTP/1.1" 500 220 "-" "-"

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFDIs Descargados — VEF ERP</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}
+  .header{background:linear-gradient(135deg,#1a1f2e 0%,#0f1117 100%);border-bottom:1px solid #2d3748;padding:16px 24px;display:flex;align-items:center;gap:14px}
+  .header-icon{width:40px;height:40px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+  .header h1{font-size:1.2rem;font-weight:700;color:#f7fafc}
+  .header p{font-size:.78rem;color:#718096;margin-top:2px}
+  .filters{background:#1a1f2e;border-bottom:1px solid #2d3748;padding:12px 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .fg{display:flex;flex-direction:column;gap:3px}
+  .fg label{font-size:.68rem;color:#718096;text-transform:uppercase;letter-spacing:.05em}
+  .fg input,.fg select{background:#0f1117;border:1px solid #2d3748;color:#e2e8f0;padding:6px 9px;border-radius:7px;font-size:.82rem;outline:none}
+  .fg input{min-width:120px}
+  .fg input:focus,.fg select:focus{border-color:#667eea}
+  .btn{padding:7px 16px;border-radius:7px;border:none;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+  .btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+  .btn-primary:hover{opacity:.88}
+  .btn-outline{background:transparent;border:1px solid #2d3748;color:#a0aec0}
+  .btn-outline:hover{border-color:#667eea;color:#667eea}
+  .btn-sm{padding:4px 10px;font-size:.74rem}
+  .btn-xml{background:#1c4532;color:#9ae6b4;border:1px solid #276749}
+  .btn-xml:hover{background:#276749}
+  .stats{padding:12px 24px;display:flex;gap:12px;flex-wrap:wrap}
+  .sc{background:#1a1f2e;border:1px solid #2d3748;border-radius:9px;padding:10px 16px;min-width:130px}
+  .sc .v{font-size:1.35rem;font-weight:700;color:#667eea}
+  .sc .l{font-size:.7rem;color:#718096;margin-top:2px}
+  .table-wrap{padding:0 24px 24px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.79rem;min-width:1000px}
+  thead tr{background:#1a1f2e;position:sticky;top:0;z-index:1}
+  thead th{padding:9px 10px;text-align:left;font-size:.67rem;color:#718096;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;cursor:pointer;border-bottom:2px solid #2d3748;user-select:none}
+  thead th:hover{color:#a0aec0}
+  tbody tr{border-bottom:1px solid #161b27;transition:.1s}
+  tbody tr:hover{background:#1a1f2e}
+  tbody td{padding:8px 10px;vertical-align:middle}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700;text-transform:uppercase;white-space:nowrap}
+  .bI{background:#1a365d;color:#90cdf4}.bE{background:#742a2a;color:#fc8181}
+  .bT{background:#1d3a22;color:#68d391}.bN{background:#44337a;color:#d6bcfa}.bP{background:#553c9a;color:#e9d8fd}
+  .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.68rem;font-weight:700;background:#2d3748;color:#a0aec0;white-space:nowrap;cursor:default}
+  .tag-pue{background:#1a365d;color:#63b3ed}.tag-ppd{background:#44337a;color:#d6bcfa}
+  .monto{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+  .mp{color:#68d391}.mn{color:#fc8181}
+  .rfc{font-family:monospace;font-size:.74rem;color:#63b3ed}
+  .uuid{font-family:monospace;font-size:.7rem;color:#718096;max-width:165px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help}
+  .dim{color:#4a5568;font-size:.75rem}
+  .empty{text-align:center;padding:56px 20px;color:#4a5568}
+  .spinner{display:inline-block;width:20px;height:20px;border:3px solid #2d3748;border-top-color:#667eea;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100}
+  .modal{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:30px;width:350px;max-width:95vw}
+  .modal h2{font-size:1rem;font-weight:700;margin-bottom:18px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:.74rem;color:#718096;margin-bottom:4px}
+  .field input{width:100%;background:#0f1117;border:1px solid #2d3748;color:#e2e8f0;padding:8px 11px;border-radius:8px;font-size:.88rem;outline:none}
+  .field input:focus{border-color:#667eea}
+  .err{background:#742a2a;color:#fc8181;padding:9px 13px;border-radius:8px;font-size:.8rem;margin-top:10px}
+  .col-toggle{padding:8px 24px;background:#1a1f2e;border-bottom:1px solid #2d3748;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .col-toggle span{font-size:.7rem;color:#718096;margin-right:2px}
+  .col-toggle label{display:flex;align-items:center;gap:4px;font-size:.73rem;color:#a0aec0;cursor:pointer;background:#0f1117;border:1px solid #2d3748;padding:3px 9px;border-radius:5px}
+  .col-toggle label:hover{border-color:#667eea}
+  .col-toggle input[type=checkbox]{accent-color:#667eea}
+  .pagination{padding:10px 24px;display:flex;align-items:center;gap:8px;border-top:1px solid #2d3748;font-size:.8rem}
+  .pagination span{color:#718096;flex:1}
+  #toast{position:fixed;bottom:22px;right:22px;background:#2d3748;color:#f7fafc;padding:10px 18px;border-radius:9px;font-size:.82rem;display:none;z-index:999;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+
+<div class="modal-bg" id="loginModal">
+  <div class="modal">
+    <h2>🔐 Acceso VEF ERP</h2>
+    <div class="field"><label>URL del servidor</label><input id="sUrl" value="http://localhost:3000"></div>
+    <div class="field"><label>Usuario</label><input id="sUser" value="admin" autocomplete="username"></div>
+    <div class="field"><label>Contraseña</label><input id="sPass" type="password" value="admin123" autocomplete="current-password"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Entrar</button>
+    <div id="loginErr" style="display:none" class="err"></div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-icon">📄</div>
+  <div><h1>CFDIs Descargados del SAT</h1><p id="empLabel">—</p></div>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇ CSV</button>
+    <button class="btn btn-outline btn-sm" onclick="reparsearXmls()" style="color:#68d391;border-color:#276749" title="Re-extraer MetodoPago, FormaPago, etc. de los XMLs ya guardados en BD">🔄 Re-parsear XMLs</button>
+    <button class="btn btn-outline btn-sm" onclick="loadCfdis()">↺ Actualizar</button>
+    <button class="btn btn-outline btn-sm" onclick="logout()" style="color:#fc8181;border-color:#742a2a">Salir</button>
+  </div>
+</div>
+
+<div class="filters">
+  <div class="fg"><label>Tipo</label>
+    <select id="fTipo">
+      <option value="">Todos</option><option value="I">Ingreso (I)</option>
+      <option value="E">Egreso (E)</option><option value="T">Traslado (T)</option>
+      <option value="N">Nómina (N)</option><option value="P">Pago (P)</option>
+    </select>
+  </div>
+  <div class="fg"><label>Método Pago</label>
+    <select id="fMetodo">
+      <option value="">Todos</option>
+      <option value="PUE">PUE — Una exhibición</option>
+      <option value="PPD">PPD — Parcialidades</option>
+    </select>
+  </div>
+  <div class="fg"><label>RFC</label><input id="fRfc" placeholder="RFC emisor/receptor"></div>
+  <div class="fg"><label>Desde</label><input id="fDesde" type="date"></div>
+  <div class="fg"><label>Hasta</label><input id="fHasta" type="date"></div>
+  <div class="fg"><label>Buscar</label><input id="fBusca" placeholder="UUID, folio, nombre..."></div>
+  <div class="fg" style="justify-content:flex-end"><label>&nbsp;</label>
+    <div style="display:flex;gap:7px">
+      <button class="btn btn-primary" onclick="loadCfdis()">Buscar</button>
+      <button class="btn btn-outline" onclick="clearFilters()">✕</button>
+    </div>
+  </div>
+</div>
+
+<div class="col-toggle">
+  <span>Columnas:</span>
+  <label><input type="checkbox" id="cSerie" checked onchange="renderPage()"> Serie/Folio</label>
+  <label><input type="checkbox" id="cFormaPago" checked onchange="renderPage()"> Forma Pago</label>
+  <label><input type="checkbox" id="cMetodo" checked onchange="renderPage()"> Método Pago</label>
+  <label><input type="checkbox" id="cLugar" checked onchange="renderPage()"> Lugar Exp.</label>
+  <label><input type="checkbox" id="cNoCert" onchange="renderPage()"> No. Certificado</label>
+  <label><input type="checkbox" id="cTimbrado" onchange="renderPage()"> Fecha Timbrado</label>
+  <label><input type="checkbox" id="cEmisor" checked onchange="renderPage()"> Emisor</label>
+  <label><input type="checkbox" id="cReceptor" checked onchange="renderPage()"> Receptor</label>
+</div>
+
+<div class="stats" id="statsBar" style="display:none">
+  <div class="sc"><div class="v" id="sTot">0</div><div class="l">Total CFDIs</div></div>
+  <div class="sc"><div class="v" id="sIng" style="color:#68d391">$0</div><div class="l">Ingresos (I)</div></div>
+  <div class="sc"><div class="v" id="sEgr" style="color:#fc8181">$0</div><div class="l">Egresos (E)</div></div>
+  <div class="sc"><div class="v" id="sPue" style="color:#63b3ed">0</div><div class="l">PUE</div></div>
+  <div class="sc"><div class="v" id="sPpd" style="color:#d6bcfa">0</div><div class="l">PPD</div></div>
+</div>
+
+<div class="table-wrap">
+  <div id="stLoad" class="empty"><div><span class="spinner"></span></div><h3 style="margin-top:12px;color:#718096">Cargando CFDIs...</h3></div>
+  <div id="stEmpty" class="empty" style="display:none">
+    <div style="font-size:2.8rem;margin-bottom:10px">📭</div>
+    <h3 style="color:#718096">Sin CFDIs encontrados</h3>
+    <p style="font-size:.8rem;margin-top:4px">Usa SAT → Descarga Masiva para importar</p>
+  </div>
+  <table id="tbl" style="display:none">
+    <thead><tr id="theadRow"></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div class="pagination" id="pagBar" style="display:none">
+  <span id="pagInfo"></span>
+  <button class="btn btn-outline btn-sm" id="btnPrev" onclick="chPage(-1)">‹ Ant</button>
+  <span id="pagNum" style="color:#a0aec0;font-size:.8rem"></span>
+  <button class="btn btn-outline btn-sm" id="btnNext" onclick="chPage(1)">Sig ›</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const FORMA_PAGO={'01':'Efectivo','02':'Cheque nominativo','03':'Transferencia electrónica de fondos','04':'Tarjeta de crédito','05':'Monedero electrónico','06':'Dinero electrónico','08':'Vales de despensa','12':'Dación en pago','13':'Pago por subrogación','14':'Pago por consignación','15':'Condonación','17':'Compensación','23':'Novación','24':'Confusión','25':'Remisión de deuda','26':'Prescripción o caducidad','27':'A satisfacción del acreedor','28':'Tarjeta de débito','29':'Tarjeta de servicios','30':'Aplicación de anticipos','31':'Intermediario pagos','99':'Por definir'};
+const METODO_PAGO={'PUE':'Pago en una sola exhibición','PPD':'Pago en parcialidades o diferido'};
+
+const PG=50;
+let all=[],filtered=[],page=1,sCol='fecha_cfdi',sDir='desc';
+let token=localStorage.getItem('vef_token')||'';
+let base=localStorage.getItem('vef_url')||'http://localhost:3000';
+
+async function doLogin(){
+  const url=document.getElementById('sUrl').value.trim().replace(/\/$/,'');
+  const user=document.getElementById('sUser').value.trim();
+  const pass=document.getElementById('sPass').value;
+  const errEl=document.getElementById('loginErr');errEl.style.display='none';
+  try{
+    const r=await fetch(`${url}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})});
+    const d=await r.json();
+    if(!r.ok||!d.token)throw new Error(d.error||'Credenciales incorrectas');
+    token=d.token;base=url;
+    localStorage.setItem('vef_token',token);localStorage.setItem('vef_url',base);
+    document.getElementById('loginModal').style.display='none';
+    document.getElementById('empLabel').textContent=d.empresa||user;
+    loadCfdis();
+  }catch(e){errEl.textContent=e.message;errEl.style.display='block';}
+}
+function logout(){localStorage.removeItem('vef_token');location.reload();}
+
+async function loadCfdis(){
+  if(!token)return;
+  show('stLoad');hide('stEmpty');hide('tbl');hide('statsBar');hide('pagBar');
+  const tipo=document.getElementById('fTipo').value;
+  const rfc=document.getElementById('fRfc').value.trim();
+  const desde=document.getElementById('fDesde').value;
+  const hasta=document.getElementById('fHasta').value;
+  const p=new URLSearchParams();
+  if(tipo)p.set('tipo',tipo);if(rfc)p.set('rfc',rfc);
+  if(desde)p.set('desde',desde);if(hasta)p.set('hasta',hasta);
+  try{
+    const r=await fetch(`${base}/api/sat/cfdis?${p}`,{headers:{'Authorization':`Bearer ${token}`}});
+    if(r.status===401){logout();return;}
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.error||'Error del servidor');
+    all=Array.isArray(data)?data:[];
+    applyFilter();
+  }catch(e){hide('stLoad');toast('❌ '+e.message,4000);show('stEmpty');}
+}
+
+function applyFilter(){
+  const q=document.getElementById('fBusca').value.toLowerCase().trim();
+  const met=document.getElementById('fMetodo').value;
+  filtered=all.filter(r=>{
+    if(met&&r.metodo_pago!==met)return false;
+    if(!q)return true;
+    return['uuid','emisor_rfc','emisor_nombre','receptor_rfc','receptor_nombre','folio','serie','forma_pago','metodo_pago','lugar_expedicion']
+      .some(k=>(r[k]||'').toLowerCase().includes(q));
+  });
+  sortData();updateStats();page=1;renderPage();
+}
+
+function sortBy(col){
+  if(sCol===col)sDir=sDir==='asc'?'desc':'asc';else{sCol=col;sDir='asc';}
+  sortData();renderPage();
+}
+function sortData(){
+  filtered.sort((a,b)=>{
+    let va=a[sCol]??'',vb=b[sCol]??'';
+    if(['fecha_cfdi','fecha_timbrado','created_at'].includes(sCol)){va=va?new Date(va):0;vb=vb?new Date(vb):0;}
+    else if(['subtotal','total'].includes(sCol)){va=parseFloat(va)||0;vb=parseFloat(vb)||0;}
+    else{va=String(va).toLowerCase();vb=String(vb).toLowerCase();}
+    return sDir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+  });
+}
+
+function colOn(id){return document.getElementById(id).checked;}
+function buildCols(){
+  const all=[
+    {id:'fecha_cfdi',label:'Fecha CFDI',sort:'fecha_cfdi'},
+    {id:'tipo',label:'Tipo',sort:'tipo_comprobante'},
+    {id:'uuid',label:'UUID'},
+    {id:'serie',label:'Serie / Folio',sort:'serie',tog:'cSerie'},
+    {id:'emisorRfc',label:'Emisor RFC',sort:'emisor_rfc',tog:'cEmisor'},
+    {id:'emisorNom',label:'Emisor Nombre',sort:'emisor_nombre',tog:'cEmisor'},
+    {id:'recRfc',label:'Receptor RFC',sort:'receptor_rfc',tog:'cReceptor'},
+    {id:'recNom',label:'Receptor Nombre',sort:'receptor_nombre',tog:'cReceptor'},
+    {id:'formaPago',label:'Forma Pago',sort:'forma_pago',tog:'cFormaPago'},
+    {id:'metodoPago',label:'Método Pago',sort:'metodo_pago',tog:'cMetodo'},
+    {id:'lugar',label:'Lugar Exp.',sort:'lugar_expedicion',tog:'cLugar'},
+    {id:'noCert',label:'No. Certificado',tog:'cNoCert'},
+    {id:'timbrado',label:'Timbrado',sort:'fecha_timbrado',tog:'cTimbrado'},
+    {id:'subtotal',label:'Subtotal',sort:'subtotal'},
+    {id:'total',label:'Total',sort:'total'},
+    {id:'moneda',label:'Mon.'},
+    {id:'xml',label:'XML'},
+  ];
+  return all.filter(c=>!c.tog||colOn(c.tog));
+}
+
+function cellFor(c,r){
+  const tipo=r.tipo_comprobante||'?';
+  const fp=r.forma_pago||'';
+  const mp=r.metodo_pago||'';
+  const fpTitle=FORMA_PAGO[fp]?fp+' — '+FORMA_PAGO[fp]:fp;
+  const mpTitle=METODO_PAGO[mp]||mp;
+  switch(c.id){
+    case 'fecha_cfdi':return`<td style="white-space:nowrap;font-size:.77rem">${r.fecha_cfdi?r.fecha_cfdi.slice(0,16).replace('T',' '):'—'}</td>`;
+    case 'tipo':return`<td><span class="badge b${tipo}">${tipo}</span></td>`;
+    case 'uuid':return`<td class="uuid" title="${r.uuid||''}">${r.uuid||'—'}</td>`;
+    case 'serie':return`<td style="white-space:nowrap"><span class="dim">${r.serie||''}</span>${r.serie&&r.folio?' / ':''}<strong style="color:#e2e8f0">${r.folio||'—'}</strong></td>`;
+    case 'emisorRfc':return`<td class="rfc">${r.emisor_rfc||'—'}</td>`;
+    case 'emisorNom':return`<td style="max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.emisor_nombre||''}">${r.emisor_nombre||'—'}</td>`;
+    case 'recRfc':return`<td class="rfc">${r.receptor_rfc||'—'}</td>`;
+    case 'recNom':return`<td style="max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.receptor_nombre||''}">${r.receptor_nombre||'—'}</td>`;
+    case 'formaPago':return`<td>${fp?`<span class="tag" title="${fpTitle}">${fp}</span>`:'<span class="dim">—</span>'}</td>`;
+    case 'metodoPago':return`<td>${mp?`<span class="tag tag-${mp.toLowerCase()}" title="${mpTitle}">${mp}</span>`:'<span class="dim">—</span>'}</td>`;
+    case 'lugar':return`<td class="dim">${r.lugar_expedicion||'—'}</td>`;
+    case 'noCert':return`<td style="font-family:monospace;font-size:.68rem;color:#4a5568;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.no_certificado||''}">${r.no_certificado||'—'}</td>`;
+    case 'timbrado':return`<td style="white-space:nowrap;font-size:.74rem;color:#718096">${r.fecha_timbrado?r.fecha_timbrado.slice(0,16).replace('T',' '):'—'}</td>`;
+    case 'subtotal':return`<td class="monto">${fmt(r.subtotal)}</td>`;
+    case 'total':return`<td class="monto ${tipo==='E'?'mn':'mp'}">${fmt(r.total)}</td>`;
+    case 'moneda':return`<td class="dim">${r.moneda||'MXN'}</td>`;
+    case 'xml':return`<td>${r.uuid?`<button class="btn btn-xml btn-sm" onclick="dlXml('${r.uuid}')">⬇ XML</button>`:'—'}</td>`;
+    default:return'<td>—</td>';
+  }
+}
+
+function renderPage(){
+  hide('stLoad');
+  if(!filtered.length){show('stEmpty');hide('tbl');hide('pagBar');return;}
+  hide('stEmpty');show('tbl');show('statsBar');
+  const cols=buildCols();
+  document.getElementById('theadRow').innerHTML=cols.map(c=>{
+    const arrow=sCol===c.sort?(sDir==='asc'?' ↑':' ↓'):'';
+    const onclick=c.sort?`onclick="sortBy('${c.sort}')"`:''
+    return`<th ${onclick}>${c.label}${arrow}</th>`;
+  }).join('');
+  const start=(page-1)*PG;
+  document.getElementById('tbody').innerHTML=filtered.slice(start,start+PG)
+    .map(r=>'<tr>'+cols.map(c=>cellFor(c,r)).join('')+'</tr>').join('');
+  const total=filtered.length,totalP=Math.ceil(total/PG);
+  document.getElementById('pagInfo').textContent=`${start+1}–${Math.min(start+PG,total)} de ${total} CFDIs`;
+  document.getElementById('pagNum').textContent=`Pág ${page}/${totalP}`;
+  document.getElementById('btnPrev').disabled=page<=1;
+  document.getElementById('btnNext').disabled=page>=totalP;
+  show('pagBar');
+}
+function chPage(d){page=Math.max(1,page+d);renderPage();}
+
+function updateStats(){
+  document.getElementById('sTot').textContent=filtered.length;
+  document.getElementById('sIng').textContent='$'+fmt(filtered.filter(r=>r.tipo_comprobante==='I').reduce((s,r)=>s+parseFloat(r.total||0),0));
+  document.getElementById('sEgr').textContent='$'+fmt(filtered.filter(r=>r.tipo_comprobante==='E').reduce((s,r)=>s+parseFloat(r.total||0),0));
+  document.getElementById('sPue').textContent=filtered.filter(r=>r.metodo_pago==='PUE').length;
+  document.getElementById('sPpd').textContent=filtered.filter(r=>r.metodo_pago==='PPD').length;
+}
+
+async function dlXml(uuid){
+  toast('⏳ Descargando...',2000);
+  try{
+    const r=await fetch(`${base}/api/sat/cfdis/${uuid}/xml`,{headers:{'Authorization':`Bearer ${token}`}});
+    if(!r.ok)throw new Error('XML no encontrado en BD');
+    const blob=await r.blob();
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${uuid}.xml`;a.click();
+    toast('✅ XML descargado',2000);
+  }catch(e){toast('❌ '+e.message,3500);}
+}
+
+function exportCSV(){
+  if(!filtered.length)return toast('Sin datos',2000);
+  const cols=['fecha_cfdi','tipo_comprobante','uuid','serie','folio','emisor_rfc','emisor_nombre','receptor_rfc','receptor_nombre','forma_pago','metodo_pago','lugar_expedicion','subtotal','total','moneda','no_certificado','fecha_timbrado'];
+  const blob=new Blob([cols.join(',')+'\n'+filtered.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`cfdis_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  toast('✅ CSV exportado',2000);
+}
+
+function fmt(n){return(parseFloat(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function show(id){document.getElementById(id).style.display='';}
+function hide(id){document.getElementById(id).style.display='none';}
+function clearFilters(){['fTipo','fMetodo','fRfc','fDesde','fHasta','fBusca'].forEach(id=>document.getElementById(id).value='');loadCfdis();}
+
+async function reparsearXmls(){
+  toast('⏳ Re-parseando XMLs de la BD, espera...',8000);
+  try{
+    const r=await fetch(`${base}/api/sat/reparsear-xmls`,{method:'POST',headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}});
+    if(r.status===401){logout();return;}
+    const d=await r.json();
+    if(d.ok){
+      toast(`✅ ${d.actualizados} CFDIs actualizados${d.errores?.length?' ('+d.errores.length+' errores)':''}`,4000);
+      setTimeout(loadCfdis,600);
+    }else{
+      toast('❌ '+( d.error||'Error al re-parsear'),5000);
+    }
+  }catch(e){toast('❌ '+e.message,4000);}
+}
+let tt;function toast(m,ms=3000){const e=document.getElementById('toast');e.textContent=m;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',ms);}
+document.getElementById('fBusca').addEventListener('input',applyFilter);
+document.getElementById('fMetodo').addEventListener('change',applyFilter);
+document.querySelectorAll('.modal input').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
+(function(){if(token){document.getElementById('loginModal').style.display='none';document.getElementById('sUrl').value=base;loadCfdis();}else{hide('stLoad');}})();
+</script>
+</body>
+</html>

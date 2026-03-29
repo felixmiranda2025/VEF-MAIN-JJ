@@ -7,7 +7,7 @@ from . import Utils
 
 class DownloadRequest:
     soap_action = 'http://DescargaMasivaTerceros.sat.gob.mx/IDescargaMasivaTercerosService/Descargar'
-    url = 'https://cfdidescargamasiva.clouda.sat.gob.mx/DescargaMasivaService.svc'
+    url = 'https://cfdidescargamasivasolicitud.clouda.sat.gob.mx/DescargaMasivaTercerosService.svc'
     
     def soapRequest(self, certificate: bytes, keyPEM: str, token: str, id_paquete: str, path: str):
         xml = self.getSOAPBody(certificate=certificate, keyPEM=keyPEM, id_paquete=id_paquete)

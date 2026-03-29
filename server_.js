@@ -1257,15 +1257,6 @@ async function autoSetup() {
           receptor_rfc VARCHAR(20),
           receptor_nombre VARCHAR(300),
           uso_cfdi VARCHAR(10),
-          forma_pago VARCHAR(5),
-          metodo_pago VARCHAR(5),
-          lugar_expedicion VARCHAR(10),
-          serie VARCHAR(50),
-          folio VARCHAR(50),
-          no_certificado VARCHAR(30),
-          version VARCHAR(5),
-          fecha_timbrado TIMESTAMP,
-          rfc_prov_certif VARCHAR(20),
           xml_content TEXT,
           id_paquete VARCHAR(200),
           created_at TIMESTAMP DEFAULT NOW(),
@@ -1376,40 +1367,8 @@ async function autoSetup() {
         moneda VARCHAR(10) DEFAULT 'MXN', emisor_rfc VARCHAR(20),
         emisor_nombre VARCHAR(300), receptor_rfc VARCHAR(20),
         receptor_nombre VARCHAR(300), uso_cfdi VARCHAR(10),
-        forma_pago VARCHAR(5), metodo_pago VARCHAR(5),
-        lugar_expedicion VARCHAR(10), serie VARCHAR(50), folio VARCHAR(50),
-        no_certificado VARCHAR(30), version VARCHAR(5),
-        fecha_timbrado TIMESTAMP, rfc_prov_certif VARCHAR(20),
         xml_content TEXT, id_paquete VARCHAR(200),
         created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`,
-      // Migración: agregar columnas nuevas a sat_cfdis en schemas existentes
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS forma_pago VARCHAR(5)`,
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(5)`,
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS lugar_expedicion VARCHAR(10)`,
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS serie VARCHAR(50)`,
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS folio VARCHAR(50)`,
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS no_certificado VARCHAR(30)`,
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS version VARCHAR(5)`,
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS fecha_timbrado TIMESTAMP`,
-      `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS rfc_prov_certif VARCHAR(20)`,
-      // Solicitudes de autorización para envío de cotizaciones
-      `CREATE TABLE IF NOT EXISTS solicitudes_autorizacion (
-        id SERIAL PRIMARY KEY,
-        tipo VARCHAR(30) DEFAULT 'envio_cotizacion',
-        referencia_id INTEGER,
-        referencia_num TEXT,
-        solicitante_id INTEGER,
-        solicitante_nombre TEXT,
-        destinatario_email TEXT,
-        destinatario_cc TEXT,
-        asunto TEXT,
-        mensaje TEXT,
-        estatus VARCHAR(20) DEFAULT 'pendiente',
-        autorizado_por INTEGER,
-        fecha_solicitud TIMESTAMP DEFAULT NOW(),
-        fecha_resolucion TIMESTAMP,
-        notas_autorizador TEXT
-      )`,
     ];
 
     for(const empRow of allEmpresas.rows) {
@@ -4589,25 +4548,6 @@ app.get('/api/sat/pac-info', auth, async (req, res) => {
   } catch(e) { res.json({ok:false, pac:'No configurado', configurado:false}); }
 });
 
-// Solicitar descarga de CFDIs EMITIDOS
-app.post('/api/sat/solicitar-emitidos', auth, licencia, async (req, res) => {
-  try {
-    const r = await satProxy('/solicitar-emitidos', req.body);
-    res.json(r);
-  } catch(e) { res.status(500).json({ok:false, error:e.message}); }
-});
-
-
-// Descargar XML de un CFDI específico por UUID (proceso automático)
-app.post('/api/sat/descargar-uuid', auth, licencia, async (req, res) => {
-  try {
-    // Este endpoint puede tardar hasta 3 minutos — timeout extendido
-    res.setTimeout(200000);
-    const r = await satProxy('/descargar-uuid', req.body, 190000);
-    res.json(r);
-  } catch(e) { res.status(500).json({ok:false, error:e.message}); }
-});
-
 // Validar CFDI por UUID — consulta pública SAT sin FIEL
 app.post('/api/sat/validar-cfdi', auth, licencia, async (req, res) => {
   try {
@@ -4872,25 +4812,11 @@ app.get('/admin', (req,res)=>{
 });
 
 app.get('/app', (req,res)=>{
-  const fs   = require('fs');
-  const fp   = require('path').join(__dirname,'frontend','app.html');
-  try {
-    let h = fs.readFileSync(fp,'utf8');
-    // Eliminar SOLO el script externo de Cloudflare manteniendo el resto intacto
-    // Patron: <script ...cdn-cgi...></script>  seguido de <script> principal
-    h = h.replace(/<script[^>]*cdn-cgi[^>]*><\/script>/gi, '');
-    // Limpiar email obfuscation
-    h = h.replace(/<a[^>]*cdn-cgi[^>]*>[^<]*<\/a>/gi, 'soporte.ventas@vef-automatizacion.com');
-    h = h.replace(/data-cfemail="[^"]*"/gi, '');
-    res.setHeader('Cache-Control','no-cache,no-store,must-revalidate');
-    res.setHeader('Content-Type','text/html; charset=utf-8');
-    res.setHeader('Content-Security-Policy',"script-src 'self' 'unsafe-inline'");
-    // Guardar en disco
-    try{fs.writeFileSync(fp,h,'utf8');}catch(e){}
-    res.send(h);
-  } catch(e){ res.sendFile(fp); }
+  res.setHeader('Cache-Control','no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma','no-cache');
+  res.setHeader('Expires','0');
+  res.sendFile(path.join(__dirname,'frontend','app.html'));
 });
-
 app.get('/api/sat/health', async (req, res) => {  // sin auth — el frontend lo llama antes del login
   // Ping directo al servicio Python — acepta cualquier respuesta HTTP 2xx
   const http = require('http');
@@ -5111,7 +5037,7 @@ app.post('/api/auth/cambiar-empresa', auth, async (req, res) => {
 // Iniciar el Python con: python3 sat_service/sat_api.py
 // ================================================================
 
-function satProxy(endpoint, body, timeoutMs = 120000) {
+function satProxy(endpoint, body) {
   const http = require('http');
   const data = JSON.stringify(body);
   return new Promise((resolve, reject) => {
@@ -5124,27 +5050,14 @@ function satProxy(endpoint, body, timeoutMs = 120000) {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(data)
       },
-      timeout: timeoutMs
+      timeout: 120000
     };
     const req = http.request(reqOpts, (res) => {
       let buf = '';
       res.on('data', c => buf += c);
       res.on('end', () => {
-        let parsed;
-        try { parsed = JSON.parse(buf); }
-        catch(e) { parsed = { ok: false, error: 'Respuesta inválida del servicio SAT Python', raw: buf.slice(0,200) }; }
-        // FIX: Si el microservicio Python retorna 4xx/5xx, incluir código en el objeto
-        // para que el frontend pueda mostrar el error real en lugar de silenciarlo
-        if (res.statusCode >= 400) {
-          parsed.ok = false;
-          parsed._httpStatus = res.statusCode;
-          if (!parsed.error && !parsed.detail) {
-            parsed.error = `SAT Python retornó HTTP ${res.statusCode}`;
-          }
-          // Log para diagnóstico en servidor
-          console.error(`satProxy ${endpoint} → HTTP ${res.statusCode}:`, JSON.stringify(parsed).slice(0,300));
-        }
-        resolve(parsed);
+        try { resolve(JSON.parse(buf)); }
+        catch(e) { resolve({ ok: false, error: 'Respuesta inválida del servicio SAT Python' }); }
       });
     });
     req.on('error', (e) => {
@@ -5210,67 +5123,24 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
     const r = await satProxy('/descargar', req.body);
     if (r.ok && r.cfdis?.length) {
       let saved = 0;
-      const errores = [];
-      // Asegurar que la tabla sat_cfdis existe con todas las columnas
-      try {
-        await QR(req, `CREATE TABLE IF NOT EXISTS sat_cfdis (
-          id SERIAL PRIMARY KEY, uuid VARCHAR(100) UNIQUE, fecha_cfdi TIMESTAMP,
-          tipo_comprobante VARCHAR(5), subtotal NUMERIC(15,2) DEFAULT 0,
-          total NUMERIC(15,2) DEFAULT 0, moneda VARCHAR(10) DEFAULT 'MXN',
-          emisor_rfc VARCHAR(20), emisor_nombre VARCHAR(300),
-          receptor_rfc VARCHAR(20), receptor_nombre VARCHAR(300), uso_cfdi VARCHAR(10),
-          forma_pago VARCHAR(5), metodo_pago VARCHAR(5), lugar_expedicion VARCHAR(10),
-          serie VARCHAR(50), folio VARCHAR(50), no_certificado VARCHAR(30),
-          version VARCHAR(5), fecha_timbrado TIMESTAMP, rfc_prov_certif VARCHAR(20),
-          xml_content TEXT, id_paquete VARCHAR(200),
-          created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`);
-        // Migración en caliente — agregar columnas si la tabla ya existía sin ellas
-        for (const col of [
-          'forma_pago VARCHAR(5)','metodo_pago VARCHAR(5)','lugar_expedicion VARCHAR(10)',
-          'serie VARCHAR(50)','folio VARCHAR(50)','no_certificado VARCHAR(30)',
-          'version VARCHAR(5)','fecha_timbrado TIMESTAMP','rfc_prov_certif VARCHAR(20)'
-        ]) { await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{}); }
-      } catch(eTable) {
-        console.error('SAT descargar — no se pudo crear sat_cfdis:', eTable.message);
-        return res.status(500).json({ ok: false, error: 'Error creando tabla sat_cfdis: ' + eTable.message });
-      }
-
       for (const cfdi of r.cfdis) {
         if (!cfdi.uuid) continue;
         try {
-          await QR(req, `INSERT INTO sat_cfdis(
-            uuid,fecha_cfdi,tipo_comprobante,subtotal,total,moneda,
-            emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,uso_cfdi,
-            forma_pago,metodo_pago,lugar_expedicion,serie,folio,
-            no_certificado,version,fecha_timbrado,rfc_prov_certif,
-            xml_content,id_paquete)
-            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
-            ON CONFLICT (uuid) DO UPDATE SET
-              xml_content=EXCLUDED.xml_content, forma_pago=EXCLUDED.forma_pago,
-              metodo_pago=EXCLUDED.metodo_pago, lugar_expedicion=EXCLUDED.lugar_expedicion,
-              serie=EXCLUDED.serie, folio=EXCLUDED.folio, no_certificado=EXCLUDED.no_certificado,
-              version=EXCLUDED.version, fecha_timbrado=EXCLUDED.fecha_timbrado,
-              rfc_prov_certif=EXCLUDED.rfc_prov_certif, updated_at=NOW()`,
+          await QR(req, `INSERT INTO sat_cfdis(uuid,fecha_cfdi,tipo_comprobante,subtotal,total,moneda,
+            emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,uso_cfdi,xml_content,id_paquete)
+            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+            ON CONFLICT (uuid) DO UPDATE SET updated_at=NOW()`,
             [cfdi.uuid, cfdi.fecha||null, cfdi.tipo||null,
              parseFloat(cfdi.subtotal)||0, parseFloat(cfdi.total)||0, cfdi.moneda||'MXN',
-             cfdi.emisor_rfc||null, cfdi.emisor_nombre||null,
-             cfdi.receptor_rfc||null, cfdi.receptor_nombre||null, cfdi.uso_cfdi||null,
-             cfdi.forma_pago||null, cfdi.metodo_pago||null, cfdi.lugar_expedicion||null,
-             cfdi.serie||null, cfdi.folio||null, cfdi.no_certificado||null,
-             cfdi.version||null, cfdi.fecha_timbrado||null, cfdi.rfc_prov_certif||null,
-             cfdi.xml||null, req.body.id_paquete||null]);
+             cfdi.emisor_rfc, cfdi.emisor_nombre, cfdi.receptor_rfc, cfdi.receptor_nombre,
+             cfdi.uso_cfdi, cfdi.xml, req.body.id_paquete]);
           saved++;
-        } catch(eCfdi) {
-          // FIX: Registrar error en lugar de ignorarlo silenciosamente
-          console.error('SAT descargar — error guardando UUID', cfdi.uuid, ':', eCfdi.message);
-          errores.push({ uuid: cfdi.uuid, error: eCfdi.message });
-        }
+        } catch {}
       }
       await QR(req, `UPDATE sat_solicitudes SET estatus='descargado' WHERE id_solicitud=$1`,
         [req.body.id_solicitud]).catch(()=>{});
       r.guardados = saved;
-      if (errores.length) r.errores_bd = errores;
-      // No enviar XML en respuesta (son muy grandes)
+      // No enviar XML en respuesta
       r.cfdis = r.cfdis.map(c => ({ ...c, xml: undefined }));
     }
     res.json(r);
@@ -5280,36 +5150,16 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
 app.get('/api/sat/cfdis', auth, async (req, res) => {
   try {
     const { tipo, rfc, desde, hasta } = req.query;
-    // Asegurar tabla y columnas nuevas
-    await QR(req, `CREATE TABLE IF NOT EXISTS sat_cfdis (
-      id SERIAL PRIMARY KEY,uuid VARCHAR(100) UNIQUE,fecha_cfdi TIMESTAMP,
-      tipo_comprobante VARCHAR(5),subtotal NUMERIC(15,2) DEFAULT 0,total NUMERIC(15,2) DEFAULT 0,
-      moneda VARCHAR(10) DEFAULT 'MXN',emisor_rfc VARCHAR(20),emisor_nombre VARCHAR(300),
-      receptor_rfc VARCHAR(20),receptor_nombre VARCHAR(300),uso_cfdi VARCHAR(10),
-      forma_pago VARCHAR(5),metodo_pago VARCHAR(5),lugar_expedicion VARCHAR(10),
-      serie VARCHAR(50),folio VARCHAR(50),no_certificado VARCHAR(30),
-      version VARCHAR(5),fecha_timbrado TIMESTAMP,rfc_prov_certif VARCHAR(20),
-      xml_content TEXT,id_paquete VARCHAR(200),
-      created_at TIMESTAMP DEFAULT NOW(),updated_at TIMESTAMP DEFAULT NOW())`)
-    .catch(e => console.warn('sat_cfdis ensure:', e.message));
-    for (const col of [
-      'forma_pago VARCHAR(5)','metodo_pago VARCHAR(5)','lugar_expedicion VARCHAR(10)',
-      'serie VARCHAR(50)','folio VARCHAR(50)','no_certificado VARCHAR(30)',
-      'version VARCHAR(5)','fecha_timbrado TIMESTAMP','rfc_prov_certif VARCHAR(20)'
-    ]) { await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{}); }
-
     let where = 'WHERE 1=1'; const vals = []; let i = 1;
     if (tipo)  { where += ` AND tipo_comprobante=$${i++}`; vals.push(tipo); }
     if (rfc)   { where += ` AND (emisor_rfc=$${i++} OR receptor_rfc=$${i++})`; vals.push(rfc,rfc); }
     if (desde) { where += ` AND fecha_cfdi>=$${i++}`; vals.push(desde); }
     if (hasta) { where += ` AND fecha_cfdi<=$${i++}`; vals.push(hasta); }
     const rows = await QR(req, `SELECT id,uuid,fecha_cfdi,tipo_comprobante,subtotal,total,moneda,
-      emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,uso_cfdi,
-      forma_pago,metodo_pago,lugar_expedicion,serie,folio,no_certificado,
-      version,fecha_timbrado,rfc_prov_certif,created_at
+      emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,uso_cfdi,created_at
       FROM sat_cfdis ${where} ORDER BY fecha_cfdi DESC NULLS LAST LIMIT 500`, vals);
-    res.json(Array.isArray(rows) ? rows : []);
-  } catch(e) { console.error('GET /api/sat/cfdis:', e.message); res.status(500).json({ error: e.message }); }
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/sat/cfdis/:uuid/xml', auth, async (req, res) => {
@@ -5329,269 +5179,6 @@ app.get('/api/sat/solicitudes', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── Re-parsear XMLs ya guardados en BD ───────────────────────────
-// Extrae MetodoPago, FormaPago, LugarExpedicion, Serie, Folio, etc.
-// desde xml_content y actualiza las columnas vacías.
-app.post('/api/sat/reparsear-xmls', auth, async (req, res) => {
-  try {
-    // Agregar columnas si no existen
-    for (const col of [
-      'forma_pago VARCHAR(5)','metodo_pago VARCHAR(5)','lugar_expedicion VARCHAR(10)',
-      'serie VARCHAR(50)','folio VARCHAR(50)','no_certificado VARCHAR(30)',
-      'version VARCHAR(5)','fecha_timbrado TIMESTAMP','rfc_prov_certif VARCHAR(20)'
-    ]) { await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{}); }
-
-    // Traer todos los que tienen xml pero campos nuevos vacíos
-    const rows = await QR(req,
-      `SELECT id, uuid, xml_content FROM sat_cfdis
-       WHERE xml_content IS NOT NULL AND xml_content != ''
-         AND (metodo_pago IS NULL OR forma_pago IS NULL)
-       LIMIT 2000`);
-
-    if (!rows.length) return res.json({ ok: true, actualizados: 0, msg: 'No hay XMLs pendientes de re-parsear' });
-
-    // Parser XML minimalista — extrae atributos del nodo raíz cfdi:Comprobante
-    // y del nodo tfd:TimbreFiscalDigital sin dependencias externas
-    function parseAttr(xml, attr) {
-      const re = new RegExp(`\\b${attr}="([^"]*)"`, 'i');
-      const m = xml.match(re);
-      return m ? m[1] : null;
-    }
-
-    let actualizados = 0;
-    const errores = [];
-
-    for (const row of rows) {
-      try {
-        const xml = row.xml_content;
-        const metodo_pago      = parseAttr(xml, 'MetodoPago');
-        const forma_pago       = parseAttr(xml, 'FormaPago');
-        const lugar_expedicion = parseAttr(xml, 'LugarExpedicion');
-        const serie            = parseAttr(xml, 'Serie');
-        const folio            = parseAttr(xml, 'Folio');
-        const no_certificado   = parseAttr(xml, 'NoCertificado');
-        const version          = parseAttr(xml, 'Version');
-        // Timbre Fiscal Digital
-        const fecha_timbrado_str = parseAttr(xml, 'FechaTimbrado');
-        const rfc_prov_certif    = parseAttr(xml, 'RfcProvCertif');
-
-        await QR(req,
-          `UPDATE sat_cfdis SET
-            metodo_pago      = COALESCE(metodo_pago,      $1),
-            forma_pago       = COALESCE(forma_pago,       $2),
-            lugar_expedicion = COALESCE(lugar_expedicion, $3),
-            serie            = COALESCE(serie,            $4),
-            folio            = COALESCE(folio,            $5),
-            no_certificado   = COALESCE(no_certificado,   $6),
-            version          = COALESCE(version,          $7),
-            fecha_timbrado   = COALESCE(fecha_timbrado,   $8::timestamp),
-            rfc_prov_certif  = COALESCE(rfc_prov_certif,  $9),
-            updated_at       = NOW()
-           WHERE id = $10`,
-          [ metodo_pago, forma_pago, lugar_expedicion, serie, folio,
-            no_certificado, version,
-            fecha_timbrado_str || null,
-            rfc_prov_certif, row.id ]);
-        actualizados++;
-      } catch(e) {
-        errores.push({ uuid: row.uuid, error: e.message });
-      }
-    }
-    res.json({ ok: true, total: rows.length, actualizados, errores: errores.slice(0,10) });
-  } catch(e) {
-    console.error('reparsear-xmls:', e.message);
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-
-
-// ════════════════════════════════════════════════════════════════
-// SOLICITUDES DE AUTORIZACIÓN — Envío de cotizaciones
-// ════════════════════════════════════════════════════════════════
-
-
-// ════════════════════════════════════════════════════════════════
-// SOLICITUDES DE AUTORIZACIÓN — Envío de cotizaciones
-// ════════════════════════════════════════════════════════════════
-
-// Crear solicitud de autorización (cualquier usuario)
-app.post('/api/autorizaciones', auth, async (req, res) => {
-  try {
-    const { tipo='envio_cotizacion', referencia_id, referencia_num,
-            destinatario_email, destinatario_cc, asunto, mensaje } = req.body;
-    await QR(req, `CREATE TABLE IF NOT EXISTS solicitudes_autorizacion (
-      id SERIAL PRIMARY KEY, tipo VARCHAR(30) DEFAULT 'envio_cotizacion',
-      referencia_id INTEGER, referencia_num TEXT,
-      solicitante_id INTEGER, solicitante_nombre TEXT,
-      destinatario_email TEXT, destinatario_cc TEXT, asunto TEXT, mensaje TEXT,
-      estatus VARCHAR(20) DEFAULT 'pendiente', autorizado_por INTEGER,
-      fecha_solicitud TIMESTAMP DEFAULT NOW(), fecha_resolucion TIMESTAMP,
-      notas_autorizador TEXT)`).catch(()=>{});
-    const rows = await QR(req, `INSERT INTO solicitudes_autorizacion
-      (tipo,referencia_id,referencia_num,solicitante_id,solicitante_nombre,
-       destinatario_email,destinatario_cc,asunto,mensaje)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
-      [tipo, referencia_id||null, referencia_num||null,
-       req.user.id, req.user.nombre||req.user.username,
-       destinatario_email||null, destinatario_cc||null, asunto||null, mensaje||null]);
-    res.json({ ok: true, id: rows[0]?.id });
-  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
-});
-
-// Listar solicitudes (admin/gerencia)
-app.get('/api/autorizaciones', auth, async (req, res) => {
-  try {
-    if (!['admin','gerencia'].includes(req.user.rol))
-      return res.status(403).json({ error: 'Sin permisos' });
-    await QR(req, `CREATE TABLE IF NOT EXISTS solicitudes_autorizacion (
-      id SERIAL PRIMARY KEY, tipo VARCHAR(30) DEFAULT 'envio_cotizacion',
-      referencia_id INTEGER, referencia_num TEXT, solicitante_id INTEGER,
-      solicitante_nombre TEXT, destinatario_email TEXT, destinatario_cc TEXT,
-      asunto TEXT, mensaje TEXT, estatus VARCHAR(20) DEFAULT 'pendiente',
-      autorizado_por INTEGER, fecha_solicitud TIMESTAMP DEFAULT NOW(),
-      fecha_resolucion TIMESTAMP, notas_autorizador TEXT)`).catch(()=>{});
-    const estatus = req.query.estatus || 'pendiente';
-    const rows = await QR(req, `SELECT * FROM solicitudes_autorizacion
-      WHERE estatus=$1 ORDER BY fecha_solicitud DESC LIMIT 100`, [estatus]);
-    res.json(rows);
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
-
-// Mis solicitudes (cualquier usuario ve las suyas)
-app.get('/api/autorizaciones/mis-solicitudes', auth, async (req, res) => {
-  try {
-    await QR(req, `CREATE TABLE IF NOT EXISTS solicitudes_autorizacion (
-      id SERIAL PRIMARY KEY, tipo VARCHAR(30), referencia_id INTEGER,
-      referencia_num TEXT, solicitante_id INTEGER, solicitante_nombre TEXT,
-      destinatario_email TEXT, destinatario_cc TEXT, asunto TEXT, mensaje TEXT,
-      estatus VARCHAR(20) DEFAULT 'pendiente', autorizado_por INTEGER,
-      fecha_solicitud TIMESTAMP DEFAULT NOW(), fecha_resolucion TIMESTAMP,
-      notas_autorizador TEXT)`).catch(()=>{});
-    const rows = await QR(req,
-      `SELECT id,tipo,referencia_id,referencia_num,destinatario_email,
-              asunto,estatus,notas_autorizador,fecha_solicitud,fecha_resolucion
-       FROM solicitudes_autorizacion
-       WHERE solicitante_id=$1
-       ORDER BY fecha_solicitud DESC LIMIT 20`,
-      [req.user.id]);
-    res.json(rows);
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
-// Contar pendientes para badge
-app.get('/api/autorizaciones/pendientes-count', auth, async (req, res) => {
-  try {
-    if (!['admin','gerencia'].includes(req.user.rol)) return res.json({ count: 0 });
-    await QR(req, `CREATE TABLE IF NOT EXISTS solicitudes_autorizacion (
-      id SERIAL PRIMARY KEY, tipo VARCHAR(30), referencia_id INTEGER,
-      referencia_num TEXT, solicitante_id INTEGER, solicitante_nombre TEXT,
-      destinatario_email TEXT, destinatario_cc TEXT, asunto TEXT, mensaje TEXT,
-      estatus VARCHAR(20) DEFAULT 'pendiente', autorizado_por INTEGER,
-      fecha_solicitud TIMESTAMP DEFAULT NOW(), fecha_resolucion TIMESTAMP,
-      notas_autorizador TEXT)`).catch(()=>{});
-    const rows = await QR(req, `SELECT COUNT(*) as count FROM solicitudes_autorizacion WHERE estatus='pendiente'`);
-    res.json({ count: parseInt(rows[0]?.count)||0 });
-  } catch(e) { res.json({ count: 0 }); }
-});
-
-
-// Actualizar datos del correo antes de aprobar
-app.post('/api/autorizaciones/:id/actualizar', auth, async (req, res) => {
-  try {
-    if (!['admin','gerencia'].includes(req.user.rol))
-      return res.status(403).json({ error: 'Sin permisos' });
-    const { destinatario_email, destinatario_cc, asunto, mensaje } = req.body;
-    await QR(req, `UPDATE solicitudes_autorizacion SET
-      destinatario_email=COALESCE($1,destinatario_email),
-      destinatario_cc=$2,
-      asunto=COALESCE($3,asunto),
-      mensaje=COALESCE($4,mensaje)
-      WHERE id=$5`,
-      [destinatario_email||null, destinatario_cc||null,
-       asunto||null, mensaje||null, req.params.id]);
-    res.json({ ok: true });
-  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
-});
-
-// Aprobar → envía el correo de cotización
-app.post('/api/autorizaciones/:id/aprobar', auth, async (req, res) => {
-  try {
-    if (!['admin','gerencia'].includes(req.user.rol))
-      return res.status(403).json({ error: 'Sin permisos' });
-    const rows = await QR(req, `SELECT * FROM solicitudes_autorizacion WHERE id=$1`, [req.params.id]);
-    if (!rows.length) return res.status(404).json({ error: 'Solicitud no encontrada' });
-    const sol = rows[0];
-    if (sol.estatus !== 'pendiente') return res.status(400).json({ error: 'Ya fue procesada' });
-    await QR(req, `UPDATE solicitudes_autorizacion SET estatus='aprobado',
-      autorizado_por=$1, fecha_resolucion=NOW(), notas_autorizador=$2 WHERE id=$3`,
-      [req.user.id, req.body.notas||null, req.params.id]);
-    // Enviar el correo usando la ruta interna de cotizaciones
-    if (sol.tipo === 'envio_cotizacion' && sol.referencia_id) {
-      const http = require('http');
-      const token = req.headers.authorization;
-      const emailData = JSON.stringify({ to: sol.destinatario_email,
-        cc: sol.destinatario_cc||undefined, asunto: sol.asunto, mensaje: sol.mensaje });
-      await new Promise((resolve) => {
-        const opts = { hostname:'127.0.0.1', port: parseInt(process.env.PORT)||3000,
-          path:`/api/cotizaciones/${sol.referencia_id}/email`, method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':token,
-          'Content-Length':Buffer.byteLength(emailData)} };
-        const r2 = http.request(opts, (r)=>{ r.resume(); resolve(); });
-        r2.on('error', ()=>resolve());
-        r2.write(emailData); r2.end();
-      });
-    }
-    res.json({ ok: true });
-  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
-});
-
-// Rechazar solicitud
-app.post('/api/autorizaciones/:id/rechazar', auth, async (req, res) => {
-  try {
-    if (!['admin','gerencia'].includes(req.user.rol))
-      return res.status(403).json({ error: 'Sin permisos' });
-    await QR(req, `UPDATE solicitudes_autorizacion SET estatus='rechazado',
-      autorizado_por=$1, fecha_resolucion=NOW(), notas_autorizador=$2 WHERE id=$3`,
-      [req.user.id, req.body.notas||null, req.params.id]);
-    res.json({ ok: true });
-  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
-});
-
-// ── Borrar un CFDI individual ────────────────────────────────────
-app.delete('/api/sat/cfdis/:uuid', auth, async (req, res) => {
-  try {
-    await QR(req, `DELETE FROM sat_cfdis WHERE uuid=$1`, [req.params.uuid]);
-    res.json({ ok: true });
-  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
-});
-
-// ── Borrar TODOS los CFDIs de la empresa ─────────────────────────
-app.delete('/api/sat/cfdis', auth, async (req, res) => {
-  try {
-    const r = await QR(req, `DELETE FROM sat_cfdis`);
-    // También limpiar paquetes de las solicitudes
-    await QR(req, `UPDATE sat_solicitudes SET estatus='pendiente', paquetes=NULL`).catch(()=>{});
-    res.json({ ok: true, eliminados: r?.rowCount ?? 0 });
-  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
-});
-
-// ── Borrar una solicitud individual ──────────────────────────────
-app.delete('/api/sat/solicitudes/:id', auth, async (req, res) => {
-  try {
-    await QR(req, `DELETE FROM sat_solicitudes WHERE id_solicitud=$1`, [req.params.id]);
-    res.json({ ok: true });
-  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
-});
-
-// ── Borrar TODO el historial de solicitudes ───────────────────────
-app.delete('/api/sat/solicitudes', auth, async (req, res) => {
-  try {
-    const r = await QR(req, `DELETE FROM sat_solicitudes`);
-    res.json({ ok: true, eliminados: r?.rowCount ?? 0 });
-  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
-});
 
 // ── Auto-iniciar microservicio SAT Python ──────────────────────
 // ── SAT Python auto-start ────────────────────────────────────────

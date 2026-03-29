@@ -303,6 +303,7 @@ tbody td{padding:11px 14px;vertical-align:middle;}
          onerror="this.style.display='none';document.getElementById('sidebarBrand').style.display='block'"
          onload="document.getElementById('sidebarBrand').style.display='none'"
          style="max-width:180px;max-height:90px;object-fit:contain;display:block;margin:0 auto 6px;">
+
     <div id="sidebarBrand" style="display:none">
       <div class="brand">VEF <span>Automatización</span></div>
     </div>
@@ -318,26 +319,28 @@ tbody td{padding:11px 14px;vertical-align:middle;}
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
-    <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard')"><span class="icon">📊</span> Dashboard</div>
+    <div class="nav-item active" id="navDashboard" data-page="dashboard" onclick="nav('dashboard')"><span class="icon">📊</span> Dashboard</div>
     <div class="nav-section">Gestión</div>
-    <div class="nav-item" data-page="clientes" onclick="nav(&quot;clientes&quot;)"><span class="icon">👤</span> Clientes</div>
-    <div class="nav-item" data-page="proveedores" onclick="nav(&quot;proveedores&quot;)"><span class="icon">🏭</span> Proveedores</div>
-    <div class="nav-item" data-page="proyectos" onclick="nav('proyectos')"><span class="icon">📁</span> Proyectos</div>
-    <div class="nav-item" data-page="cotizaciones" onclick="nav(&quot;cotizaciones&quot;)"><span class="icon">📄</span> Cotizaciones</div>
+    <div class="nav-item" id="navClientes" data-page="clientes" onclick="nav(&quot;clientes&quot;)"><span class="icon">👤</span> Clientes</div>
+    <div class="nav-item" id="navProveedores" data-page="proveedores" onclick="nav(&quot;proveedores&quot;)"><span class="icon">🏭</span> Proveedores</div>
+    <div class="nav-item" id="navProyectos" data-page="proyectos" onclick="nav('proyectos')"><span class="icon">📁</span> Proyectos</div>
+    <div class="nav-item" id="navCotizaciones" data-page="cotizaciones" onclick="nav(&quot;cotizaciones&quot;)"><span class="icon">📄</span> Cotizaciones</div>
+    <div class="nav-item" id="navAutorizaciones" data-page="autorizaciones" onclick="nav('autorizaciones')" style="display:none"><span class="icon">🔐</span> Autorizaciones <span id="badgeAutorizaciones" style="display:none;background:#dc2626;color:#fff;border-radius:10px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:4px">0</span></div>
     <div class="nav-section">Finanzas</div>
-    <div class="nav-item" data-page="ordenes" onclick="nav(&quot;ordenes&quot;)"><span class="icon">🧾</span> Órdenes y Facturas</div>
-    <div class="nav-item" data-page="oc-prov" onclick="nav('oc-prov')"><span class="icon">📦</span> OC Proveedores</div>
-    <div class="nav-item" data-page="egresos" onclick="nav(&quot;egresos&quot;)"><span class="icon">💸</span> Egresos</div>
+    <div class="nav-item" id="navOrdenes" data-page="ordenes" onclick="nav(&quot;ordenes&quot;)"><span class="icon">🧾</span> Órdenes y Facturas</div>
+    <div class="nav-item" id="navOCProv" data-page="oc-prov" onclick="nav('oc-prov')"><span class="icon">📦</span> OC Proveedores</div>
+    <div class="nav-item" id="navEgresos" data-page="egresos" onclick="nav(&quot;egresos&quot;)"><span class="icon">💸</span> Egresos</div>
     <div class="nav-section">Operaciones</div>
-    <div class="nav-item" data-page="inventario" onclick="nav(&quot;inventario&quot;)"><span class="icon">🗃</span> Inventario</div>
+    <div class="nav-item" id="navInventario" data-page="inventario" onclick="nav(&quot;inventario&quot;)"><span class="icon">🗃</span> Inventario</div>
     <div class="nav-section">Productividad</div>
-    <div class="nav-item" data-page="tareas" onclick="nav(&quot;tareas&quot;)"><span class="icon">✅</span> Tareas y Proyectos</div>
-    <div class="nav-item" data-page="sat" onclick="nav(&quot;sat&quot;)"><span class="icon">📊</span> Reportes SAT</div>
+    <div class="nav-item" id="navTareas" data-page="tareas" onclick="nav(&quot;tareas&quot;)"><span class="icon">✅</span> Tareas y Proyectos</div>
+    <div class="nav-item" id="navSat" data-page="sat" onclick="nav(&quot;sat&quot;)"><span class="icon">📊</span> Reportes SAT</div>
     <div class="nav-item" data-page="sat-descarga" onclick="nav('sat-descarga')"><span class="icon">🏛</span> Descarga SAT</div>
-    <div class="nav-item" data-page="reportes-servicio" onclick="nav('reportes-servicio')"><span class="icon">📋</span> Reportes Servicio</div>
-    <div class="nav-item" data-page="pdfs" onclick="nav(&quot;pdfs&quot;)"><span class="icon">📁</span> PDFs Guardados</div>
+    <div class="nav-item" data-page="sat-descarga" onclick="nav('sat-descarga');setTimeout(function(){satSwitchTab('facturas');},600)"><span class="icon">📋</span> Facturas SAT</div>
+    <div class="nav-item" id="navReportes" data-page="reportes-servicio" onclick="nav('reportes-servicio')"><span class="icon">📋</span> Reportes Servicio</div>
+    <div class="nav-item" id="navPdfs" data-page="pdfs" onclick="nav(&quot;pdfs&quot;)"><span class="icon">📁</span> PDFs Guardados</div>
     <div class="nav-item" data-page="usuarios" id="navUsuarios" onclick="nav('usuarios')" style="display:none"><span class="icon">👥</span> Usuarios</div>
-    <div class="nav-item" data-page="ia" onclick="nav('ia')"><span class="icon">🤖</span> Asistente IA</div>
+    <div class="nav-item" id="navIA" data-page="ia" onclick="nav('ia')"><span class="icon">🤖</span> Asistente IA</div>
     <div class="nav-item" data-page="config" id="navConfig" onclick="nav(&quot;config&quot;)" style="display:none"><span class="icon">⚙️</span> Configuración</div>
   </div>
   <div class="sidebar-footer">
@@ -358,7 +361,7 @@ tbody td{padding:11px 14px;vertical-align:middle;}
        onerror="this.style.display='none'">
   <div class="contact-bar">
     <span>📞 +52 (722) 115-7792</span>
-    <span>✉ soporte.ventas@vef-automatizacion.com</span>
+    <span>✉ <a href="/cdn-cgi/l/email-protection" class="__cf_email__" >[email&#160;protected]</a></span>
   </div>
 </header>
 
@@ -411,13 +414,30 @@ tbody td{padding:11px 14px;vertical-align:middle;}
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ══════════════ AUTH ══════════════ */
 const TOKEN = sessionStorage.getItem('vef_token');
 const USER  = JSON.parse(sessionStorage.getItem('vef_user') || '{}');
 
 // Si no hay token → login inmediato (sin throw para no romper el script)
 if(!TOKEN){ window.location.replace('/'); }
+
+// Actualizar logos con token del usuario para aislamiento por empresa
+// (se ejecuta inmediatamente al cargar la página)
+if(TOKEN){
+  var _logoUrl = '/api/logo?token='+encodeURIComponent(TOKEN)+'&t='+Date.now();
+  document.addEventListener('DOMContentLoaded', function(){
+    var sl=document.getElementById('sidebarLogo');
+    var hl=document.getElementById('headerLogo');
+    if(sl) sl.src = _logoUrl;
+    if(hl) hl.src = _logoUrl;
+  });
+  // También ejecutar ahora en caso de que el DOM ya esté listo
+  var _sl=document.getElementById('sidebarLogo');
+  var _hl=document.getElementById('headerLogo');
+  if(_sl) _sl.src = _logoUrl;
+  if(_hl) _hl.src = _logoUrl;
+}
 
 // Verificar token y actualizar USER con datos reales del servidor
 if(TOKEN){
@@ -439,9 +459,10 @@ if(TOKEN){
       var currentUser = JSON.parse(sessionStorage.getItem('vef_user')||'{}');
       // Actualizar logos con token para aislamiento por empresa
       var tok = sessionStorage.getItem('vef_token')||'';
-      var logoUrl = '/api/logo?t='+Date.now()+'&token='+encodeURIComponent(tok);
+      var logoUrl = '/api/logo?token='+encodeURIComponent(tok)+'&t='+Date.now();
       ['sidebarLogo','headerLogo'].forEach(function(id){
-        var el=document.getElementById(id); if(el) el.src=logoUrl;
+        var el=document.getElementById(id);
+        if(el){ el.src=''; el.src=logoUrl; }
       });
       // Sincronizar rol y datos del servidor (fuente de verdad = JWT del servidor)
       currentUser.rol = serverUser.rol || 'usuario';
@@ -457,15 +478,24 @@ if(TOKEN){
         window.location.reload();
       }
       // Doble verificación del servidor: ocultar todo si no es admin
-      if(currentUser.rol !== 'admin'){
-        ['navUsuarios','navConfig','navAdminSistema'].forEach(function(id){
-          var el=document.getElementById(id);
-          if(el) el.style.display='none';
-        });
-        // Eliminar el nav de admin si se insertó antes
-        var an=document.getElementById('navAdminSistema');
-        if(an) an.remove();
+      // Re-aplicar permisos con rol actualizado del servidor
+      aplicarPermisos();
+
+// Polling badge de autorizaciones pendientes (cada 60s para admin/gerencia)
+function _autorizacionesBadge(){
+  var rol = (typeof USER!=='undefined'?USER:JSON.parse(sessionStorage.getItem('vef_user')||'{}')).rol||'';
+  if(rol!=='admin'&&rol!=='gerencia') return;
+  fetch('/api/autorizaciones/pendientes-count',{headers:{'Authorization':'Bearer '+(localStorage.getItem('vef_token')||'')}})
+    .then(function(r){return r.json();}).then(function(d){
+      var badge=document.getElementById('badgeAutorizaciones');
+      if(!badge) return;
+      var n=d.count||0;
+      badge.textContent=n;
+      badge.style.display=n>0?'':'none';
+    }).catch(function(){});
 }
+_autorizacionesBadge();
+setInterval(_autorizacionesBadge, 60000);
     })
     .catch(function(){ /* servidor no disponible — continuar con datos locales */ });
 }
@@ -474,13 +504,8 @@ if(TOKEN){
 document.getElementById('userName').textContent  = USER.nombre || USER.username || '—';
 document.getElementById('userRole').textContent   = USER.rol || '—';
 document.getElementById('userAvatar').textContent = (USER.nombre||USER.username||'U')[0].toUpperCase();
-// Config visible solo para admin
-if(USER.rol === 'admin'){
-  ['navUsuarios','navConfig'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.style.display='';
-  });
-
-}
+// Aplicar permisos de menú según rol
+aplicarPermisos();
 // Show empresa name in sidebar
 const empBadge = document.getElementById('empBadge');
 if(empBadge && USER.empresa_nombre) empBadge.textContent = USER.empresa_nombre;
@@ -610,16 +635,83 @@ function filterByStatus(sel,id,col){
 }
 
 /* ══════════════ NAV ══════════════ */
+// Permisos por módulo según rol
+var _PERMISOS = {
+  admin:    null, // null = acceso total
+  gerencia: ['dashboard','clientes','proveedores','proyectos','cotizaciones','ordenes','oc-prov','egresos','inventario','sat','sat-descarga','pdfs','tareas'],
+  compras:  ['dashboard','ordenes','oc-prov','egresos','inventario','pdfs'],
+  almacen:  ['dashboard','inventario','pdfs'],
+  ventas:   ['dashboard','inventario','proyectos','cotizaciones','egresos','pdfs'],
+};
+
+function rolTieneAcceso(page){
+  try {
+    var u = typeof USER !== 'undefined' ? USER : JSON.parse(sessionStorage.getItem('vef_user')||'{}');
+    var rol = (u && u.rol) || 'usuario';
+    var perms = _PERMISOS[rol];
+    if(!perms) return true; // admin = acceso total
+    return perms.includes(page);
+  } catch(e) { return true; }
+}
+
+function aplicarPermisos(){
+  try {
+  var u = typeof USER !== 'undefined' ? USER : JSON.parse(sessionStorage.getItem('vef_user')||'{}');
+  var rol = (u && u.rol) || 'usuario';
+  var perms = _PERMISOS[rol];
+
+  // Ocultar items del menú que no corresponden al rol
+  var todosNav = ['navDashboard','navClientes','navProveedores','navProyectos',
+    'navCotizaciones','navOrdenes','navOCProv','navEgresos','navInventario',
+    'navTareas','navSat','navPdfs','navIA','navReportes',
+    'navUsuarios','navConfig'];
+
+  todosNav.forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    var page = el.dataset.page;
+    if(rol === 'admin'){
+      // admin ve todo
+      if(id === 'navUsuarios' || id === 'navConfig') el.style.display = '';
+    } else {
+      // Ocultar si no tiene permiso
+      if(!perms || !perms.includes(page)){
+        el.style.display = 'none';
+      }
+      // Siempre ocultar admin-only para no-admins
+      if(id === 'navUsuarios' || id === 'navConfig') el.style.display = 'none';
+    }
+  });
+
+  // Ocultar también los nav-items de sat-descarga (tienen data-page igual)
+  document.querySelectorAll('.nav-item[data-page="sat-descarga"]').forEach(function(el){
+    if(perms && !perms.includes('sat-descarga')) el.style.display = 'none';
+  });
+  // Mostrar nav de autorizaciones solo a admin y gerencia
+  var navAut = document.getElementById('navAutorizaciones');
+  if(navAut){
+    navAut.style.display = (rol==='admin'||rol==='gerencia') ? '' : 'none';
+  }
+  } catch(e){ console.warn('aplicarPermisos error:', e); }
+}
+
 function nav(page){
-  // Seguridad: bloquear páginas admin a usuarios sin rol admin
+  // Verificar permiso del rol
+  if(!rolTieneAcceso(page)){
+    var _u=typeof USER!=='undefined'?USER:JSON.parse(sessionStorage.getItem('vef_user')||'{}');
+    toast('&#x26D4; Acceso denegado para tu rol ('+(_u&&_u.rol||'usuario')+')','err');
+    dashboard();
+    return;
+  }
+  // Bloqueo extra para páginas de admin
   const adminOnlyPages=['admin_sistema','usuarios'];
   if(adminOnlyPages.includes(page) && (!USER || USER.rol!=='admin')){
-    toast('⛔ Acceso denegado — solo administradores','err');
+    toast('&#x26D4; Acceso denegado — solo administradores','err');
     return;
   }
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.toggle('active',e.dataset.page===page));
   closeSidebar(); spin();
-  const PAGES={dashboard,clientes,proveedores,proyectos,cotizaciones,ordenes,'oc-prov':ocProv,inventario,egresos,tareas,sat,'sat-descarga':satDescarga,pdfs,usuarios,'reportes-servicio':reportesServicio,ia:moduloIA,config:configuracion};
+  const PAGES={dashboard,clientes,proveedores,proyectos,cotizaciones,ordenes,'oc-prov':ocProv,inventario,egresos,tareas,sat,'sat-descarga':satDescarga,pdfs,usuarios,'reportes-servicio':reportesServicio,ia:moduloIA,config:configuracion,autorizaciones:moduloAutorizaciones};
   Promise.resolve().then(()=>(PAGES[page]||dashboard)()).catch(function(e){
     setContent('<div class="alert alert-err" style="padding:20px">&#10060; Error: '+esc(e.message)+'<br><br><button class="btn btn-secondary" onclick="dashboard()">&#8592; Volver</button></div>');
     console.error('nav error:',e);
@@ -644,25 +736,62 @@ async function dashboard(){
     '<div style="font-size:.82rem;margin-top:6px">Conectando a la base de datos</div></div>');
   try {
     let d = {};
+    let _autPendientes = [];   // solicitudes pendientes (admin/gerencia)
+    let _misSolicitudes = [];  // mis solicitudes enviadas (otros roles)
+    // Mostrar lo que tenemos inmediatamente si hay datos en caché local
+    const _cached = sessionStorage.getItem('vef_dash_cache');
+    if(_cached){ try{ d = JSON.parse(_cached); renderDash(d); }catch{} }
+
+    // Fetch con reintentos — timeout 25s para tolerar latencia de RDS Ohio
     try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(()=>ctrl.abort(), 8000);
       const token = sessionStorage.getItem('vef_token')||'';
-      const resp = await fetch('/api/dashboard/metrics',{
+      const ctrl  = new AbortController();
+      const tid   = setTimeout(()=>ctrl.abort(), 25000);
+      const resp  = await fetch('/api/dashboard/metrics',{
         headers:{'Authorization':'Bearer '+token},
-        signal: ctrl.signal
+        signal: ctrl.signal,
+        cache: 'no-store'
       });
       clearTimeout(tid);
       if(resp.ok){
         const ct = resp.headers.get('content-type')||'';
-        if(ct.includes('application/json')) d = await resp.json();
+        if(ct.includes('application/json')){
+          d = await resp.json();
+          // Guardar en cache por si hay reconexión
+          try{ sessionStorage.setItem('vef_dash_cache', JSON.stringify(d)); }catch{}
+        }
+      } else if(resp.status === 402){
+        // Licencia vencida
+        setContent('<div style="padding:60px;text-align:center"><div style="font-size:3rem">🔒</div>'+
+          '<div style="font-size:1.2rem;font-weight:700;color:#dc2626;margin:16px 0">Licencia vencida</div>'+
+          '<div style="color:#64748b">Contacta al administrador para renovar tu acceso.</div></div>');
+        return;
       } else {
         console.warn('dashboard HTTP', resp.status);
       }
     } catch(err) {
       console.warn('dashboard fetch:', err.message);
-      d = {_warn: err.message};
+      if(!d || !d.empresa){
+        // Sin datos en cache ni del servidor — mostrar dashboard vacío
+        d = {cotizaciones_activas:0,clientes:0,proveedores:0,items_inventario:0,
+          facturas_pendientes:0,tareas_pendientes:0,ing_mes:0,egr_mes:0,cob_mes:0,
+          empresa:{nombre:'VEF Automatizacion'},cot_recientes:[],fac_vencer:[],inv_bajo:[],
+          mes_actual:'', _warn: err.message};
+      }
     }
+    // Cargar autorizaciones según rol
+    const _dashRol = (typeof USER!=='undefined'?USER:JSON.parse(sessionStorage.getItem('vef_user')||'{}')).rol||'';
+    const _dashTok = sessionStorage.getItem('vef_token')||localStorage.getItem('vef_token')||'';
+    try {
+      if(_dashRol==='admin'||_dashRol==='gerencia'){
+        const _ar = await fetch('/api/autorizaciones?estatus=pendiente',{headers:{'Authorization':'Bearer '+_dashTok}});
+        if(_ar.ok) _autPendientes = await _ar.json();
+      } else {
+        const _mr = await fetch('/api/autorizaciones/mis-solicitudes',{headers:{'Authorization':'Bearer '+_dashTok}});
+        if(_mr.ok) _misSolicitudes = await _mr.json();
+      }
+    } catch(e2){ /* silencioso */ }
+
     d = d || {};
     const emp = d.empresa||{};
     const mes = d.mes_actual||'';
@@ -919,6 +1048,58 @@ async function dashboard(){
           '</div>'+
         '</div>'+
       '</div>'+
+
+      // ═══ AUTORIZACIONES BANNER (admin/gerencia si hay pendientes) ════════
+      (_dashRol==='admin'||_dashRol==='gerencia' ? (
+        '<div id="dashAutBanner" style="margin-bottom:16px">'+
+        (_autPendientes.length ?
+          '<div onclick="nav(\'autorizaciones\')" style="background:linear-gradient(135deg,#fef9c3,#fef3c7);border:2px solid #f59e0b;border-radius:12px;padding:14px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:box-shadow .15s" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(245,158,11,.25)\'" onmouseout="this.style.boxShadow=\'\'">'+
+            '<div style="width:42px;height:42px;background:#f59e0b;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">🔐</div>'+
+            '<div style="flex:1">'+
+              '<div style="font-weight:700;color:#92400e;font-size:.95rem">'+_autPendientes.length+' solicitud'+ (_autPendientes.length>1?'es':'') +' de envío pendiente'+(_autPendientes.length>1?'s':'')+' de autorización</div>'+
+              '<div style="font-size:.78rem;color:#b45309;margin-top:2px">'+
+                _autPendientes.slice(0,3).map(function(s){ return esc(s.solicitante_nombre||'')+'  →  Cot. '+esc(s.referencia_num||''); }).join(' &nbsp;·&nbsp; ')+
+                (_autPendientes.length>3?' &nbsp;+'+(_autPendientes.length-3)+' más':'')+
+              '</div>'+
+            '</div>'+
+            '<div style="background:#f59e0b;color:#fff;border-radius:8px;padding:6px 16px;font-size:.82rem;font-weight:700;white-space:nowrap">Ver →</div>'+
+          '</div>'
+          : '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:11px 18px;display:flex;align-items:center;gap:10px">'+
+            '<span style="font-size:1.1rem">✅</span>'+
+            '<span style="font-size:.83rem;color:#166534;font-weight:600">Sin solicitudes de envío pendientes</span>'+
+          '</div>')+
+        '</div>'
+      ) : '') +
+
+      // Mis solicitudes (para usuarios sin permiso de envío directo)
+      (_dashRol!=='admin'&&_dashRol!=='gerencia'&&_misSolicitudes.length ?
+        '<div style="margin-bottom:16px">'+
+        '<div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden">'+
+          '<div style="padding:12px 18px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">'+
+            '<div style="font-size:.85rem;font-weight:700;color:#1e293b">📨 Mis Solicitudes de Envío</div>'+
+          '</div>'+
+          '<table style="width:100%;font-size:.82rem;border-collapse:collapse">'+
+          '<thead><tr style="background:#f8fafc">'+
+            '<th style="padding:7px 14px;text-align:left;color:#64748b;font-size:.7rem;text-transform:uppercase">Cotización</th>'+
+            '<th style="padding:7px 14px;text-align:left;color:#64748b;font-size:.7rem;text-transform:uppercase">Destinatario</th>'+
+            '<th style="padding:7px 14px;text-align:left;color:#64748b;font-size:.7rem;text-transform:uppercase">Fecha</th>'+
+            '<th style="padding:7px 14px;text-align:left;color:#64748b;font-size:.7rem;text-transform:uppercase">Estado</th>'+
+          '</tr></thead><tbody>'+
+          _misSolicitudes.slice(0,5).map(function(s,i){
+            var sc={pendiente:'#d97706',aprobado:'#059669',rechazado:'#dc2626'}[s.estatus]||'#64748b';
+            var ico={pendiente:'⏳',aprobado:'✅',rechazado:'❌'}[s.estatus]||'•';
+            return '<tr style="background:'+(i%2===0?'#fff':'#f8fafc')+';border-bottom:1px solid #f1f5f9">'+
+              '<td style="padding:8px 14px;font-weight:700;color:#0D2B55">'+esc(s.referencia_num||'—')+'</td>'+
+              '<td style="padding:8px 14px;font-size:.8rem;color:#64748b">'+esc(s.destinatario_email||'—')+'</td>'+
+              '<td style="padding:8px 14px;font-size:.78rem;color:#94a3b8;white-space:nowrap">'+(s.fecha_solicitud||'').slice(0,10)+'</td>'+
+              '<td style="padding:8px 14px"><span style="background:'+sc+'18;color:'+sc+';padding:2px 9px;border-radius:10px;font-size:.73rem;font-weight:700">'+ico+' '+esc(s.estatus)+'</span>'+
+              (s.estatus==='rechazado'&&s.notas_autorizador?'<div style="font-size:.71rem;color:#dc2626;margin-top:2px">'+esc(s.notas_autorizador)+'</div>':'')+
+              '</td>'+
+            '</tr>';
+          }).join('')+
+          '</tbody></table>'+
+        '</div></div>'
+      : '') +
 
       // ═══ TABLAS INFERIORES ════════════════════════════════════
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">'+
@@ -1655,9 +1836,11 @@ async function cotPDF(){
 }
 function cotEmail(){
   if(!_cotSel){toast('Selecciona una cotización','err');return;}
+  const rol = (typeof USER!=='undefined'?USER:JSON.parse(sessionStorage.getItem('vef_user')||'{}')).rol||'usuario';
+  const puedeEnviar = rol==='admin'||rol==='gerencia';
   const clienteNombre = _cotData?.cliente_nombre || 'Cliente';
   const servicio = _cotData?.proyecto_nombre || '[descripción del servicio]';
-  const mensajePredeterminado = 
+  const mensajePredeterminado =
 `Estimado/a ${clienteNombre},
 
 Por medio del presente, me es grato hacerte llegar la cotización solicitada para los servicios de ${servicio}.
@@ -1668,6 +1851,39 @@ Quedo atento a cualquier duda o comentario que puedas tener para concretar esta 
 
 Saludos cordiales,`;
 
+  if(!puedeEnviar){
+    // Usuario sin permiso → modal de solicitud de autorización
+    openModalLg('📨 Solicitar Autorización de Envío',`
+      <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:.85rem;color:#78350f">
+        <strong>⚠️ Requiere autorización</strong><br>
+        Tu rol no tiene permiso para enviar cotizaciones directamente.<br>
+        Tu solicitud será enviada a <strong>Gerencia / Administración</strong> para su aprobación.
+      </div>
+      <div class="form-grid form-grid-2" style="gap:12px">
+        <div class="field-group">
+          <label class="field-required">Para (destinatario)</label>
+          <input id="em_t" type="email" value="${esc(_cotData?.cliente_email||'')}" placeholder="cliente@empresa.com">
+        </div>
+        <div class="field-group">
+          <label>CC (con copia)</label>
+          <input id="em_c" type="email" placeholder="otro@empresa.com">
+        </div>
+        <div class="field-group" style="grid-column:1/-1">
+          <label>Asunto</label>
+          <input id="em_s" value="Cotización ${esc(_cotData?.numero_cotizacion||'')} — ${esc(_cotData?.proyecto_nombre||'Servicios')}">
+        </div>
+        <div class="field-group" style="grid-column:1/-1">
+          <label>Mensaje del correo</label>
+          <textarea id="em_m" rows="6" style="font-size:.88rem;line-height:1.6">${mensajePredeterminado}</textarea>
+          <small style="color:#64748b;font-size:.75rem">El PDF se adjuntará cuando gerencia/admin apruebe el envío</small>
+        </div>
+      </div>`,
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+     <button class="btn btn-primary" onclick="cotSolicitarAutorizacion()">📨 Enviar Solicitud</button>`);
+    return;
+  }
+
+  // Admin / gerencia → envío directo
   openModalLg('✉️ Enviar Cotización por Correo',`
     <div class="form-grid form-grid-2" style="gap:12px">
       <div class="field-group">
@@ -1690,6 +1906,28 @@ Saludos cordiales,`;
     </div>`,
   `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button class="btn btn-primary" onclick="cotEmailSend()">✉️ Enviar Cotización</button>`);
+}
+async function cotSolicitarAutorizacion(){
+  const to=ge('em_t')?.value.trim();
+  if(!to){toast('Destinatario requerido','err');return;}
+  const btn=document.querySelector('[onclick="cotSolicitarAutorizacion()"]');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando...';}
+  try{
+    await api('/api/autorizaciones','POST',{
+      tipo:'envio_cotizacion',
+      referencia_id:_cotSel,
+      referencia_num:_cotData?.numero_cotizacion||String(_cotSel),
+      destinatario_email:to,
+      destinatario_cc:ge('em_c')?.value.trim()||undefined,
+      asunto:ge('em_s')?.value.trim()||undefined,
+      mensaje:ge('em_m')?.value.trim()||undefined
+    });
+    toast('✅ Solicitud enviada a Gerencia/Admin para aprobación');
+    closeModal();
+  }catch(e){
+    toast(e.message,'err');
+    if(btn){btn.disabled=false;btn.textContent='📨 Enviar Solicitud';}
+  }
 }
 async function cotEmailSend(){
   const to=ge('em_t').value.trim();
@@ -5905,7 +6143,7 @@ async function satIniciarPython(){
   try {
     toast('⏳ Intentando iniciar el servicio SAT...');
     // Llamar endpoint que auto-inicia y espera
-    var r = await api('/api/sat/health');
+    var r = await fetch('/api/sat/health?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).catch(function(){return {ok:false};});
     if(r.ok){
       toast('✅ Servicio SAT iniciado correctamente');
       setTimeout(satDescarga, 500);
@@ -5923,405 +6161,1787 @@ dashboard();
    Flujo: 1) FIEL → 2) Solicitar → 3) Verificar → 4) Descargar
 ══════════════════════════════════════════════════════ */
 var _satToken=null, _satCer=null, _satKey=null, _satPass=null;
+var _satXmlDescargados=[]; // XMLs descargados en esta sesión
 
+
+var _satToken=null, _satCer=null, _satKey=null, _satPass=null;
+var _satMetadatos=[], _satMetadatosRecibidos=[], _satMetadatosEmitidos=[];
+var _satFiltroActual='todos';
+
+// ══════════════════════════════════════════════════════════════
+// DESCARGA MASIVA SAT — módulo principal
+// ══════════════════════════════════════════════════════════════
 async function satDescarga(){
   setPage('Descarga SAT');
+  var progress=0;
+  setContent(
+    '<div class="card"><div class="card-body" style="text-align:center;padding:50px" id="sat_checking">'+
+    '<div style="font-size:2.5rem;margin-bottom:14px">&#x1F3DB;</div>'+
+    '<div style="font-weight:700;color:#0D2B55;font-size:1.05rem">Verificando servicio SAT...</div>'+
+    '<div style="font-size:.82rem;color:#64748b;margin-top:8px" id="sat_checking_msg">Conectando...</div>'+
+    '<div style="margin-top:16px;background:#e2e8f0;border-radius:20px;height:6px;overflow:hidden">'+
+      '<div id="sat_progress_bar" style="background:#0D2B55;height:6px;width:0%;transition:width 0.4s;border-radius:20px"></div>'+
+    '</div></div></div>'
+  );
+  var progressTimer=setInterval(function(){
+    progress=Math.min(progress+10,90);
+    var b=document.getElementById('sat_progress_bar');
+    var m=document.getElementById('sat_checking_msg');
+    if(b) b.style.width=progress+'%';
+    if(m) m.textContent=progress<40?'Iniciando servicio Python...':progress<70?'Cargando modulos SAT...':'Casi listo...';
+  },600);
 
-  // Verificar servicio Python SAT — mostrar spinner mientras verifica
-  setContent('<div class="card"><div class="card-body" style="text-align:center;padding:50px">'+
-    '<div style="font-size:2rem;margin-bottom:12px">⏳</div>'+
-    '<div style="font-weight:600;color:#0D2B55">Verificando servicio SAT...</div>'+
-    '<div style="font-size:.82rem;color:#64748b;margin-top:6px">Esto puede tardar unos segundos</div>'+
-  '</div></div>');
+  var satOk=false;
+  for(var _i=0;_i<3&&!satOk;_i++){
+    try{
+      var _hr=await fetch('/api/sat/health?t='+Date.now(),{cache:'no-store'});
+      satOk=(_hr.status>=200&&_hr.status<300);
+    }catch(e){}
+    if(!satOk&&_i<2) await new Promise(function(r){setTimeout(r,2000);});
+  }
+  clearInterval(progressTimer);
+  var bar=document.getElementById('sat_progress_bar');
+  if(bar) bar.style.width='100%';
 
-  var satHealth = await api('/api/sat/health').catch(function(){ return {ok:false}; });
-
-  if(!satHealth.ok){
-    var isWin = navigator.userAgent.toLowerCase().includes('windows') || navigator.platform.toLowerCase().includes('win');
+  if(!satOk){
+    var isWin=/windows|win32|win64/i.test(navigator.userAgent+navigator.platform);
     setContent(
-      '<div class="card"><div class="card-header"><div class="card-title">🏛 Descarga Masiva SAT</div></div>'+
+      '<div class="card"><div class="card-header"><div class="card-title">&#x1F3DB; Descarga Masiva SAT</div></div>'+
       '<div class="card-body">'+
       '<div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:12px;padding:28px;text-align:center;max-width:600px;margin:0 auto">'+
-        '<div style="font-size:2.5rem;margin-bottom:10px">⚠️</div>'+
-        '<div style="font-size:1.05rem;font-weight:700;color:#dc2626;margin-bottom:6px">Servicio SAT no está corriendo</div>'+
-        '<div style="color:#64748b;font-size:.85rem;margin-bottom:20px">El módulo SAT requiere un servicio Python auxiliar en el puerto 5050.</div>'+
+        '<div style="font-size:2.5rem;margin-bottom:10px">&#9888;&#65039;</div>'+
+        '<div style="font-size:1.05rem;font-weight:700;color:#dc2626;margin-bottom:6px">Servicio SAT no esta corriendo</div>'+
+        '<div style="color:#64748b;font-size:.85rem;margin-bottom:20px">El modulo SAT requiere un servicio Python auxiliar en el puerto 5050.</div>'+
         '<div style="background:#fff;border-radius:8px;padding:16px;text-align:left;font-size:.84rem;border:1px solid #fecaca">'+
           '<strong style="color:#0D2B55">'+(isWin?'Pasos para Windows:':'Pasos para Linux/Mac:')+'</strong>'+
-          '<ol style="margin:10px 0 0 18px;line-height:2.1">'+
+          '<ol style="margin:10px 0 0 18px;line-height:2.2">'+
           (isWin?
-            '<li>Usa el archivo <strong>INICIAR_VEF_ERP.bat</strong> — inicia todo automáticamente</li>'+
-            '<li>O manualmente: abre <strong>CMD</strong> en la carpeta del proyecto</li>'+
-            '<li>Primera vez: <code style="background:#f1f5f9;padding:1px 7px;border-radius:4px">pip install flask requests lxml pyOpenSSL chilkat2</code></li>'+
-            '<li>Inicia: <code style="background:#f1f5f9;padding:1px 7px;border-radius:4px">python sat_service\sat_api.py</code></li>'+
-            '<li>Deja esa ventana CMD abierta y da click en Reintentar</li>'
+            '<li>Usa <strong>INICIAR_VEF_ERP.bat</strong></li>'+
+            '<li>O: <code style="background:#f1f5f9;padding:2px 8px;border-radius:4px">pip install satcfdi aiohttp lxml</code></li>'+
+            '<li>Ejecuta: <code style="background:#f1f5f9;padding:2px 8px;border-radius:4px">python sat_service\\sat_api.py</code></li>'+
+            '<li>Deja esa ventana abierta y clic en <strong>Reintentar</strong></li>'
           :
-            '<li>Abre una terminal en la carpeta del proyecto</li>'+
-            '<li>Primera vez: <code style="background:#f1f5f9;padding:1px 7px;border-radius:4px">pip3 install flask requests lxml pyOpenSSL chilkat2</code></li>'+
-            '<li>Inicia: <code style="background:#f1f5f9;padding:1px 7px;border-radius:4px">python3 sat_service/sat_api.py</code></li>'+
-            '<li>Deja esa terminal abierta y da click en Reintentar</li>')+
+            '<li>Terminal: <code style="background:#f1f5f9;padding:2px 8px;border-radius:4px">pip3 install satcfdi aiohttp lxml</code></li>'+
+            '<li>Ejecuta: <code style="background:#f1f5f9;padding:2px 8px;border-radius:4px">python3 sat_service/sat_api.py</code></li>'+
+            '<li>Deja esa terminal abierta y clic en <strong>Reintentar</strong></li>')+
           '</ol>'+
         '</div>'+
-        '<div style="display:flex;gap:10px;justify-content:center;margin-top:18px">'+
-          '<button class="btn btn-primary" onclick="satDescarga()">🔄 Reintentar conexión</button>'+
-          '<button class="btn btn-secondary" onclick="satIniciarPython()">🐍 Iniciar Python ahora</button>'+
+        '<div style="display:flex;gap:10px;justify-content:center;margin-top:20px">'+
+          '<button class="btn btn-primary" onclick="satDescarga()">&#x1F504; Reintentar</button>'+
+          '<button class="btn btn-secondary" onclick="satIniciarPython()">&#x1F40D; Iniciar Python ahora</button>'+
         '</div>'+
       '</div></div></div>'
     );
     return;
   }
 
-  var solicitudes = await api('/api/sat/solicitudes').catch(function(){return [];});
-  var cfdis       = await api('/api/sat/cfdis').catch(function(){return [];});
-  window._satCfdis = cfdis;
+  var solicitudes=await api('/api/sat/solicitudes').catch(function(){return [];});
+  var cfdis=await api('/api/sat/cfdis').catch(function(){return [];});
+  window._satCfdis=cfdis;
 
-  var tiposMap={I:'🟢 Ingreso',E:'🔴 Egreso',T:'🔵 Traslado',N:'💛 Nómina',P:'🟣 Pago'};
+  // Separar recibidos y emitidos de los metadatos en memoria
+  var metaRec=_satMetadatosRecibidos||[];
+  var metaEmi=_satMetadatosEmitidos||[];
+  var totalMeta=metaRec.length+metaEmi.length;
 
-  var filasCfdis = cfdis.length ? cfdis.map(function(c,i){
-    var tc = tiposMap[c.tipo_comprobante]||c.tipo_comprobante||'—';
-    return '<tr style="background:'+(i%2?'#f8fafc':'#fff')+';border-bottom:1px solid #f1f5f9">'
-      +'<td style="padding:7px 10px;font-family:monospace;font-size:.74rem;color:#0D2B55">'
-        +(c.uuid?(c.uuid.slice(0,18)+'…'):'—')+'</td>'
-      +'<td style="padding:7px 8px;white-space:nowrap">'+(c.fecha_cfdi||'—').slice(0,10)+'</td>'
-      +'<td style="padding:7px 8px">'+tc+'</td>'
-      +'<td style="padding:7px 8px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
-        +'<small style="color:#64748b">'+esc(c.emisor_rfc||'')+'</small><br>'+esc(c.emisor_nombre||'—')+'</td>'
-      +'<td style="padding:7px 8px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
-        +'<small style="color:#64748b">'+esc(c.receptor_rfc||'')+'</small><br>'+esc(c.receptor_nombre||'—')+'</td>'
-      +'<td style="padding:7px 8px;text-align:right;font-weight:700">'+fmtSym(c.total,'MXN')+'</td>'
-      +'<td style="padding:7px 8px;text-align:center">'+esc(c.moneda||'MXN')+'</td>'
-      +'<td style="padding:7px 8px;text-align:center">'
-        +(c.uuid
-          ? '<button onclick="satDescargarXML(\''+c.uuid+'\')" style="background:#0D2B55;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:.72rem;cursor:pointer">⬇ XML</button>'
-          : '—')+'</td>'
-      +'</tr>';
-  }).join('') : '<tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8">Sin CFDIs descargados aún</td></tr>';
+  _satRenderUI(solicitudes, cfdis, metaRec, metaEmi);
 
-  var filasSols = solicitudes.map(function(s){
-    var sc={pendiente:'#d97706',listo:'#059669',descargado:'#0D2B55',error:'#dc2626'}[s.estatus]||'#64748b';
-    return '<tr style="border-bottom:1px solid #f1f5f9">'
-      +'<td style="padding:8px 10px;font-family:monospace;font-size:.75rem">'+esc(s.id_solicitud||'—')+'</td>'
-      +'<td style="padding:8px">'+esc(s.fecha_inicio||'—')+'</td>'
-      +'<td style="padding:8px">'+esc(s.fecha_fin||'—')+'</td>'
-      +'<td style="padding:8px">'+esc(s.tipo||'CFDI')+'</td>'
-      +'<td style="padding:8px"><span style="background:'+sc+'20;color:'+sc+';padding:2px 8px;border-radius:12px;font-size:.74rem;font-weight:700">'+esc(s.estatus||'pendiente')+'</span></td>'
-      +'<td style="padding:8px">'
-        +(s.estatus==='listo'
-          ? '<button onclick="satUsarSolicitud(\''+esc(s.id_solicitud)+'\')" style="background:#059669;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:.75rem;cursor:pointer">⬇ Descargar</button>'
-          : '')+'</td>'
-      +'</tr>';
-  }).join('');
-
-  setContent(
-    // ══ Card principal ═══════════════════════════════════════
-    '<div class="card" style="margin-bottom:16px">'
-    +'<div class="card-header">'
-      +'<div class="card-title">🏛 Descarga Masiva SAT — CFDI</div>'
-      +'<button class="btn btn-secondary btn-sm" onclick="satDescarga()">🔄 Actualizar</button>'
-    +'</div>'
-    +'<div class="card-body">'
-
-    // Indicador de pasos
-    +'<div style="display:flex;margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0" id="sat_pasos">'
-      +['1. Cargar FIEL','2. Solicitar','3. Verificar','4. Descargar'].map(function(s,i){
-        return '<div id="sat_paso'+(i+1)+'" style="flex:1;padding:10px 8px;text-align:center;font-size:.78rem;font-weight:600;'
-          +'color:'+(i===0?'#0D2B55':'#94a3b8')+';border-right:'+(i<3?'1px solid #e2e8f0':'')+';background:'+(i===0?'#e0e7ff':'')+'">'
-          +s+'</div>';
-      }).join('')
-    +'</div>'
-
-    // ── PASO 1: FIEL ────────────────────────────────────────
-    +'<div id="sat_sec1">'
-    +'<div style="background:#fffbeb;border-left:3px solid #d97706;padding:10px 14px;border-radius:4px;font-size:.83rem;margin-bottom:14px">'
-      +'🔐 <strong>FIEL (Firma Electrónica Avanzada)</strong> — Necesitas tus archivos <strong>.cer</strong> y <strong>.key</strong> del SAT.'
-    +'</div>'
-    +'<div class="form-grid form-grid-2" style="gap:14px">'
-      +'<div class="field-group"><label style="font-weight:700">📄 Certificado (.cer)</label>'
-        +'<input type="file" id="sat_cer_file" accept=".cer" style="display:block;width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px">'
-        +'<small style="color:#64748b">Archivo .cer de tu FIEL del SAT</small></div>'
-      +'<div class="field-group"><label style="font-weight:700">🔑 Llave Privada (.key)</label>'
-        +'<input type="file" id="sat_key_file" accept=".key" style="display:block;width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px">'
-        +'<small style="color:#64748b">Archivo .key de tu FIEL del SAT</small></div>'
-      +'<div class="field-group"><label style="font-weight:700">🔒 Contraseña de la llave</label>'
-        +'<input type="password" id="sat_pass_in" placeholder="Contraseña de tu archivo .key" style="width:100%"></div>'
-      +'<div class="field-group" style="display:flex;align-items:flex-end">'
-        +'<button class="btn btn-primary" style="width:100%" onclick="satAutenticar()">🔐 Autenticar con SAT</button></div>'
-    +'</div>'
-    +'<div id="sat_auth_msg" style="margin-top:10px;font-size:.85rem"></div>'
-    +'</div>'
-
-    // ── PASO 2: Solicitar ──────────────────────────────────
-    +'<div id="sat_sec2" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">'
-    +'<div style="font-size:.85rem;font-weight:700;color:#0D2B55;margin-bottom:12px">📤 Paso 2 — Solicitar descarga al SAT</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">'
-      +'<div class="field-group"><label>📅 Fecha Inicio</label>'
-        +'<input type="date" id="sat_desde"></div>'
-      +'<div class="field-group"><label>📅 Fecha Fin</label>'
-        +'<input type="date" id="sat_hasta"></div>'
-      +'<div class="field-group"><label>Tipo</label>'
-        +'<select id="sat_tipo_dl">'
-          +'<option value="CFDI">CFDI (XML completo)</option>'
-          +'<option value="METADATA">Metadata</option>'
-        +'</select></div>'
-      +'<button class="btn btn-primary" onclick="satSolicitar()" style="white-space:nowrap">📤 Solicitar</button>'
-    +'</div>'
-    +'<div id="sat_sol_msg" style="margin-top:10px;font-size:.85rem"></div>'
-    +'</div>'
-
-    // ── PASO 3: Verificar ─────────────────────────────────
-    +'<div id="sat_sec3" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">'
-    +'<div style="font-size:.85rem;font-weight:700;color:#0D2B55;margin-bottom:12px">🔍 Paso 3 — Verificar estado de solicitud</div>'
-    +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
-      +'<div class="field-group" style="flex:1;min-width:260px"><label>ID de Solicitud</label>'
-        +'<input id="sat_id_sol" placeholder="ID devuelto por el SAT al solicitar"></div>'
-      +'<button class="btn btn-secondary" onclick="satVerificar()" style="white-space:nowrap">🔍 Verificar Estado</button>'
-    +'</div>'
-    +'<div id="sat_ver_msg" style="margin-top:10px;font-size:.85rem"></div>'
-    +'<div id="sat_pkgs" style="margin-top:10px"></div>'
-    +'</div>'
-
-    +'</div></div>'
-
-    // ══ CFDIs descargados ═══════════════════════════════════
-    +'<div class="card" style="margin-bottom:16px">'
-    +'<div class="card-header">'
-      +'<div class="card-title">📂 CFDIs Descargados ('+cfdis.length+')</div>'
-      +'<button class="btn btn-success btn-sm" onclick="satExportarCSV()">📥 Exportar CSV</button>'
-    +'</div>'
-    +'<div class="card-body" style="padding:0">'
-    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.82rem">'
-    +'<thead><tr style="background:#0D2B55;color:#fff">'
-      +'<th style="padding:8px 10px;text-align:left">UUID</th>'
-      +'<th style="padding:8px">Fecha</th><th style="padding:8px">Tipo</th>'
-      +'<th style="padding:8px;text-align:left">Emisor</th>'
-      +'<th style="padding:8px;text-align:left">Receptor</th>'
-      +'<th style="padding:8px;text-align:right">Total</th>'
-      +'<th style="padding:8px">Moneda</th><th style="padding:8px">XML</th>'
-    +'</tr></thead>'
-    +'<tbody>'+filasCfdis+'</tbody>'
-    +'</table></div>'
-    +'</div></div>'
-
-    // ══ Historial solicitudes ═══════════════════════════════
-    +(solicitudes.length
-      ? '<div class="card"><div class="card-header"><div class="card-title">📋 Historial de Solicitudes</div></div>'
-        +'<div class="card-body" style="padding:0">'
-        +'<table style="width:100%;border-collapse:collapse;font-size:.82rem">'
-        +'<thead><tr style="background:#f1f5f9">'
-          +'<th style="padding:8px 10px">ID Solicitud</th><th style="padding:8px">Desde</th>'
-          +'<th style="padding:8px">Hasta</th><th style="padding:8px">Tipo</th>'
-          +'<th style="padding:8px">Estatus</th><th style="padding:8px">Acción</th>'
-        +'</tr></thead>'
-        +'<tbody>'+filasSols+'</tbody></table>'
-        +'</div></div>'
-      : '')
-  );
-
-  // Setear fechas por defecto
-  var hoy = new Date();
-  var inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-  var ds = ge('sat_desde'); if(ds) ds.value = inicio.toISOString().slice(0,10);
-  var dh = ge('sat_hasta'); if(dh) dh.value = hoy.toISOString().slice(0,10);
-
-  // Si ya tenemos token, mostrar secciones
-  if(_satToken){ satMostrarPasos(2); }
+  var hoy=new Date();
+  var inicio=new Date(hoy.getFullYear(),hoy.getMonth(),1);
+  var ds=ge('sat_desde'); if(ds) ds.value=inicio.toISOString().slice(0,10);
+  var dh=ge('sat_hasta'); if(dh) dh.value=hoy.toISOString().slice(0,10);
+  if(_satToken) satMostrarPasos(2);
 }
 
-// ── Helpers UI ──────────────────────────────────────────────────
+function _satRenderUI(solicitudes, cfdis, metaRec, metaEmi){
+  var totalMeta=(metaRec||[]).length+(metaEmi||[]).length;
+
+  setContent(
+    // ══ Tabs principales ══════════════════════════════════════
+    '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">'+
+      '<button id="satTab_descarga" class="btn btn-primary btn-sm" onclick="satSwitchTab(\'descarga\')">&#x1F4E5; Descarga Masiva</button>'+
+      '<button id="satTab_facturas" class="btn btn-secondary btn-sm" onclick="satSwitchTab(\'facturas\')">&#x1F4CA; Facturas SAT ('+totalMeta+')</button>'+
+      '<button id="satTab_xml" class="btn btn-secondary btn-sm" onclick="satSwitchTab(\'xml\')">&#x1F4C4; XMLs ('+(_satXmlDescargados||[]).length+')</button>'+
+      '<button id="satTab_cfdisbd" class="btn btn-secondary btn-sm" onclick="satSwitchTab(\'cfdisbd\')">&#x1F5C4; CFDIs en BD</button>'+
+      '<button id="satTab_validar"  class="btn btn-secondary btn-sm" onclick="satSwitchTab(\'validar\')">&#x2714;&#xFE0F; Validar CFDI</button>'+
+    '</div>'+
+
+    // ══ TAB: Descarga Masiva ══════════════════════════════════
+    '<div id="satTab_descarga_content">'+
+    _satRenderDescarga(solicitudes, cfdis)+
+    '</div>'+
+
+    // ══ TAB: Facturas SAT ════════════════════════════════════
+    '<div id="satTab_facturas_content" style="display:none">'+
+    _satRenderFacturas(metaRec, metaEmi, cfdis)+
+    '</div>'+
+
+    // ══ TAB: XMLs Descargados ══════════════════════════════════
+    '<div id="satTab_xml_content" style="display:none">'+
+    _satRenderXmlDescargados()+
+    '</div>'+
+
+    // ══ TAB: CFDIs en BD ══════════════════════════════════════
+    '<div id="satTab_cfdisbd_content" style="display:none">'+
+    '<div style="padding:40px;text-align:center;color:#94a3b8"><span style="font-size:2rem">🗄️</span><div style="margin-top:8px">Cargando CFDIs...</div></div>'+
+    '</div>'+
+
+    // ══ TAB: Validar CFDI ════════════════════════════════════
+    '<div id="satTab_validar_content" style="display:none">'+
+    _satRenderValidar()+
+    '</div>'
+  );
+}
+
+function satSwitchTab(tab){
+  ['descarga','facturas','xml','cfdisbd','validar'].forEach(function(t){
+    var c=document.getElementById('satTab_'+t+'_content');
+    var b=document.getElementById('satTab_'+t);
+    if(c) c.style.display=t===tab?'block':'none';
+    if(b){ b.className=t===tab?'btn btn-primary btn-sm':'btn btn-secondary btn-sm'; }
+  });
+  // Render XML tab siempre al abrir
+  if(tab==='xml'){
+    // Auto-importar de _satCfdis si tienen xml y _satXmlDescargados está vacío
+    if(!(_satXmlDescargados||[]).length && (window._satCfdis||[]).length){
+      (window._satCfdis||[]).forEach(function(c){
+        if(!c.uuid || !c.xml) return;
+        _satXmlDescargados = (_satXmlDescargados||[]).filter(function(x){return x.uuid!==c.uuid;});
+        _satXmlDescargados.push({
+          uuid:c.uuid, xml:c.xml||'', fecha:c.fecha||c.fecha_cfdi||'',
+          tipo:c.tipo||c.tipo_comprobante||'', serie:c.serie||'', folio:c.folio||'',
+          subtotal:c.subtotal||'0', descuento:c.descuento||'0', iva:c.iva||'0',
+          total:c.total||'0', moneda:c.moneda||'MXN',
+          forma_pago:c.forma_pago||'', metodo_pago:c.metodo_pago||'',
+          uso_cfdi:c.uso_cfdi||'', emisor_rfc:c.emisor_rfc||'',
+          emisor_nombre:c.emisor_nombre||'', receptor_rfc:c.receptor_rfc||'',
+          receptor_nombre:c.receptor_nombre||'',
+          num_conceptos:(c.conceptos||[]).length, conceptos:c.conceptos||[]
+        });
+      });
+    }
+    var el=document.getElementById('satTab_xml_content');
+    if(el) el.innerHTML = typeof _satRenderXmlDescargados === 'function'
+      ? _satRenderXmlDescargados()
+      : '<div style="padding:40px;text-align:center;color:#94a3b8">Cargando...</div>';
+    var btn=document.getElementById('satTab_xml');
+    if(btn) btn.textContent='\uD83D\uDCC4 XMLs ('+(_satXmlDescargados||[]).length+')';
+  }
+  // Cargar CFDIs desde BD al abrir ese tab
+  if(tab==='cfdisbd'){
+    satCfdisBdCargar();
+  }
+}
+
+// ── Render Descarga Masiva ────────────────────────────────────
+function _satRenderDescarga(solicitudes, cfdis){
+  var filasSols=(solicitudes||[]).map(function(s){
+    var sc={pendiente:'#d97706',listo:'#059669',descargado:'#0D2B55',error:'#dc2626'}[s.estatus]||'#64748b';
+    return '<tr style="border-bottom:1px solid #f1f5f9">'+
+      '<td style="padding:8px 10px;font-family:monospace;font-size:.73rem">'+esc(s.id_solicitud||'—')+'</td>'+
+      '<td style="padding:8px">'+esc(s.fecha_inicio||'—')+'</td>'+
+      '<td style="padding:8px">'+esc(s.fecha_fin||'—')+'</td>'+
+      '<td style="padding:8px"><span style="background:#e0e7ff;color:#3730a3;padding:2px 7px;border-radius:10px;font-size:.73rem">'+esc(s.tipo||'CFDI')+'</span></td>'+
+      '<td style="padding:8px"><span style="background:'+sc+'20;color:'+sc+';padding:2px 8px;border-radius:12px;font-size:.74rem;font-weight:700">'+esc(s.estatus||'pendiente')+'</span></td>'+
+      '<td style="padding:8px">'+
+        (s.estatus==='listo'
+          ? '<button onclick="satDescargarPaquete(\''+esc(s.id_solicitud)+'\',\''+esc(s.id_paquete||'')+'\',\''+esc(s.tipo||'CFDI')+'\')" style="background:#059669;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:.75rem;cursor:pointer">&#x2B07; Descargar</button>'
+          : s.estatus==='pendiente'
+          ? '<button onclick="satVerificarId(\''+esc(s.id_solicitud)+'\')" style="background:#d97706;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:.75rem;cursor:pointer">&#x1F50D; Verificar</button>'
+          : '')+'</td>'+
+      '<td style="padding:8px"><button data-id="'+esc(s.id_solicitud)+'" onclick="satBorrarSolicitud(this.dataset.id)" style="background:transparent;border:1px solid #fca5a5;color:#dc2626;border-radius:4px;padding:2px 7px;font-size:.72rem;cursor:pointer" title="Eliminar esta solicitud">🗑</button></td>'+
+      '</tr>';
+  }).join('');
+
+  return '<div class="card" style="margin-bottom:16px">'+
+    '<div class="card-header"><div class="card-title">&#x1F3DB; Descarga Masiva SAT</div>'+
+      '<button class="btn btn-secondary btn-sm" onclick="satDescarga()">&#x1F504; Actualizar</button></div>'+
+    '<div class="card-body">'+
+
+    // Pasos
+    '<div style="display:flex;margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0" id="sat_pasos">'+
+      ['1. Cargar FIEL','2. Solicitar','3. Verificar','4. Descargar'].map(function(s,i){
+        return '<div id="sat_paso'+(i+1)+'" style="flex:1;padding:10px 8px;text-align:center;font-size:.78rem;font-weight:600;color:'+(i===0?'#0D2B55':'#94a3b8')+';border-right:'+(i<3?'1px solid #e2e8f0':'')+';background:'+(i===0?'#e0e7ff':'')+'">'+ s+'</div>';
+      }).join('')+
+    '</div>'+
+
+    // Paso 1: FIEL
+    '<div id="sat_sec1">'+
+    '<div style="background:#fffbeb;border-left:3px solid #d97706;padding:10px 14px;border-radius:4px;font-size:.83rem;margin-bottom:14px">'+
+      '&#x1F510; <strong>FIEL (Firma Electronica Avanzada)</strong> — Necesitas tus archivos <strong>.cer</strong> y <strong>.key</strong> del SAT.</div>'+
+    '<div class="form-grid form-grid-2" style="gap:14px">'+
+      '<div class="field-group"><label style="font-weight:700">&#x1F4C4; Certificado (.cer)</label>'+
+        '<input type="file" id="sat_cer_file" accept=".cer" style="display:block;width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px">'+
+        '<small style="color:#64748b">Archivo .cer de tu FIEL del SAT</small></div>'+
+      '<div class="field-group"><label style="font-weight:700">&#x1F511; Llave Privada (.key)</label>'+
+        '<input type="file" id="sat_key_file" accept=".key" style="display:block;width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px">'+
+        '<small style="color:#64748b">Archivo .key de tu FIEL del SAT</small></div>'+
+      '<div class="field-group"><label style="font-weight:700">&#x1F512; Contrasena de la llave</label>'+
+        '<input type="password" id="sat_pass_in" placeholder="Contrasena de tu archivo .key" style="width:100%"></div>'+
+      '<div class="field-group" style="display:flex;align-items:flex-end">'+
+        '<button class="btn btn-primary" style="width:100%" onclick="satAutenticar()">&#x1F510; Autenticar con SAT</button></div>'+
+    '</div>'+
+    '<div id="sat_auth_msg" style="margin-top:10px;font-size:.85rem"></div>'+
+    '</div>'+
+
+    // Paso 2: Solicitar
+    '<div id="sat_sec2" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">'+
+    '<div style="font-size:.85rem;font-weight:700;color:#0D2B55;margin-bottom:12px">&#x1F4E4; Paso 2 — Solicitar descarga al SAT</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">'+
+      '<div class="field-group"><label>&#x1F4C5; Fecha Inicio</label><input type="date" id="sat_desde"></div>'+
+      '<div class="field-group"><label>&#x1F4C5; Fecha Fin</label><input type="date" id="sat_hasta"></div>'+
+      '<div class="field-group"><label>Tipo</label>'+
+        '<select id="sat_tipo_dl">'+
+          '<option value="METADATA" selected>METADATA (rápido)</option>'+
+          '<option value="CFDI">CFDI (XML completo)</option>'+
+        '</select></div>'+
+      '<button class="btn btn-primary" onclick="satSolicitar()" style="white-space:nowrap">&#x1F4E5; Recibidas</button>'+
+      '<button class="btn btn-secondary" onclick="satSolicitarEmitidos()" style="white-space:nowrap">&#x1F4E4; Emitidas</button>'+
+    '</div>'+
+    '<div id="sat_sol_msg" style="margin-top:10px;font-size:.85rem"></div>'+
+    '</div>'+
+
+    // Paso 3: Verificar
+    '<div id="sat_sec3" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">'+
+    '<div style="font-size:.85rem;font-weight:700;color:#0D2B55;margin-bottom:12px">&#x1F50D; Paso 3 — Verificar estado</div>'+
+    '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
+      '<div class="field-group" style="flex:1;min-width:260px"><label>ID de Solicitud</label>'+
+        '<input id="sat_id_sol" placeholder="ID devuelto por el SAT al solicitar"></div>'+
+      '<button class="btn btn-secondary" onclick="satVerificar()" style="white-space:nowrap">&#x1F50D; Verificar Estado</button>'+
+    '</div>'+
+    '<div id="sat_ver_msg" style="margin-top:10px;font-size:.85rem"></div>'+
+    '<div id="sat_pkgs" style="margin-top:10px"></div>'+
+    '</div>'+
+
+    '</div></div>'+
+
+    // Historial
+    (solicitudes&&solicitudes.length?
+      '<div class="card"><div class="card-header"><div class="card-title">&#x1F4CB; Historial de Solicitudes</div>'+
+      '<button onclick="satBorrarHistorialTodo()" style="background:transparent;border:1px solid #fca5a5;color:#dc2626;border-radius:6px;padding:4px 12px;font-size:.78rem;cursor:pointer;font-weight:600" title="Borrar todo el historial">🗑 Borrar historial</button>'+
+      '</div>'+
+      '<div class="card-body" style="padding:0"><div style="overflow-x:auto">'+
+      '<table style="width:100%;border-collapse:collapse;font-size:.82rem">'+
+      '<thead><tr style="background:#f1f5f9">'+
+        '<th style="padding:8px 10px;text-align:left">ID Solicitud</th><th style="padding:8px">Desde</th>'+
+        '<th style="padding:8px">Hasta</th><th style="padding:8px">Tipo</th>'+
+        '<th style="padding:8px">Estatus</th><th style="padding:8px">Accion</th>'+
+        '<th style="padding:8px"></th>'+
+      '</tr></thead><tbody>'+filasSols+'</tbody></table>'+
+      '</div></div></div>' : '');
+}
+
+// ── Render Facturas SAT (tabla principal con metadatos) ────────
+function _satRenderFacturas(metaRec, metaEmi, cfdis){
+  var tiposMap={
+    I:'<span style="background:#dcfce7;color:#166534;padding:2px 9px;border-radius:10px;font-size:.73rem;font-weight:700">&#x1F7E2; Ingreso</span>',
+    E:'<span style="background:#fee2e2;color:#991b1b;padding:2px 9px;border-radius:10px;font-size:.73rem;font-weight:700">&#x1F534; Egreso</span>',
+    T:'<span style="background:#dbeafe;color:#1e40af;padding:2px 9px;border-radius:10px;font-size:.73rem;font-weight:700">&#x1F535; Traslado</span>',
+    N:'<span style="background:#fef9c3;color:#854d0e;padding:2px 9px;border-radius:10px;font-size:.73rem;font-weight:700">&#x1F7E1; N&oacute;mina</span>',
+    P:'<span style="background:#f3e8ff;color:#6b21a8;padding:2px 9px;border-radius:10px;font-size:.73rem;font-weight:700">&#x1F7E3; Pago</span>'
+  };
+
+  // Estado global de ordenamiento
+  window._satSort = window._satSort || {col:'fecha_emision', asc:false};
+
+  function sortData(rows){
+    var col=window._satSort.col, asc=window._satSort.asc;
+    return rows.slice().sort(function(a,b){
+      var va=a[col]||'', vb=b[col]||'';
+      if(col==='monto'){ va=parseFloat(va)||0; vb=parseFloat(vb)||0; }
+      if(va<vb) return asc?-1:1;
+      if(va>vb) return asc?1:-1;
+      return 0;
+    });
+  }
+
+  function thBtn(label, col){
+    var active=window._satSort.col===col;
+    var arrow=active?(window._satSort.asc?' &#x25B2;':' &#x25BC;'):'';
+    return '<th onclick="satSortFacturas(\''+col+'\')" style="padding:9px 10px;text-align:left;font-size:.76rem;cursor:pointer;white-space:nowrap;user-select:none;'+(active?'background:#1e3a5f':'')+'">'+label+arrow+'</th>';
+  }
+
+  var thead='<thead><tr style="background:#0D2B55;color:#fff">'+
+    thBtn('UUID','uuid')+
+    thBtn('Fecha','fecha_emision')+
+    thBtn('Tipo','tipo')+
+    thBtn('RFC Emisor','rfc_emisor')+
+    thBtn('Nombre Emisor','nombre_emisor')+
+    thBtn('RFC Receptor','rfc_receptor')+
+    thBtn('Monto','monto')+
+    thBtn('Estatus','estatus')+
+    thBtn('Cert. SAT','fecha_certificacion')+
+    thBtn('PAC','rfc_pac')+
+    '<th style="padding:9px 10px;font-size:.76rem">Acciones</th>'+
+  '</tr></thead>';
+
+  function filas(rows, tipo_dir){
+    var sorted=sortData(rows);
+    return sorted.map(function(c,i){
+      var esRec=(tipo_dir==='recibido');
+      var vigente=(c.estatus||'').toLowerCase()==='vigente';
+      var monto=parseFloat(c.monto||0);
+      return '<tr data-idx="'+i+'" data-dir="'+tipo_dir+'" '+
+        'style="background:'+(i%2?'#f8fafc':'#fff')+';border-bottom:1px solid #f1f5f9;cursor:pointer" '+
+        'onclick="satVerDetalle(this,event)">'+
+        '<td style="padding:7px 10px;font-family:monospace;font-size:.72rem;color:#0D2B55;white-space:nowrap" title="'+(c.uuid||'')+'">'+
+          (c.uuid?('<span style="display:inline-block;max-width:120px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom">'+esc(c.uuid)+'</span>'):'—')+'</td>'+
+        '<td style="padding:7px 8px;white-space:nowrap;font-size:.8rem">'+(c.fecha_emision||'—').slice(0,10)+'</td>'+
+        '<td style="padding:7px 8px;text-align:center">'+(tiposMap[c.tipo||c.efecto]||c.tipo||'—')+'</td>'+
+        '<td style="padding:7px 8px;font-family:monospace;font-size:.75rem;color:#374151">'+esc(c.rfc_emisor||'—')+'</td>'+
+        '<td style="padding:7px 8px;max-width:220px">'+
+          '<div style="font-size:.8rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(c.nombre_emisor||'')+'">'+esc(c.nombre_emisor||'—')+'</div>'+
+        '</td>'+
+        '<td style="padding:7px 8px;font-family:monospace;font-size:.75rem;color:#374151">'+esc(c.rfc_receptor||'—')+'</td>'+
+        '<td style="padding:7px 8px;text-align:right;font-weight:700;font-size:.85rem;white-space:nowrap">'+
+          (monto>0?fmtSym(monto,'MXN'):'<span style="color:#94a3b8">MX$0.00</span>')+'</td>'+
+        '<td style="padding:7px 8px;text-align:center">'+
+          '<span style="background:'+(vigente?'#f0fdf4':'#fef2f2')+';color:'+(vigente?'#059669':'#dc2626')+
+          ';padding:2px 9px;border-radius:10px;font-size:.72rem;font-weight:700">'+esc(c.estatus||'—')+'</span></td>'+
+        '<td style="padding:7px 8px;font-size:.72rem;color:#64748b;white-space:nowrap">'+
+          (c.fecha_certificacion||'—').slice(0,10)+'</td>'+
+        '<td style="padding:7px 8px;font-family:monospace;font-size:.72rem;color:#6366f1">'+esc(c.rfc_pac||'—')+'</td>'+
+        '<td style="padding:7px 8px;white-space:nowrap">'+
+          (c.uuid?
+            '<div style="display:flex;gap:5px">'+
+            '<button onclick="event.stopPropagation();satValidarUUID(\''+esc(c.uuid)+'\',\''+esc(c.rfc_emisor||'')+'\',\''+esc(c.rfc_receptor||'')+'\',\''+esc(c.monto||'0')+'\')" '+
+              'title="Validar en SAT" style="background:#0D2B55;color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:.72rem;cursor:pointer">&#x2714; Validar</button>'+
+            '<button onclick="event.stopPropagation();satDescXML(\''+esc(c.uuid)+'\')" '+
+              'title="Descargar XML" style="background:#059669;color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:.72rem;cursor:pointer">&#x2B07; XML</button>'+
+            '</div>'
+            : '—')+'</td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  var totalRec=metaRec.length, totalEmi=metaEmi.length, totalMeta=totalRec+totalEmi;
+
+  // Calcular totales
+  function sumMonto(rows){ return rows.reduce(function(a,c){return a+parseFloat(c.monto||0);},0); }
+  var totalRecMonto=sumMonto(metaRec), totalEmiMonto=sumMonto(metaEmi);
+  var cancelRec=metaRec.filter(function(c){return (c.estatus||'').toLowerCase()==='cancelado';}).length;
+  var cancelEmi=metaEmi.filter(function(c){return (c.estatus||'').toLowerCase()==='cancelado';}).length;
+
+  return '<div class="card">'+
+    '<div class="card-header">'+
+      '<div class="card-title">&#x1F4CA; Facturas SAT ('+totalMeta+' registros)</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="btn btn-success btn-sm" onclick="satExportarCSVMeta()">&#x1F4E5; Exportar CSV</button>'+
+        '<button class="btn btn-secondary btn-sm" onclick="satDescarga()">&#x1F504; Actualizar</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="card-body" style="padding:0">'+
+
+    // ── Filtros ──────────────────────────────────────────────────
+    '<div style="padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'+
+      '<input id="sat_buscar" placeholder="&#x1F50D; UUID, RFC o nombre..." '+
+        'style="flex:1;min-width:200px;padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem" '+
+        'oninput="satFiltrarTabla()">'+
+      '<input type="date" id="sat_fi" title="Fecha desde" onchange="satFiltrarTabla()" '+
+        'style="padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem">'+
+      '<input type="date" id="sat_ff" title="Fecha hasta" onchange="satFiltrarTabla()" '+
+        'style="padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem">'+
+      '<select id="sat_filtro_tipo" onchange="satFiltrarTabla()" style="padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem">'+
+        '<option value="">Todos los tipos</option>'+
+        '<option value="I">Ingreso</option><option value="E">Egreso</option>'+
+        '<option value="T">Traslado</option><option value="N">N&oacute;mina</option><option value="P">Pago</option>'+
+      '</select>'+
+      '<select id="sat_filtro_estatus" onchange="satFiltrarTabla()" style="padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.84rem">'+
+        '<option value="">Todos</option><option value="Vigente">Vigentes</option><option value="Cancelado">Cancelados</option>'+
+      '</select>'+
+    '</div>'+
+
+    // ── Tabs ─────────────────────────────────────────────────────
+    '<div style="display:flex;gap:0;border-bottom:2px solid #e2e8f0;padding:0 16px">'+
+      '<button id="sat_tab_rec" onclick="satTabFactura(\'rec\')" style="padding:10px 18px;border:none;background:none;font-size:.85rem;font-weight:700;color:#0D2B55;border-bottom:3px solid #0D2B55;cursor:pointer;margin-bottom:-2px">'+
+        '&#x1F4E5; Recibidas ('+totalRec+')</button>'+
+      '<button id="sat_tab_emi" onclick="satTabFactura(\'emi\')" style="padding:10px 18px;border:none;background:none;font-size:.85rem;font-weight:600;color:#64748b;cursor:pointer;margin-bottom:-2px">'+
+        '&#x1F4E4; Emitidas ('+totalEmi+')</button>'+
+    '</div>'+
+
+    // ── Tabla recibidas ──────────────────────────────────────────
+    '<div id="sat_panel_rec" style="overflow-x:auto">'+
+      (totalRec
+        ? '<table id="sat_tabla_rec" style="width:100%;border-collapse:collapse;font-size:.82rem">'+thead+
+          '<tbody id="sat_tbody_rec">'+filas(metaRec,'recibido')+'</tbody></table>'
+        : '<div style="padding:50px;text-align:center;color:#94a3b8">'+
+            '<div style="font-size:2.5rem;margin-bottom:10px">&#x1F4C2;</div>'+
+            '<div style="font-weight:600;margin-bottom:8px">Sin facturas recibidas</div>'+
+            '<div style="font-size:.85rem">Usa <b>Descarga Masiva</b> con tipo METADATA</div>'+
+            '<button class="btn btn-primary" style="margin-top:14px" onclick="satSwitchTab(\'descarga\')">&#x1F4E5; Ir a Descarga</button>'+
+          '</div>')+
+    '</div>'+
+
+    // ── Tabla emitidas ───────────────────────────────────────────
+    '<div id="sat_panel_emi" style="display:none;overflow-x:auto">'+
+      (totalEmi
+        ? '<table id="sat_tabla_emi" style="width:100%;border-collapse:collapse;font-size:.82rem">'+thead+
+          '<tbody id="sat_tbody_emi">'+filas(metaEmi,'emitido')+'</tbody></table>'
+        : '<div style="padding:50px;text-align:center;color:#94a3b8">'+
+            '<div style="font-size:2.5rem;margin-bottom:10px">&#x1F4C4;</div>'+
+            '<div style="font-weight:600;margin-bottom:8px">Sin facturas emitidas</div>'+
+            '<button class="btn btn-primary" style="margin-top:14px" onclick="satSwitchTab(\'descarga\')">&#x1F4E4; Solicitar emitidas</button>'+
+          '</div>')+
+    '</div>'+
+
+    // ── Resumen totales ──────────────────────────────────────────
+    (totalMeta?
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:2px solid #e2e8f0">'+
+        '<div style="padding:14px 18px;text-align:center;border-right:1px solid #f1f5f9">'+
+          '<div style="font-size:1.4rem;font-weight:800;color:#0D2B55">'+totalMeta+'</div>'+
+          '<div style="font-size:.76rem;color:#64748b;margin-top:2px">Total CFDIs</div></div>'+
+        '<div style="padding:14px 18px;text-align:center;border-right:1px solid #f1f5f9">'+
+          '<div style="font-size:1.1rem;font-weight:800;color:#059669">'+fmtSym(totalRecMonto,'MXN')+'</div>'+
+          '<div style="font-size:.76rem;color:#64748b;margin-top:2px">Total Recibido</div></div>'+
+        '<div style="padding:14px 18px;text-align:center;border-right:1px solid #f1f5f9">'+
+          '<div style="font-size:1.1rem;font-weight:800;color:#2563eb">'+fmtSym(totalEmiMonto,'MXN')+'</div>'+
+          '<div style="font-size:.76rem;color:#64748b;margin-top:2px">Total Emitido</div></div>'+
+        '<div style="padding:14px 18px;text-align:center">'+
+          '<div style="font-size:1.4rem;font-weight:800;color:#dc2626">'+(cancelRec+cancelEmi)+'</div>'+
+          '<div style="font-size:.76rem;color:#64748b;margin-top:2px">Cancelados</div></div>'+
+      '</div>' : '')+
+
+    '</div></div>'+
+
+    // ── Panel detalle CFDI ───────────────────────────────────────
+    '<div id="sat_detalle_cfdi" style="display:none"></div>';
+}
+
+// Ordenar columnas
+function satSortFacturas(col){
+  if(window._satSort.col===col){
+    window._satSort.asc=!window._satSort.asc;
+  } else {
+    window._satSort={col:col, asc:col==='fecha_emision'?false:true};
+  }
+  // Re-render tabla activa
+  var panelF=document.getElementById('satTab_facturas_content');
+  if(panelF) panelF.innerHTML=_satRenderFacturas(
+    _satMetadatosRecibidos||[], _satMetadatosEmitidos||[], window._satCfdis||[]);
+  // Restaurar tab activo
+  var recVis=document.getElementById('sat_panel_rec');
+  if(recVis && recVis.style.display==='none') satTabFactura('emi');
+}
+
+// Descargar XML individual por UUID — con modal de progreso
+async function satDescXML(uuid){
+  if(!uuid){ toast('UUID no disponible','err'); return; }
+  if(!_satToken){ toast('Primero autentica tu FIEL','err'); return; }
+
+  // Modal de progreso
+  var modal = document.createElement('div');
+  modal.id = 'satXmlModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:16px;padding:32px 36px;max-width:480px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)">'+
+    '<div style="font-size:2.5rem;margin-bottom:12px">&#x1F4E5;</div>'+
+    '<div style="font-weight:700;font-size:1.05rem;color:#0D2B55;margin-bottom:6px">Descargando XML del SAT</div>'+
+    '<div style="font-family:monospace;font-size:.75rem;color:#64748b;margin-bottom:16px;word-break:break-all">'+esc(uuid)+'</div>'+
+    '<div style="background:#f1f5f9;border-radius:20px;height:8px;overflow:hidden;margin-bottom:12px">'+
+      '<div id="satXmlBar" style="background:#0D2B55;height:8px;width:5%;border-radius:20px;transition:width 1s"></div>'+
+    '</div>'+
+    '<div id="satXmlMsg" style="font-size:.85rem;color:#64748b">Enviando solicitud al SAT...</div>'+
+    '<div style="font-size:.78rem;color:#94a3b8;margin-top:10px">Este proceso puede tardar hasta 3 minutos</div>'+
+    '<button onclick="document.getElementById(\'satXmlModal\').remove()" '+
+      'style="margin-top:18px;background:#f1f5f9;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-size:.84rem;color:#374151">'+
+      'Cancelar</button>'+
+    '</div>';
+  document.body.appendChild(modal);
+
+  // Animar barra de progreso
+  var prog = 5;
+  var barTimer = setInterval(function(){
+    prog = Math.min(prog + 2, 90);
+    var bar = document.getElementById('satXmlBar');
+    if(bar) bar.style.width = prog + '%';
+  }, 2000);
+
+  var msgs = [
+    'Solicitando al SAT por folio fiscal...',
+    'SAT procesando solicitud...',
+    'Verificando disponibilidad...',
+    'Descargando paquete ZIP...',
+    'Extrayendo XML...'
+  ];
+  var msgIdx = 0;
+  var msgTimer = setInterval(function(){
+    var el = document.getElementById('satXmlMsg');
+    if(el && msgIdx < msgs.length){ el.textContent = msgs[msgIdx++]; }
+  }, 15000);
+
+  try {
+    var r = await api('/api/sat/descargar-uuid','POST',{
+      cer:_satCer, key:_satKey, password:_satPass,
+      token:_satToken, uuid:uuid
+    });
+
+    clearInterval(barTimer);
+    clearInterval(msgTimer);
+
+    var bar = document.getElementById('satXmlBar');
+    var msg = document.getElementById('satXmlMsg');
+
+    if(r && r.ok && r.xml){
+      if(bar){ bar.style.width='100%'; bar.style.background='#059669'; }
+      if(msg) msg.textContent = '✅ XML listo — descargando...';
+      setTimeout(function(){
+        var modal = document.getElementById('satXmlModal');
+        if(modal) modal.remove();
+      }, 1500);
+      // Guardar en memoria para mostrar en tabla
+      var cfdi = r.cfdi || {};
+      _satXmlDescargados = _satXmlDescargados.filter(function(x){ return x.uuid !== uuid; });
+      _satXmlDescargados.push({
+        uuid:             uuid,
+        xml:              r.xml,
+        fecha:            cfdi.fecha        || '',
+        tipo:             cfdi.tipo         || '',
+        emisor_rfc:       cfdi.emisor_rfc   || '',
+        emisor_nombre:    cfdi.emisor_nombre|| '',
+        receptor_rfc:     cfdi.receptor_rfc || '',
+        receptor_nombre:  cfdi.receptor_nombre||'',
+        total:            cfdi.total        || '0',
+        subtotal:         cfdi.subtotal     || '0',
+        iva:              cfdi.iva          || '0',
+        moneda:           cfdi.moneda       || 'MXN',
+        estatus:          'Vigente',
+        descargado_en:    new Date().toISOString(),
+      });
+      // Actualizar tab XML siempre (visible o no)
+      var tabXml = document.getElementById('satTab_xml_content');
+      if(tabXml) tabXml.innerHTML = _satRenderXmlDescargados();
+      // Actualizar contador en botón del tab
+      var btnXml = document.getElementById('satTab_xml');
+      if(btnXml) btnXml.textContent = '\uD83D\uDCC4 XMLs ('+(_satXmlDescargados||[]).length+')';
+      // Descargar archivo
+      var blob = new Blob([r.xml],{type:'application/xml'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = uuid + '.xml';
+      a.click();
+      toast('&#x2705; XML descargado — ver en tab XMLs');
+      // Highlight the XML tab button
+      var btnX=document.getElementById('satTab_xml');
+      if(btnX){
+        btnX.style.background='#059669';
+        btnX.style.color='#fff';
+        setTimeout(function(){ btnX.style.background=''; btnX.style.color=''; },3000);
+      }
+    } else if(r && r.id_solicitud){
+      // SAT tardó más de 3 min — dar opción de verificar después
+      if(bar){ bar.style.width='60%'; bar.style.background='#d97706'; }
+      if(msg) msg.innerHTML = '&#x231B; El SAT aún procesa. ID: <strong>'+esc(r.id_solicitud)+'</strong>';
+      setTimeout(function(){
+        var modal=document.getElementById('satXmlModal');
+        if(modal) modal.remove();
+        toast('El SAT sigue procesando. Verifica en unos minutos desde Descarga SAT.','warn');
+      }, 3000);
+    } else {
+      if(bar){ bar.style.width='100%'; bar.style.background='#dc2626'; }
+      if(msg) msg.textContent = '❌ ' + (r&&r.error||'Error al descargar');
+      setTimeout(function(){
+        var modal=document.getElementById('satXmlModal');
+        if(modal) modal.remove();
+        toast(r&&r.error?esc(r.error):'Error al descargar XML','err');
+      }, 2000);
+    }
+  } catch(e) {
+    clearInterval(barTimer);
+    clearInterval(msgTimer);
+    var modal=document.getElementById('satXmlModal');
+    if(modal) modal.remove();
+    toast('Error: '+esc(e.message),'err');
+  }
+}
+
+// Ver detalle completo al hacer clic en fila
+function satVerDetalle(tr, evt){
+  if(evt&&evt.target&&evt.target.tagName==='BUTTON') return; // no abrir si clic en botón
+  var dir=tr.dataset.dir||'recibido';
+  var idx=parseInt(tr.dataset.idx||0);
+  var rows=dir==='recibido'?(_satMetadatosRecibidos||[]):(_satMetadatosEmitidos||[]);
+  // Sort same as table
+  rows=rows.slice().sort(function(a,b){
+    var col=window._satSort&&window._satSort.col||'fecha_emision';
+    var asc=window._satSort&&window._satSort.asc;
+    var va=a[col]||'', vb=b[col]||'';
+    if(col==='monto'){va=parseFloat(va)||0;vb=parseFloat(vb)||0;}
+    if(va<vb) return asc?-1:1; if(va>vb) return asc?1:-1; return 0;
+  });
+  var c=rows[idx]; if(!c) return;
+  var vigente=(c.estatus||'').toLowerCase()==='vigente';
+  var raw=c.raw||{};
+
+  var panel=document.getElementById('sat_detalle_cfdi');
+  if(!panel) return;
+
+  panel.style.display='block';
+  panel.innerHTML=
+    '<div class="card" style="margin-top:16px;border:2px solid #0D2B55">'+
+    '<div class="card-header" style="background:#0D2B55;color:#fff">'+
+      '<div class="card-title" style="color:#fff">&#x1F50D; Detalle CFDI</div>'+
+      '<button onclick="document.getElementById(\'sat_detalle_cfdi\').style.display=\'none\'" '+
+        'style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:6px;padding:4px 12px;cursor:pointer">&#x2715; Cerrar</button>'+
+    '</div>'+
+    '<div class="card-body">'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px">'+
+
+      // UUID
+      '<div style="grid-column:1/-1;background:#f8fafc;border-radius:8px;padding:12px 16px">'+
+        '<div style="font-size:.72rem;color:#64748b;margin-bottom:4px">UUID (Folio Fiscal)</div>'+
+        '<div style="font-family:monospace;font-size:.9rem;font-weight:700;color:#0D2B55;word-break:break-all">'+esc(c.uuid||'—')+'</div>'+
+      '</div>'+
+
+      // Emisor
+      '<div style="background:#f0fdf4;border-radius:8px;padding:12px 16px;border-left:4px solid #059669">'+
+        '<div style="font-size:.72rem;color:#64748b;margin-bottom:4px">&#x1F4E4; RFC Emisor</div>'+
+        '<div style="font-family:monospace;font-weight:700;color:#059669">'+esc(c.rfc_emisor||'—')+'</div>'+
+        '<div style="font-size:.82rem;color:#374151;margin-top:4px">'+esc(c.nombre_emisor||'—')+'</div>'+
+      '</div>'+
+
+      // Receptor
+      '<div style="background:#eff6ff;border-radius:8px;padding:12px 16px;border-left:4px solid #2563eb">'+
+        '<div style="font-size:.72rem;color:#64748b;margin-bottom:4px">&#x1F4E5; RFC Receptor</div>'+
+        '<div style="font-family:monospace;font-weight:700;color:#2563eb">'+esc(c.rfc_receptor||'—')+'</div>'+
+        '<div style="font-size:.82rem;color:#374151;margin-top:4px">'+esc(c.nombre_receptor||'—')+'</div>'+
+      '</div>'+
+
+      // Monto y tipo
+      '<div style="background:#faf5ff;border-radius:8px;padding:12px 16px;border-left:4px solid #7c3aed">'+
+        '<div style="font-size:.72rem;color:#64748b;margin-bottom:4px">&#x1F4B0; Monto / Tipo</div>'+
+        '<div style="font-size:1.2rem;font-weight:800;color:#7c3aed">'+fmtSym(parseFloat(c.monto||0),'MXN')+'</div>'+
+        '<div style="font-size:.82rem;color:#374151;margin-top:4px">'+(c.tipo||c.efecto||'—')+' &nbsp;|&nbsp; '+
+          '<span style="font-weight:700;color:'+(vigente?'#059669':'#dc2626')+'">'+esc(c.estatus||'—')+'</span></div>'+
+      '</div>'+
+
+    '</div>'+
+
+    // Segunda fila de detalles
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:.82rem">'+
+      _detRow('Fecha Emisión', (c.fecha_emision||'—').slice(0,16))+
+      _detRow('Fecha Cert. SAT', (c.fecha_certificacion||'—').slice(0,16))+
+      _detRow('PAC Certificó', c.rfc_pac||'—')+
+      _detRow('Fecha Cancelación', c.fecha_cancelacion||'—')+
+    '</div>'+
+
+    // Todos los campos raw
+    (Object.keys(raw).length?
+      '<div style="margin-top:14px;background:#f8fafc;border-radius:8px;padding:12px 16px">'+
+      '<div style="font-size:.78rem;font-weight:700;color:#0D2B55;margin-bottom:8px">Todos los campos del SAT:</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px">'+
+        Object.entries(raw).map(function(kv){
+          return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:.75rem">'+
+            '<span style="color:#64748b">'+esc(kv[0])+':</span> <strong>'+esc(kv[1]||'—')+'</strong></div>';
+        }).join('')+
+      '</div></div>' : '')+
+
+    // Botones acción
+    '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">'+
+      (c.uuid?
+        '<button class="btn btn-primary" onclick="satValidarUUID(\''+esc(c.uuid)+'\',\''+esc(c.rfc_emisor||'')+'\',\''+esc(c.rfc_receptor||'')+'\',\''+esc(c.monto||'0')+'\')">'+
+          '&#x2714; Validar en SAT</button>'+
+        '<button class="btn btn-success" onclick="satDescXML(\''+esc(c.uuid)+'\')">'+
+          '&#x2B07; Descargar XML</button>':'')+''+
+    '</div>'+
+
+    '</div></div>';
+}
+
+function _detRow(label, val){
+  return '<div style="background:#f8fafc;border-radius:6px;padding:10px 12px">'+
+    '<div style="font-size:.7rem;color:#64748b;margin-bottom:3px">'+esc(label)+'</div>'+
+    '<div style="font-weight:600;color:#1e293b">'+esc(val)+'</div>'+
+  '</div>';
+}
+
+
+function satTabFactura(tab){
+  var rec=document.getElementById('sat_panel_rec');
+  var emi=document.getElementById('sat_panel_emi');
+  var bRec=document.getElementById('sat_tab_rec');
+  var bEmi=document.getElementById('sat_tab_emi');
+  if(tab==='rec'){
+    if(rec) rec.style.display='block';
+    if(emi) emi.style.display='none';
+    if(bRec){ bRec.style.color='#0D2B55'; bRec.style.borderBottom='3px solid #0D2B55'; }
+    if(bEmi){ bEmi.style.color='#64748b'; bEmi.style.borderBottom='none'; }
+  } else {
+    if(rec) rec.style.display='none';
+    if(emi) emi.style.display='block';
+    if(bRec){ bRec.style.color='#64748b'; bRec.style.borderBottom='none'; }
+    if(bEmi){ bEmi.style.color='#0D2B55'; bEmi.style.borderBottom='3px solid #0D2B55'; }
+  }
+}
+
+function satFiltrarTabla(){
+  var buscar=(ge('sat_buscar')||{value:''}).value.toLowerCase();
+  var filtroTipo=(ge('sat_filtro_tipo')||{value:''}).value;
+  var filtroEst=(ge('sat_filtro_estatus')||{value:''}).value;
+  ['sat_tabla_rec','sat_tabla_emi'].forEach(function(tablaId){
+    var tabla=document.getElementById(tablaId);
+    if(!tabla) return;
+    var filas=tabla.querySelectorAll('tbody tr');
+    filas.forEach(function(fila){
+      var txt=fila.textContent.toLowerCase();
+      var tipo=fila.cells[2]?fila.cells[2].textContent.trim():'';
+      var est=fila.cells[5]?fila.cells[5].textContent.trim():'';
+      var ok=(!buscar||txt.includes(buscar))&&
+             (!filtroTipo||tipo.includes(filtroTipo))&&
+             (!filtroEst||est.includes(filtroEst));
+      fila.style.display=ok?'':'none';
+    });
+  });
+}
+
+function satVerCFDI(row){
+  // Resaltar fila seleccionada
+  var tabla=row.closest('table');
+  if(tabla) tabla.querySelectorAll('tr').forEach(function(r){ r.style.background=''; });
+  row.style.background='#e0e7ff !important';
+}
+
+// ── Render Validar CFDI ────────────────────────────────────────
+function _satRenderValidar(){
+  return '<div class="card"><div class="card-header"><div class="card-title">&#x2714;&#xFE0F; Validar CFDI ante el SAT</div></div>'+
+    '<div class="card-body">'+
+    '<div style="background:#f0f9ff;border-left:3px solid #0284c7;padding:10px 14px;border-radius:4px;font-size:.83rem;margin-bottom:16px">'+
+      '&#x2139;&#xFE0F; Consulta el estatus de cualquier CFDI directamente en el SAT. No requiere FIEL.</div>'+
+    '<div class="form-grid form-grid-2" style="gap:14px;margin-bottom:16px">'+
+      '<div class="field-group"><label>UUID (Folio Fiscal)</label>'+
+        '<input id="val_uuid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div>'+
+      '<div class="field-group"><label>RFC Emisor</label>'+
+        '<input id="val_emisor" placeholder="RFC del emisor de la factura"></div>'+
+      '<div class="field-group"><label>RFC Receptor</label>'+
+        '<input id="val_receptor" placeholder="RFC del receptor"></div>'+
+      '<div class="field-group"><label>Total (exacto del XML)</label>'+
+        '<input id="val_total" placeholder="0.00" type="number" step="0.01"></div>'+
+    '</div>'+
+    '<button class="btn btn-primary" onclick="satValidarForm()">&#x2714; Validar en SAT</button>'+
+    '<div id="val_resultado" style="margin-top:16px"></div>'+
+    '</div></div>';
+}
+
+async function satValidarForm(){
+  var uuid=(ge('val_uuid')||{value:''}).value.trim();
+  var emisor=(ge('val_emisor')||{value:''}).value.trim();
+  var receptor=(ge('val_receptor')||{value:''}).value.trim();
+  var total=(ge('val_total')||{value:'0'}).value.trim();
+  var div=ge('val_resultado');
+  if(!uuid||!emisor||!receptor||!total){ toast('Completa todos los campos','err'); return; }
+  if(div) div.innerHTML='<div style="color:#64748b;font-size:.85rem">&#x231B; Consultando al SAT...</div>';
+  try{
+    var r=await api('/api/sat/validar-cfdi','POST',{uuid,rfc_emisor:emisor,rfc_receptor:receptor,total});
+    if(div){
+      var esVig=(r.estado||'').toLowerCase()==='vigente';
+      div.innerHTML='<div style="background:'+(esVig?'#f0fdf4':'#fef2f2')+';border:2px solid '+(esVig?'#86efac':'#fca5a5')+';border-radius:10px;padding:18px">'+
+        '<div style="font-size:1.1rem;font-weight:700;color:'+(esVig?'#059669':'#dc2626')+';margin-bottom:10px">'+
+          (esVig?'&#x2705; CFDI Vigente':'&#x274C; CFDI '+esc(r.estado||'No encontrado'))+'</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.84rem">'+
+          '<div><strong>UUID:</strong> '+esc(uuid)+'</div>'+
+          '<div><strong>Estado:</strong> '+esc(r.estado||'—')+'</div>'+
+          '<div><strong>Es cancelable:</strong> '+esc(r.es_cancelable||'—')+'</div>'+
+          '<div><strong>Estado cancelacion:</strong> '+esc(r.estado_cancel||'N/A')+'</div>'+
+          '<div><strong>Codigo SAT:</strong> '+esc(r.codigo_estatus||'—')+'</div>'+
+        '</div>'+
+      '</div>';
+    }
+  }catch(e){
+    if(div) div.innerHTML='<div style="color:#dc2626;font-size:.85rem">&#x274C; Error: '+esc(e.message)+'</div>';
+  }
+}
+
+async function satValidarUUID(uuid, rfcEmisor, rfcReceptor, monto){
+  toast('&#x231B; Validando CFDI en SAT...');
+  try{
+    var r=await api('/api/sat/validar-cfdi','POST',{uuid,rfc_emisor:rfcEmisor,rfc_receptor:rfcReceptor,total:monto});
+    var esVig=(r.estado||'').toLowerCase()==='vigente';
+    toast((esVig?'&#x2705; ':'&#x274C; ')+'UUID: '+uuid.slice(0,8)+'... — '+esc(r.estado||'No encontrado'), esVig?'ok':'err');
+  }catch(e){
+    toast('Error validando: '+e.message,'err');
+  }
+}
+
 function satMostrarPasos(activo){
   for(var i=1;i<=4;i++){
-    var el=ge('sat_paso'+i);
+    var el=document.getElementById('sat_paso'+i);
     if(!el) continue;
-    el.style.background = i===activo?'#e0e7ff':'';
-    el.style.color      = i<=activo?'#0D2B55':'#94a3b8';
+    el.style.background=i===activo?'#e0e7ff':'';
+    el.style.color=i===activo?'#0D2B55':i<activo?'#059669':'#94a3b8';
   }
-  if(activo>=2){ var s2=ge('sat_sec2'); if(s2) s2.style.display='block'; }
-  if(activo>=3){ var s3=ge('sat_sec3'); if(s3) s3.style.display='block'; }
+  for(var j=1;j<=3;j++){
+    var sec=document.getElementById('sat_sec'+j);
+    if(sec) sec.style.display=j<=activo?'block':'none';
+  }
 }
 
 function satUsarSolicitud(idSol){
-  var el=ge('sat_id_sol');
-  if(el){ el.value=idSol; satMostrarPasos(3); ge('sat_sec3').scrollIntoView({behavior:'smooth'}); }
+  var inp=ge('sat_id_sol');
+  if(inp){ inp.value=idSol; }
+  satMostrarPasos(3);
+  var sec3=ge('sat_sec3');
+  if(sec3) sec3.scrollIntoView({behavior:'smooth'});
 }
 
-// ── Paso 1: Autenticar ─────────────────────────────────────────
+function satVerificarId(idSol){
+  var inp=ge('sat_id_sol');
+  if(inp) inp.value=idSol;
+  satMostrarPasos(3);
+  satVerificar();
+}
+
 async function satAutenticar(){
-  var cerFile = ge('sat_cer_file') && ge('sat_cer_file').files[0];
-  var keyFile = ge('sat_key_file') && ge('sat_key_file').files[0];
-  var pass    = ge('sat_pass_in')  && ge('sat_pass_in').value;
-  var msg     = ge('sat_auth_msg');
-
-  if(!cerFile||!keyFile){ toast('Selecciona los archivos .cer y .key','err'); return; }
-  if(msg) msg.innerHTML='⏳ Leyendo archivos FIEL...';
-
+  var cerFile=ge('sat_cer_file'); var keyFile=ge('sat_key_file');
+  var pass=(ge('sat_pass_in')||{value:''}).value;
+  var msg=ge('sat_auth_msg');
+  if(!cerFile||!cerFile.files[0]){ toast('Selecciona el archivo .cer','err'); return; }
+  if(!keyFile||!keyFile.files[0]){ toast('Selecciona el archivo .key','err'); return; }
+  if(!pass){ toast('Ingresa la contrasena de la llave','err'); return; }
+  if(msg) msg.innerHTML='<span style="color:#64748b">&#x231B; Autenticando con el SAT...</span>';
   try{
-    var cerB64 = await satFileToBase64(cerFile);
-    var keyB64 = await satFileToBase64(keyFile);
-    if(msg) msg.innerHTML='⏳ Conectando con el SAT...';
-
-    var r = await api('/api/sat/login','POST',{cer:cerB64, key:keyB64, password:pass||''});
-    if(r.ok){
-      _satToken=r.token; _satCer=cerB64; _satKey=keyB64; _satPass=pass||'';
-      if(msg) msg.innerHTML='<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:10px;color:#166534">'
-        +'✅ <strong>Autenticado correctamente</strong>'
-        +(r.rfc?' — RFC: <strong style="font-family:monospace">'+esc(r.rfc)+'</strong>':'')
-        +'<br><small>Token SAT obtenido. Ahora puedes solicitar la descarga.</small></div>';
+    var cerB64=await satFileToBase64(cerFile.files[0]);
+    var keyB64=await satFileToBase64(keyFile.files[0]);
+    if(_satToken){
+      var vr=await api('/api/sat/verify_token','POST',{cer:cerB64,key:keyB64,password:pass,token:_satToken}).catch(function(){return {token_valido:false};});
+      if(vr&&vr.token_valido){
+        _satCer=cerB64; _satKey=keyB64; _satPass=pass;
+        if(msg) msg.innerHTML='<span style="color:#059669">&#x2705; Token valido — RFC: <strong>'+esc(vr.rfc||'')+'</strong></span>';
+        satMostrarPasos(2); return;
+      }
+    }
+    var r=await api('/api/sat/login','POST',{cer:cerB64,key:keyB64,password:pass});
+    if(r&&r.ok){
+      _satToken=r.token; _satCer=cerB64; _satKey=keyB64; _satPass=pass;
+      window._satRFC=(r.rfc||'').toUpperCase();
+      if(msg) msg.innerHTML='<span style="color:#059669">&#x2705; Autenticado — RFC: <strong>'+esc(r.rfc||'')+'</strong></span>';
       satMostrarPasos(2);
-      toast('✅ Conexión con SAT exitosa');
     } else {
-      if(msg) msg.innerHTML='<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:10px;color:#991b1b">'
-        +'❌ <strong>'+esc(r.error||'Error de autenticación')+'</strong>'
-        +'<br><small>Verifica que tu FIEL no esté revocada y que la contraseña sea correcta.</small></div>';
+      if(msg) msg.innerHTML='<span style="color:#dc2626">&#x274C; '+(r&&r.error?esc(r.error):'Error de autenticacion')+'</span>';
     }
   }catch(e){
-    if(msg) msg.innerHTML='<span style="color:#dc2626">❌ '+esc(e.message)+'</span>';
+    if(msg) msg.innerHTML='<span style="color:#dc2626">&#x274C; '+esc(e.message)+'</span>';
   }
 }
 
-// ── Paso 2: Solicitar ──────────────────────────────────────────
 async function satSolicitar(){
   if(!_satToken){ toast('Primero autentica tu FIEL','err'); return; }
-  var desde = ge('sat_desde')&&ge('sat_desde').value;
-  var hasta  = ge('sat_hasta')&&ge('sat_hasta').value;
-  var tipo   = ge('sat_tipo_dl')&&ge('sat_tipo_dl').value||'CFDI';
-  var msg    = ge('sat_sol_msg');
+  var desde=(ge('sat_desde')||{value:''}).value;
+  var hasta=(ge('sat_hasta')||{value:''}).value;
+  var tipo=(ge('sat_tipo_dl')||{value:'METADATA'}).value;
+  var msg=ge('sat_sol_msg');
   if(!desde||!hasta){ toast('Selecciona el rango de fechas','err'); return; }
-  if(msg) msg.innerHTML='⏳ Enviando solicitud al SAT...';
-
+  if(msg) msg.innerHTML='<span style="color:#64748b">&#x231B; Enviando solicitud al SAT...</span>';
   try{
-    var r = await api('/api/sat/solicitar','POST',{
-      cer:_satCer, key:_satKey, password:_satPass,
-      token:_satToken, fecha_inicio:desde, fecha_fin:hasta, tipo:tipo
+    var r=await api('/api/sat/solicitar','POST',{
+      cer:_satCer,key:_satKey,password:_satPass,
+      token:_satToken,fecha_inicio:desde,fecha_fin:hasta,tipo:tipo
     });
-    if(r.ok){
-      var idSol = r.solicitud&&(r.solicitud.IdSolicitud||r.solicitud.id_solicitud);
-      if(ge('sat_id_sol')) ge('sat_id_sol').value = idSol||'';
-      if(msg) msg.innerHTML='<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:12px;color:#166534">'
-        +'✅ <strong>Solicitud enviada al SAT</strong>'
-        +(idSol?'<br>ID: <strong style="font-family:monospace">'+esc(idSol)+'</strong>':'')
-        +'<br><small style="color:#4b5563">⏳ El SAT tarda entre <strong>30 min y varias horas</strong> en preparar los paquetes. '
-        +'Copia el ID y usa "Verificar Estado" para consultar cuando estén listos.</small></div>';
+    if(r&&r.ok&&r.solicitud){
+      var idSol=r.solicitud.IdSolicitud||'';
+      if(msg) msg.innerHTML='<span style="color:#059669">&#x2705; Solicitud aceptada — ID: <strong>'+esc(idSol)+'</strong></span>'+
+        '<br><small style="color:#64748b">El SAT puede tardar de 1 hora a 2 dias en procesar. Guarda este ID.</small>';
+      var inp=ge('sat_id_sol'); if(inp) inp.value=idSol;
       satMostrarPasos(3);
+      toast('&#x2705; Solicitud aceptada — ID: '+idSol.slice(0,16)+'...');
     } else {
-      var hint='';
-      if(r.error&&r.error.includes('5002')) hint='<br><small>Código 5002: Ya existe solicitud activa para este período. Espera o usa otro rango.</small>';
-      if(r.error&&r.error.includes('5004')) hint='<br><small>Código 5004: Token expirado. Vuelve al Paso 1 y autentica de nuevo.</small>';
-      if(msg) msg.innerHTML='<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:10px;color:#991b1b">❌ '+esc(r.error||'Error')+hint+'</div>';
+      if(msg) msg.innerHTML='<span style="color:#dc2626">&#x274C; '+(r&&r.error?esc(r.error):'Error al solicitar')+'</span>';
     }
   }catch(e){
-    if(msg) msg.innerHTML='<span style="color:#dc2626">❌ '+esc(e.message)+'</span>';
+    if(msg) msg.innerHTML='<span style="color:#dc2626">&#x274C; '+esc(e.message)+'</span>';
   }
 }
 
-// ── Paso 3: Verificar ──────────────────────────────────────────
+async function satSolicitarEmitidos(){
+  if(!_satToken){ toast('Primero autentica tu FIEL','err'); return; }
+  var desde=(ge('sat_desde')||{value:''}).value;
+  var hasta=(ge('sat_hasta')||{value:''}).value;
+  var tipo=(ge('sat_tipo_dl')||{value:'METADATA'}).value;
+  if(!desde||!hasta){ toast('Selecciona fechas de inicio y fin','err'); return; }
+  var msg=ge('sat_sol_msg');
+  if(msg) msg.innerHTML='<span style="color:#d97706">&#x231B; Solicitando EMITIDOS al SAT...</span>';
+  try{
+    var r=await api('/api/sat/solicitar-emitidos','POST',{
+      cer:_satCer,key:_satKey,password:_satPass,
+      token:_satToken,fecha_inicio:desde,fecha_fin:hasta,tipo:tipo
+    });
+    if(r&&r.ok){
+      var sol=r.solicitud||{};
+      if(msg) msg.innerHTML='<span style="color:#059669">&#x2705; Emitidas solicitadas — ID: <strong>'+esc(sol.IdSolicitud||'')+'</strong><br>'+
+        '<small style="color:#64748b">'+esc(sol.Mensaje||'')+'</small></span>';
+      satMostrarPasos(3);
+      // Guardar solicitud en BD
+      api('/api/sat/solicitudes','POST',{
+        id_solicitud:sol.IdSolicitud,fecha_inicio:desde,fecha_fin:hasta,tipo:tipo,direccion:'emitidos'
+      }).catch(function(){});
+    } else {
+      if(msg) msg.innerHTML='<span style="color:#dc2626">&#x274C; '+(r&&r.error?esc(r.error):'Error al solicitar')+'</span>';
+    }
+  }catch(e){
+    if(msg) msg.innerHTML='<span style="color:#dc2626">&#x274C; '+esc(e.message)+'</span>';
+  }
+}
+
+
 async function satVerificar(){
   if(!_satToken){ toast('Primero autentica tu FIEL','err'); return; }
-  var idSol = ge('sat_id_sol')&&ge('sat_id_sol').value.trim();
-  var msg   = ge('sat_ver_msg');
-  var pkgs  = ge('sat_pkgs');
+  var idSol=(ge('sat_id_sol')||{value:''}).value.trim();
+  var msg=ge('sat_ver_msg'); var pkgs=ge('sat_pkgs');
   if(!idSol){ toast('Ingresa el ID de solicitud','err'); return; }
-  if(msg) msg.innerHTML='⏳ Verificando estado en el SAT...';
+  if(msg) msg.innerHTML='<span style="color:#64748b">&#x231B; Verificando con el SAT...</span>';
   if(pkgs) pkgs.innerHTML='';
-
   try{
-    var r = await api('/api/sat/verificar','POST',{
-      cer:_satCer, key:_satKey, password:_satPass,
-      token:_satToken, id_solicitud:idSol
+    var r=await api('/api/sat/verificar','POST',{
+      cer:_satCer,key:_satKey,password:_satPass,
+      token:_satToken,id_solicitud:idSol
     });
-    if(r.ok){
-      if(r.listo&&r.paquetes&&r.paquetes.length){
-        if(msg) msg.innerHTML='<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:10px;color:#166534">'
-          +'✅ <strong>¡Solicitud lista!</strong> — '+r.paquetes.length+' paquete(s) disponibles para descargar</div>';
-        if(pkgs){
-          pkgs.innerHTML='<div style="margin-top:10px"><div style="font-size:.82rem;font-weight:700;margin-bottom:8px">Paquetes disponibles:</div>'
-            +r.paquetes.map(function(p){
-              return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 12px">'
-                +'<span style="font-family:monospace;font-size:.78rem;flex:1;color:#166534">'+esc(p)+'</span>'
-                +'<button onclick="satDescargarPaquete(\''+idSol+'\',\''+p+'\')" '
-                  +'style="background:#059669;color:#fff;border:none;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:.82rem;font-weight:600">⬇ Descargar</button>'
-                +'</div>';
-            }).join('')
-          +'</div>';
-        }
-        satMostrarPasos(4);
-      } else {
-        var estados={1:'En espera del SAT',2:'En proceso',3:'Terminado',4:'Error',5:'Rechazado'};
-        if(msg) msg.innerHTML='<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px;color:#92400e">'
-          +'⏳ <strong>Solicitud en proceso</strong> — El SAT aún está preparando los paquetes.<br>'
-          +'<small>Espera unos minutos y vuelve a verificar. Los rangos largos pueden tardar horas.</small></div>';
+    if(r&&r.ok){
+      var estadoColor={Terminada:'#059669',Aceptada:'#d97706','En proceso':'#0284c7',Error:'#dc2626',Rechazada:'#dc2626',Vencida:'#dc2626'}[r.estado]||'#64748b';
+      if(msg) msg.innerHTML='<span style="background:'+estadoColor+'20;color:'+estadoColor+';padding:4px 12px;border-radius:12px;font-weight:700;font-size:.85rem">'+esc(r.estado||'—')+'</span>'+
+        (r.num_cfdis?' <span style="color:#64748b;font-size:.83rem">— '+r.num_cfdis+' CFDIs</span>':'');
+      if(r.listo&&r.paquetes&&r.paquetes.length&&pkgs){
+        // Usar data-attributes para evitar problemas de comillas anidadas
+        var tipoActual=(ge('sat_tipo_dl')||{value:'METADATA'}).value;
+        pkgs.innerHTML='<div style="margin-top:10px;font-size:.84rem;font-weight:700;color:#0D2B55;margin-bottom:8px">&#x1F4E6; Paquetes listos para descargar:</div>'+
+          r.paquetes.map(function(p){
+            return '<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:6px">'+
+              '<span style="font-family:monospace;font-size:.8rem;flex:1">'+esc(p)+'</span>'+
+              '<button data-sol="'+esc(idSol)+'" data-paq="'+esc(p)+'" data-tipo="'+esc(tipoActual)+'" '+
+                'onclick="satDescargarPaquete(this.dataset.sol,this.dataset.paq,this.dataset.tipo)" '+
+                'style="background:#059669;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:.82rem;font-weight:700;cursor:pointer">'+
+                '&#x2B07; Descargar</button>'+
+            '</div>';
+          }).join('');
+      } else if(!r.listo){
+        if(pkgs) pkgs.innerHTML='<div style="color:#d97706;font-size:.83rem;margin-top:8px">&#x231B; El SAT aun esta procesando tu solicitud. Intenta en unos minutos.</div>';
       }
+      satMostrarPasos(r.listo?4:3);
     } else {
-      if(msg) msg.innerHTML='<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:10px;color:#991b1b">❌ '+esc(r.error||'Error al verificar')+'</div>';
+      if(msg) msg.innerHTML='<span style="color:#dc2626">&#x274C; '+(r&&r.error?esc(r.error):'Error al verificar')+'</span>';
     }
   }catch(e){
-    if(msg) msg.innerHTML='<span style="color:#dc2626">❌ '+esc(e.message)+'</span>';
+    if(msg) msg.innerHTML='<span style="color:#dc2626">&#x274C; '+esc(e.message)+'</span>';
   }
 }
 
-// ── Paso 4: Descargar paquete ─────────────────────────────────
-async function satDescargarPaquete(idSol, idPaquete){
+async function satDescargarPaquete(idSol, idPaquete, tipo){
   if(!_satToken){ toast('Primero autentica tu FIEL','err'); return; }
-  var btn=document.querySelector('[onclick*="'+idPaquete+'"]');
-  if(btn){ btn.disabled=true; btn.textContent='⏳ Descargando...'; }
-  toast('⏳ Descargando paquete del SAT...');
-
+  tipo=tipo||'METADATA';
+  toast('&#x231B; Descargando paquete del SAT...');
   try{
-    var r = await api('/api/sat/descargar','POST',{
-      cer:_satCer, key:_satKey, password:_satPass,
-      token:_satToken, id_paquete:idPaquete, id_solicitud:idSol
+    var r=await api('/api/sat/descargar','POST',{
+      cer:_satCer,key:_satKey,password:_satPass,
+      token:_satToken,id_paquete:idPaquete,id_solicitud:idSol,tipo:tipo
     });
-    if(r.ok){
-      toast('✅ '+r.total+' CFDI(s) descargados y guardados');
-      if(btn){ btn.textContent='✅ Descargado'; btn.style.background='#059669'; }
-      setTimeout(satDescarga, 1000);
+    if(r&&r.ok){
+      if(tipo==='METADATA'&&r.metadatos){
+        // Guardar metadatos en memoria y mostrar en tabla
+        // Detectar si son recibidos o emitidos por el RFC del signer
+        // Separar por RFC del signer (el que descargó)
+        var _miRFC=(window._satRFC||'').toUpperCase();
+        var _allMeta=r.metadatos||[];
+        // Acumular metadatos — recibidos: yo soy receptor, emitidos: yo soy emisor
+        _satMetadatosRecibidos=(_satMetadatosRecibidos||[]).concat(
+          _allMeta.filter(function(m){
+            var rec=(m.rfc_receptor||'').toUpperCase();
+            return !_miRFC || rec===_miRFC || rec==='';
+          })
+        );
+        _satMetadatosEmitidos=(_satMetadatosEmitidos||[]).concat(
+          _allMeta.filter(function(m){
+            return _miRFC && (m.rfc_emisor||'').toUpperCase()===_miRFC;
+          })
+        );
+        toast('&#x2705; '+r.total+' registros descargados');
+        // Renderizar tabla directamente — no depender del DOM previo
+        setTimeout(function(){
+          satSwitchTab('facturas');
+          var panelF=document.getElementById('satTab_facturas_content');
+          if(panelF){
+            panelF.innerHTML=_satRenderFacturas(
+              _satMetadatosRecibidos,
+              _satMetadatosEmitidos,
+              window._satCfdis||[]
+            );
+          }
+        },300);
+      } else {
+        toast('&#x2705; '+r.total+' CFDI(s) descargados — ver en tab XMLs');
+        var newCfdis = r.cfdis || [];
+        window._satCfdis = (window._satCfdis||[]).concat(newCfdis);
+        // Guardar también en _satXmlDescargados para mostrar en tabla XML
+        newCfdis.forEach(function(c){
+          if(!c.uuid) return;
+          _satXmlDescargados = (_satXmlDescargados||[]).filter(function(x){return x.uuid!==c.uuid;});
+          _satXmlDescargados.push({
+            uuid:            c.uuid,
+            xml:             c.xml||'',
+            fecha:           c.fecha||'',
+            tipo:            c.tipo||'',
+            serie:           c.serie||'',
+            folio:           c.folio||'',
+            subtotal:        c.subtotal||'0',
+            descuento:       c.descuento||'0',
+            iva:             c.iva||'0',
+            isr_ret:         c.isr_ret||'0',
+            total:           c.total||'0',
+            moneda:          c.moneda||'MXN',
+            forma_pago:      c.forma_pago||'',
+            metodo_pago:     c.metodo_pago||'',
+            uso_cfdi:        c.uso_cfdi||'',
+            emisor_rfc:      c.emisor_rfc||'',
+            emisor_nombre:   c.emisor_nombre||'',
+            receptor_rfc:    c.receptor_rfc||'',
+            receptor_nombre: c.receptor_nombre||'',
+            num_conceptos:   (c.conceptos||[]).length,
+            conceptos:       c.conceptos||[],
+          });
+        });
+        // Actualizar tab XML y su contador
+        var tabXml=document.getElementById('satTab_xml_content');
+        if(tabXml) tabXml.innerHTML=_satRenderXmlDescargados();
+        var btnXml=document.getElementById('satTab_xml');
+        if(btnXml){ btnXml.textContent='\uD83D\uDCC4 XMLs ('+(_satXmlDescargados||[]).length+')';
+          btnXml.style.background='#059669'; btnXml.style.color='#fff';
+          setTimeout(function(){btnXml.style.background='';btnXml.style.color='';},3000); }
+      }
     } else {
-      toast(r.error||'Error al descargar','err');
-      if(btn){ btn.disabled=false; btn.textContent='⬇ Descargar'; }
+      toast(r&&r.error?esc(r.error):'Error al descargar','err');
     }
   }catch(e){
     toast(e.message,'err');
-    if(btn){ btn.disabled=false; btn.textContent='⬇ Descargar'; }
   }
 }
 
-// ── Descargar XML individual ───────────────────────────────────
 function satDescargarXML(uuid){
   var token=sessionStorage.getItem('vef_token')||'';
   window.open('/api/sat/cfdis/'+encodeURIComponent(uuid)+'/xml?token='+encodeURIComponent(token),'_blank');
 }
 
-// ── Exportar CSV ───────────────────────────────────────────────
-function satExportarCSV(){
+function satExportarCSVMeta(){
+  var todos=(_satMetadatosRecibidos||[]).concat(_satMetadatosEmitidos||[]);
   var cfdis=window._satCfdis||[];
-  if(!cfdis.length){ toast('No hay CFDIs para exportar','err'); return; }
+  var all=todos.concat(cfdis);
+  if(!all.length){ toast('No hay datos para exportar','err'); return; }
   var nl='\r\n';
-  var csv='UUID,Fecha,Tipo,Emisor RFC,Emisor Nombre,Receptor RFC,Receptor Nombre,Subtotal,IVA,Total,Moneda'+nl;
-  cfdis.forEach(function(c){
-    csv+=[c.uuid,c.fecha_cfdi,c.tipo_comprobante,
-      c.emisor_rfc,'"'+(c.emisor_nombre||'').replace(/"/g,"''")+'"',
-      c.receptor_rfc,'"'+(c.receptor_nombre||'').replace(/"/g,"''")+'"',
-      c.subtotal,c.iva,c.total,c.moneda].join(',')+nl;
+  var csv='UUID,Fecha,Tipo,RFC Emisor,Nombre Emisor,RFC Receptor,Nombre Receptor,Monto,Estatus,Cancelacion'+nl;
+  all.forEach(function(c){
+    csv+=[
+      c.uuid||c.uuid_sat||'',
+      c.fecha_emision||c.fecha_cfdi||'',
+      c.tipo||c.efecto||c.tipo_comprobante||'',
+      c.rfc_emisor||c.emisor_rfc||'',
+      '"'+(c.nombre_emisor||c.emisor_nombre||'').replace(/"/g,"''")+'"',
+      c.rfc_receptor||c.receptor_rfc||'',
+      '"'+(c.nombre_receptor||c.receptor_nombre||'').replace(/"/g,"''")+'"',
+      c.monto||c.total||'0',
+      c.estatus||'',
+      c.fecha_cancelacion||''
+    ].join(',')+nl;
   });
   var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='CFDIs_SAT_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download='Facturas_SAT_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
-  toast('✅ CSV exportado — '+cfdis.length+' registros');
+  toast('&#x2705; CSV exportado — '+all.length+' registros');
 }
 
-// ── File to base64 ─────────────────────────────────────────────
+function satDescargaXmlLocal(uuid){
+  var f=(_satXmlDescargados||[]).find(function(x){return x.uuid===uuid;});
+  if(!f||!f.xml){toast('XML no disponible en memoria','err');return;}
+  var b=new Blob([f.xml],{type:'application/xml'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download=uuid+'.xml';
+  a.click();
+}
+
+function satVerXmlRaw(uuid){
+  var f=(_satXmlDescargados||[]).find(function(x){return x.uuid===uuid;});
+  if(!f||!f.xml){toast('XML no disponible','err');return;}
+  var m=document.createElement('div');
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  m.innerHTML='<div style="background:#1e1e1e;border-radius:12px;width:100%;max-width:920px;max-height:86vh;display:flex;flex-direction:column">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #444">'+
+      '<span style="color:#ccc;font-size:.78rem;font-family:monospace;word-break:break-all">'+esc(uuid)+'</span>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button data-uid="'+esc(uuid)+'" onclick="satDescargaXmlLocal(this.dataset.uid)" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.8rem;cursor:pointer">&#x2B07; Descargar</button>'+
+        '<button onclick="this.parentElement.parentElement.parentElement.remove()" style="background:#444;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer">&#x2715; Cerrar</button>'+
+      '</div>'+
+    '</div>'+
+    '<pre style="flex:1;overflow:auto;padding:18px;margin:0;color:#a8ff78;font-family:monospace;font-size:.76rem;white-space:pre-wrap;word-break:break-all;line-height:1.5">'+
+      esc(f.xml)+'</pre></div>';
+  document.body.appendChild(m);
+}
+
+function satLimpiarXmlDescargados(){
+  _satXmlDescargados=[];
+  satSwitchTab('xml');
+}
+
+function satExportarXmlCSV(){
+  var rows=_satXmlDescargados||[];
+  if(!rows.length){toast('Sin XMLs descargados en esta sesion','err');return;}
+  var csv='UUID,Fecha,Tipo,RFC Emisor,Nombre Emisor,RFC Receptor,Subtotal,IVA,Total,Moneda\r\n';
+  rows.forEach(function(c){
+    csv+=[
+      c.uuid, (c.fecha||'').slice(0,10), c.tipo,
+      c.emisor_rfc, '"'+(c.emisor_nombre||'').replace(/"/g,"'")+'"',
+      c.receptor_rfc, c.subtotal, c.iva, c.total, c.moneda
+    ].join(',')+'\r\n';
+  });
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='XMLs_SAT_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('&#x2705; CSV exportado — '+rows.length+' registros');
+}
+
+
+function _satRenderXmlDescargados(){
+  var rows = _satXmlDescargados || [];
+  var formaPagoMap={'01':'Efectivo','02':'Cheque','03':'Transferencia','04':'T.Crédito',
+    '08':'Vales','28':'T.Débito','29':'T.Servicios','30':'Anticipos','99':'Por definir'};
+  var metodoPagoMap={'PUE':'Una exhibición','PPD':'Parcialidades'};
+  var tipoMap={'I':'🟢 Ingreso','E':'🔴 Egreso','T':'🔵 Traslado','N':'🟡 Nómina','P':'🟣 Pago'};
+
+  if(!rows.length){
+    return '<div style="padding:60px;text-align:center;color:#94a3b8">'+
+      '<div style="font-size:3rem">📄</div>'+
+      '<div style="font-weight:600;margin:10px 0">Sin XMLs descargados en esta sesión</div>'+
+      '<div style="font-size:.85rem">Usa el botón <strong>⬇ XML</strong> en la tabla de Facturas SAT</div></div>';
+  }
+
+  var totSub=0,totIva=0,totTot=0,totDesc=0;
+  rows.forEach(function(c){
+    totSub+=parseFloat(c.subtotal||0); totIva+=parseFloat(c.iva||0);
+    totTot+=parseFloat(c.total||0); totDesc+=parseFloat(c.descuento||0);
+  });
+
+  var html='<div class="card">'+
+    '<div class="card-header"><div class="card-title">📄 XMLs Descargados ('+rows.length+')</div>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button class="btn btn-success btn-sm" onclick="satExportarXmlCSV()">📥 CSV</button>'+
+      '<button class="btn btn-secondary btn-sm" onclick="_satXmlDescargados=[];satSwitchTab(\'xml\')">🗑 Limpiar</button>'+
+    '</div></div>'+
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:2px solid #e2e8f0">'+
+      '<div style="padding:12px;text-align:center;border-right:1px solid #f1f5f9"><div style="font-size:.72rem;color:#64748b">Subtotal</div><div style="font-weight:800">'+fmtSym(totSub,'MXN')+'</div></div>'+
+      '<div style="padding:12px;text-align:center;border-right:1px solid #f1f5f9"><div style="font-size:.72rem;color:#64748b">IVA</div><div style="font-weight:800;color:#d97706">'+fmtSym(totIva,'MXN')+'</div></div>'+
+      '<div style="padding:12px;text-align:center;border-right:1px solid #f1f5f9"><div style="font-size:.72rem;color:#64748b">Descuento</div><div style="font-weight:800;color:#dc2626">'+fmtSym(totDesc,'MXN')+'</div></div>'+
+      '<div style="padding:12px;text-align:center"><div style="font-size:.72rem;color:#64748b">Total</div><div style="font-weight:800;color:#059669;font-size:1.05rem">'+fmtSym(totTot,'MXN')+'</div></div>'+
+    '</div>'+
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.8rem">'+
+    '<thead><tr style="background:#0D2B55;color:#fff">'+
+      '<th style="padding:8px 10px;text-align:left;min-width:120px">UUID</th>'+
+      '<th style="padding:8px;white-space:nowrap">Fecha</th>'+
+      '<th style="padding:8px">Tipo</th>'+
+      '<th style="padding:8px">Serie-Folio</th>'+
+      '<th style="padding:8px;text-align:left;min-width:150px">Emisor</th>'+
+      '<th style="padding:8px;text-align:left;min-width:130px">Receptor</th>'+
+      '<th style="padding:8px">F.Pago</th>'+
+      '<th style="padding:8px">Método</th>'+
+      '<th style="padding:8px;text-align:right">Subtotal</th>'+
+      '<th style="padding:8px;text-align:right">Desc.</th>'+
+      '<th style="padding:8px;text-align:right">IVA</th>'+
+      '<th style="padding:8px;text-align:right">Total</th>'+
+      '<th style="padding:8px">Mon.</th>'+
+      '<th style="padding:8px">Uso</th>'+
+      '<th style="padding:8px">#</th>'+
+      '<th style="padding:8px">Acciones</th>'+
+    '</tr></thead><tbody>';
+
+  rows.forEach(function(c,i){
+    var uuid=c.uuid||'';
+    var fp=formaPagoMap[c.forma_pago]||c.forma_pago||'—';
+    var mp=metodoPagoMap[c.metodo_pago]||c.metodo_pago||'—';
+    html+='<tr style="background:'+(i%2?'#f8fafc':'#fff')+';border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="satVerXmlDetalle('+i+')">'+
+      '<td style="padding:6px 10px;font-family:monospace;font-size:.7rem;color:#0D2B55" title="'+esc(uuid)+'">'+
+        '<span style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:bottom">'+esc(uuid)+'</span></td>'+
+      '<td style="padding:6px 8px;white-space:nowrap;font-size:.78rem">'+(c.fecha||'').slice(0,10)+'</td>'+
+      '<td style="padding:6px 8px;white-space:nowrap;font-size:.74rem">'+(tipoMap[c.tipo]||c.tipo||'—')+'</td>'+
+      '<td style="padding:6px 8px;font-family:monospace;font-size:.74rem">'+esc((c.serie||'')+(c.folio?'-'+c.folio:''))+'</td>'+
+      '<td style="padding:6px 8px"><div style="font-family:monospace;font-size:.69rem;color:#6366f1">'+esc(c.emisor_rfc||'')+'</div>'+
+        '<div style="font-size:.77rem;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.emisor_nombre||'—')+'</div></td>'+
+      '<td style="padding:6px 8px"><div style="font-family:monospace;font-size:.69rem;color:#0891b2">'+esc(c.receptor_rfc||'')+'</div>'+
+        '<div style="font-size:.77rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.receptor_nombre||'—')+'</div></td>'+
+      '<td style="padding:6px 8px;font-size:.74rem;white-space:nowrap">'+esc(fp)+'</td>'+
+      '<td style="padding:6px 8px;font-size:.74rem;white-space:nowrap">'+esc(mp)+'</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-size:.79rem">'+fmtSym(parseFloat(c.subtotal||0),'MXN')+'</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-size:.77rem;color:#dc2626">'+fmtSym(parseFloat(c.descuento||0),'MXN')+'</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-size:.77rem;color:#d97706">'+fmtSym(parseFloat(c.iva||0),'MXN')+'</td>'+
+      '<td style="padding:6px 8px;text-align:right;font-weight:700;font-size:.84rem">'+fmtSym(parseFloat(c.total||0),'MXN')+'</td>'+
+      '<td style="padding:6px 8px;font-size:.74rem;text-align:center">'+esc(c.moneda||'MXN')+'</td>'+
+      '<td style="padding:6px 8px;font-size:.72rem;text-align:center">'+esc(c.uso_cfdi||'—')+'</td>'+
+      '<td style="padding:6px 8px;text-align:center;font-weight:700;color:#0D2B55">'+(c.num_conceptos||0)+'</td>'+
+      '<td style="padding:6px 8px"><div style="display:flex;gap:3px">'+
+        '<button data-uid="'+esc(uuid)+'" onclick="event.stopPropagation();satDescargaXmlLocal(this.dataset.uid)" '+
+          'style="background:#059669;color:#fff;border:none;border-radius:3px;padding:3px 6px;font-size:.7rem;cursor:pointer" title="Descargar XML">⬇</button>'+
+        '<button data-uid="'+esc(uuid)+'" onclick="event.stopPropagation();satVerXmlRaw(this.dataset.uid)" '+
+          'style="background:#0D2B55;color:#fff;border:none;border-radius:3px;padding:3px 6px;font-size:.7rem;cursor:pointer" title="Ver XML">👁</button>'+
+        '<button data-uuid="'+esc(uuid)+'" data-rfe="'+esc(c.emisor_rfc||'')+'" data-rfr="'+esc(c.receptor_rfc||'')+'" data-tot="'+esc(c.total||'0')+'" '+
+          'onclick="event.stopPropagation();satValidarUUID(this.dataset.uuid,this.dataset.rfe,this.dataset.rfr,this.dataset.tot)" '+
+          'style="background:#6366f1;color:#fff;border:none;border-radius:3px;padding:3px 6px;font-size:.7rem;cursor:pointer" title="Validar SAT">✔</button>'+
+      '</div></td>'+
+    '</tr>';
+
+    // Fila expandible de conceptos
+    var cc=c.conceptos||[];
+    if(cc.length){
+      html+='<tr id="xmlConc_'+i+'" style="display:none;background:#f0f9ff">'+
+        '<td colspan="16" style="padding:4px 16px 12px">'+
+          '<div style="font-size:.75rem;font-weight:700;color:#0D2B55;padding:6px 0 4px">📦 Conceptos (clic en fila para expandir/colapsar):</div>'+
+          '<table style="width:100%;border-collapse:collapse;font-size:.75rem">'+
+          '<thead><tr style="background:#e0f2fe;color:#0369a1">'+
+            '<th style="padding:4px 8px;text-align:left">ClaveProdServ</th>'+
+            '<th style="padding:4px 8px;text-align:left">Descripción</th>'+
+            '<th style="padding:4px 8px">Cant.</th>'+
+            '<th style="padding:4px 8px">Clave Unidad</th>'+
+            '<th style="padding:4px 8px;text-align:right">Val. Unitario</th>'+
+            '<th style="padding:4px 8px;text-align:right">Importe</th>'+
+            '<th style="padding:4px 8px;text-align:right">Descuento</th>'+
+            '<th style="padding:4px 8px;text-align:right">IVA</th>'+
+            '<th style="padding:4px 8px">Obj.Imp</th>'+
+          '</tr></thead><tbody>'+
+          cc.map(function(cp){
+            return '<tr style="border-bottom:1px solid #bae6fd">'+
+              '<td style="padding:4px 8px;font-family:monospace;font-weight:700;color:#0369a1">'+esc(cp.clave_prod_serv||'—')+'</td>'+
+              '<td style="padding:4px 8px">'+esc(cp.descripcion||'—')+'</td>'+
+              '<td style="padding:4px 8px;text-align:center">'+esc(cp.cantidad||'1')+'</td>'+
+              '<td style="padding:4px 8px;font-family:monospace">'+esc(cp.clave_unidad||'')+'<br><small style="color:#64748b">'+esc(cp.unidad||'')+'</small></td>'+
+              '<td style="padding:4px 8px;text-align:right">'+fmtSym(parseFloat(cp.valor_unitario||0),'MXN')+'</td>'+
+              '<td style="padding:4px 8px;text-align:right;font-weight:600">'+fmtSym(parseFloat(cp.importe||0),'MXN')+'</td>'+
+              '<td style="padding:4px 8px;text-align:right;color:#dc2626">'+fmtSym(parseFloat(cp.descuento||0),'MXN')+'</td>'+
+              '<td style="padding:4px 8px;text-align:right;color:#d97706">'+fmtSym(parseFloat(cp.iva_concepto||0),'MXN')+'</td>'+
+              '<td style="padding:4px 8px;text-align:center">'+esc(cp.objeto_imp||'')+'</td>'+
+            '</tr>';
+          }).join('')+
+          '</tbody></table></td></tr>';
+    }
+  });
+
+  html+='</tbody></table></div></div>';
+  return html;
+}
+
+function satVerXmlDetalle(idx){
+  var row=document.getElementById('xmlConc_'+idx);
+  if(row) row.style.display=row.style.display==='none'?'table-row':'none';
+}
+
 function satFileToBase64(file){
-  return new Promise(function(resolve,reject){
+  return new Promise(function(res,rej){
     var r=new FileReader();
-    r.onload=function(e){
-      var result=e.target.result;
-      // Remover prefijo data URL
-      resolve(result.includes(',') ? result.split(',')[1] : result);
-    };
-    r.onerror=reject;
+    r.onload=function(e){res(e.target.result.split(',')[1]);};
+    r.onerror=rej;
     r.readAsDataURL(file);
   });
 }
+
+// ══════════════════════════════════════════════════════════════════
+//  MÓDULO: CFDIs EN BD  (tab "🗄️ CFDIs en BD" dentro de SAT)
+// ══════════════════════════════════════════════════════════════════
+var _cfdisbd_data = [];   // todos los registros cargados
+var _cfdisbd_fil  = [];   // después de filtro local
+var _cfdisbd_page = 1;
+var _cfdisbd_pg   = 50;
+
+var _FORMA_PAGO = {'01':'Efectivo','02':'Cheque nominativo','03':'Transferencia','04':'T. Crédito',
+  '05':'Monedero electrónico','06':'Dinero electrónico','08':'Vales de despensa','12':'Dación en pago',
+  '13':'Por subrogación','14':'Por consignación','15':'Condonación','17':'Compensación',
+  '23':'Novación','24':'Confusión','25':'Remisión de deuda','26':'Prescripción',
+  '28':'T. Débito','29':'T. Servicios','30':'Anticipos','31':'Intermediario','99':'Por definir'};
+var _METODO_PAGO = {'PUE':'Una exhibición','PPD':'Parcialidades / diferido'};
+var _TIPO_MAP    = {'I':'🟢 Ingreso','E':'🔴 Egreso','T':'🔵 Traslado','N':'🟡 Nómina','P':'🟣 Pago'};
+
+async function satCfdisBdCargar(){
+  var el = document.getElementById('satTab_cfdisbd_content');
+  if(!el) return;
+  el.innerHTML = '<div style="padding:50px;text-align:center;color:#94a3b8">'+
+    '<div style="font-size:2rem">⏳</div><div style="margin-top:8px;font-size:.9rem">Cargando CFDIs de la BD...</div></div>';
+
+  // Leer filtros si ya existen en el DOM
+  var tipo  = (document.getElementById('cfdisbd_fTipo')  || {}).value || '';
+  var rfc   = ((document.getElementById('cfdisbd_fRfc')   || {}).value || '').trim();
+  var desde = (document.getElementById('cfdisbd_fDesde') || {}).value || '';
+  var hasta = (document.getElementById('cfdisbd_fHasta') || {}).value || '';
+  var p = new URLSearchParams();
+  if(tipo)  p.set('tipo',  tipo);
+  if(rfc)   p.set('rfc',   rfc);
+  if(desde) p.set('desde', desde);
+  if(hasta) p.set('hasta', hasta);
+
+  try {
+    var data = await api('/api/sat/cfdis?' + p);
+    _cfdisbd_data = Array.isArray(data) ? data : [];
+    _cfdisbd_fil  = _cfdisbd_data.slice();
+    _cfdisbd_page = 1;
+    _satCfdisBdRender();
+  } catch(e) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626">❌ Error: '+esc(e.message)+'</div>';
+  }
+}
+
+function _satCfdisBdFiltrarLocal(){
+  var q = ((document.getElementById('cfdisbd_fBusca') || {}).value || '').toLowerCase().trim();
+  var met = (document.getElementById('cfdisbd_fMetodo') || {}).value || '';
+  _cfdisbd_fil = _cfdisbd_data.filter(function(r){
+    if(met && r.metodo_pago !== met) return false;
+    if(!q) return true;
+    return ['uuid','emisor_rfc','emisor_nombre','receptor_rfc','receptor_nombre','folio','serie']
+      .some(function(k){ return (r[k]||'').toLowerCase().indexOf(q) >= 0; });
+  });
+  _cfdisbd_page = 1;
+  _satCfdisBdRender();
+}
+
+function _satCfdisBdRender(){
+  var el = document.getElementById('satTab_cfdisbd_content');
+  if(!el) return;
+
+  var rows = _cfdisbd_fil;
+  var pg   = _cfdisbd_pg;
+  var page = _cfdisbd_page;
+  var start = (page-1)*pg;
+  var slice = rows.slice(start, start+pg);
+  var totalP = Math.ceil(rows.length/pg);
+
+  // Stats
+  var totIng = rows.filter(function(r){return r.tipo_comprobante==='I';}).reduce(function(s,r){return s+parseFloat(r.total||0);},0);
+  var totEgr = rows.filter(function(r){return r.tipo_comprobante==='E';}).reduce(function(s,r){return s+parseFloat(r.total||0);},0);
+  var cntPue = rows.filter(function(r){return r.metodo_pago==='PUE';}).length;
+  var cntPpd = rows.filter(function(r){return r.metodo_pago==='PPD';}).length;
+
+  var html =
+  // ── Filtros ──
+  '<div class="card" style="margin-bottom:12px">'+
+  '<div class="card-header">'+
+    '<div class="card-title">🗄️ CFDIs en Base de Datos</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      '<button class="btn btn-secondary btn-sm" onclick="satCfdisBdReparsear()" title="Re-extraer MetodoPago, FormaPago, etc. de los XMLs ya guardados">🔄 Re-parsear XMLs</button>'+
+      '<button class="btn btn-secondary btn-sm" onclick="_satCfdisBdExportCSV()">📥 CSV</button>'+
+      '<button class="btn btn-secondary btn-sm" onclick="satCfdisBdBorrarTodo()" style="color:#dc2626;border-color:#fca5a5" title="Borrar todos los CFDIs de la BD">🗑 Borrar todo</button>'+
+      '<button class="btn btn-primary btn-sm" onclick="satCfdisBdCargar()">↺ Actualizar</button>'+
+    '</div>'+
+  '</div>'+
+  '<div style="padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;border-bottom:1px solid #e2e8f0">'+
+    '<div style="display:flex;flex-direction:column;gap:3px">'+
+      '<label style="font-size:.7rem;color:#64748b;text-transform:uppercase">Tipo</label>'+
+      '<select id="cfdisbd_fTipo" onchange="satCfdisBdCargar()" style="padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:.82rem">'+
+        '<option value="">Todos</option><option value="I">Ingreso (I)</option>'+
+        '<option value="E">Egreso (E)</option><option value="T">Traslado (T)</option>'+
+        '<option value="N">Nómina (N)</option><option value="P">Pago (P)</option>'+
+      '</select></div>'+
+    '<div style="display:flex;flex-direction:column;gap:3px">'+
+      '<label style="font-size:.7rem;color:#64748b;text-transform:uppercase">Método Pago</label>'+
+      '<select id="cfdisbd_fMetodo" onchange="_satCfdisBdFiltrarLocal()" style="padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:.82rem">'+
+        '<option value="">Todos</option><option value="PUE">PUE</option><option value="PPD">PPD</option>'+
+      '</select></div>'+
+    '<div style="display:flex;flex-direction:column;gap:3px">'+
+      '<label style="font-size:.7rem;color:#64748b;text-transform:uppercase">RFC</label>'+
+      '<input id="cfdisbd_fRfc" placeholder="RFC..." onkeydown="if(event.key===\'Enter\')satCfdisBdCargar()" style="padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:.82rem;width:140px"></div>'+
+    '<div style="display:flex;flex-direction:column;gap:3px">'+
+      '<label style="font-size:.7rem;color:#64748b;text-transform:uppercase">Desde</label>'+
+      '<input id="cfdisbd_fDesde" type="date" style="padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:.82rem"></div>'+
+    '<div style="display:flex;flex-direction:column;gap:3px">'+
+      '<label style="font-size:.7rem;color:#64748b;text-transform:uppercase">Hasta</label>'+
+      '<input id="cfdisbd_fHasta" type="date" style="padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:.82rem"></div>'+
+    '<div style="display:flex;flex-direction:column;gap:3px">'+
+      '<label style="font-size:.7rem;color:#64748b;text-transform:uppercase">Buscar</label>'+
+      '<input id="cfdisbd_fBusca" placeholder="UUID, folio, nombre..." oninput="_satCfdisBdFiltrarLocal()" style="padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:.82rem;width:180px"></div>'+
+  '</div>'+
+  // ── Stats ──
+  '<div style="display:grid;grid-template-columns:repeat(5,1fr);border-bottom:2px solid #e2e8f0">'+
+    '<div style="padding:10px 14px;text-align:center;border-right:1px solid #f1f5f9">'+
+      '<div style="font-size:.7rem;color:#64748b">Total CFDIs</div>'+
+      '<div style="font-weight:800;font-size:1.2rem;color:#0D2B55">'+rows.length+'</div></div>'+
+    '<div style="padding:10px 14px;text-align:center;border-right:1px solid #f1f5f9">'+
+      '<div style="font-size:.7rem;color:#64748b">Ingresos (I)</div>'+
+      '<div style="font-weight:800;color:#059669">$'+parseFloat(totIng).toLocaleString('es-MX',{minimumFractionDigits:2})+'</div></div>'+
+    '<div style="padding:10px 14px;text-align:center;border-right:1px solid #f1f5f9">'+
+      '<div style="font-size:.7rem;color:#64748b">Egresos (E)</div>'+
+      '<div style="font-weight:800;color:#dc2626">$'+parseFloat(totEgr).toLocaleString('es-MX',{minimumFractionDigits:2})+'</div></div>'+
+    '<div style="padding:10px 14px;text-align:center;border-right:1px solid #f1f5f9">'+
+      '<div style="font-size:.7rem;color:#64748b">PUE</div>'+
+      '<div style="font-weight:800;color:#2563eb">'+cntPue+'</div></div>'+
+    '<div style="padding:10px 14px;text-align:center">'+
+      '<div style="font-size:.7rem;color:#64748b">PPD</div>'+
+      '<div style="font-weight:800;color:#7c3aed">'+cntPpd+'</div></div>'+
+  '</div>';
+
+  if(!rows.length){
+    html += '<div style="padding:50px;text-align:center;color:#94a3b8">'+
+      '<div style="font-size:2.5rem">📭</div>'+
+      '<div style="font-weight:600;margin:8px 0;color:#64748b">Sin CFDIs en la BD</div>'+
+      '<div style="font-size:.82rem">Descarga CFDIs usando la pestaña <strong>Descarga Masiva</strong> o haz clic en <strong>🔄 Re-parsear XMLs</strong></div>'+
+    '</div></div>';
+    el.innerHTML = html;
+    return;
+  }
+
+  // ── Tabla ──
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.79rem">'+
+  '<thead><tr style="background:#0D2B55;color:#fff">'+
+    '<th style="padding:8px 10px;text-align:left;min-width:130px">Fecha CFDI</th>'+
+    '<th style="padding:8px 10px">Tipo</th>'+
+    '<th style="padding:8px 10px;min-width:130px">UUID</th>'+
+    '<th style="padding:8px 10px">Serie / Folio</th>'+
+    '<th style="padding:8px 10px;text-align:left">Emisor RFC</th>'+
+    '<th style="padding:8px 10px;text-align:left;min-width:150px">Emisor Nombre</th>'+
+    '<th style="padding:8px 10px;text-align:left">Receptor RFC</th>'+
+    '<th style="padding:8px 10px;text-align:left;min-width:140px">Receptor Nombre</th>'+
+    '<th style="padding:8px 10px;white-space:nowrap">Forma Pago</th>'+
+    '<th style="padding:8px 10px;white-space:nowrap">Método Pago</th>'+
+    '<th style="padding:8px 10px">Lugar Exp.</th>'+
+    '<th style="padding:8px 10px;text-align:right">Subtotal</th>'+
+    '<th style="padding:8px 10px;text-align:right">Total</th>'+
+    '<th style="padding:8px 10px">Mon.</th>'+
+    '<th style="padding:8px 10px">XML</th>'+
+  '</tr></thead><tbody>';
+
+  slice.forEach(function(r, i){
+    var tipo  = r.tipo_comprobante||'?';
+    var fp    = r.forma_pago||'';
+    var mp    = r.metodo_pago||'';
+    var fpLbl = fp ? fp+' — '+(_FORMA_PAGO[fp]||fp) : '—';
+    var mpLbl = mp ? mp+' — '+(_METODO_PAGO[mp]||mp) : '—';
+    var mpColor = mp==='PUE'?'#1d4ed8':mp==='PPD'?'#6d28d9':'#64748b';
+    var tipoBg  = {I:'#dcfce7',E:'#fee2e2',T:'#dbeafe',N:'#fef9c3',P:'#ede9fe'}[tipo]||'#f1f5f9';
+    var tipoCol = {I:'#166534',E:'#991b1b',T:'#1e40af',N:'#854d0e',P:'#4c1d95'}[tipo]||'#334155';
+    var esEgr   = tipo==='E';
+    var totColor= esEgr?'#dc2626':'#059669';
+    var bgRow   = i%2===0?'#fff':'#f8fafc';
+
+    html += '<tr style="background:'+bgRow+';border-bottom:1px solid #f1f5f9">'+
+      '<td style="padding:7px 10px;white-space:nowrap;font-size:.78rem">'+(r.fecha_cfdi||'—').slice(0,10)+'</td>'+
+      '<td style="padding:7px 10px;text-align:center">'+
+        '<span style="background:'+tipoBg+';color:'+tipoCol+';padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:700">'+esc(tipo)+'</span></td>'+
+      '<td style="padding:7px 10px;font-family:monospace;font-size:.69rem;color:#0D2B55;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.uuid||'')+'">'+esc(r.uuid||'—')+'</td>'+
+      '<td style="padding:7px 10px;font-family:monospace;font-size:.74rem;white-space:nowrap">'+
+        '<span style="color:#64748b">'+esc(r.serie||'')+'</span>'+(r.serie&&r.folio?' / ':'')+
+        '<strong style="color:#0D2B55">'+esc(r.folio||'—')+'</strong></td>'+
+      '<td style="padding:7px 10px;font-family:monospace;font-size:.72rem;color:#6366f1">'+esc(r.emisor_rfc||'—')+'</td>'+
+      '<td style="padding:7px 10px;font-size:.77rem;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.emisor_nombre||'')+'">'+esc(r.emisor_nombre||'—')+'</td>'+
+      '<td style="padding:7px 10px;font-family:monospace;font-size:.72rem;color:#0891b2">'+esc(r.receptor_rfc||'—')+'</td>'+
+      '<td style="padding:7px 10px;font-size:.77rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.receptor_nombre||'')+'">'+esc(r.receptor_nombre||'—')+'</td>'+
+      '<td style="padding:7px 10px;white-space:nowrap;font-size:.74rem">'+
+        (fp ? '<span style="background:#f0f9ff;color:#0369a1;padding:2px 7px;border-radius:4px;font-weight:700" title="'+esc(fpLbl)+'">'+esc(fp)+'</span>' : '<span style="color:#cbd5e1">—</span>')+'</td>'+
+      '<td style="padding:7px 10px;white-space:nowrap;font-size:.74rem">'+
+        (mp ? '<span style="background:'+mpColor+'18;color:'+mpColor+';padding:2px 8px;border-radius:4px;font-weight:700" title="'+esc(mpLbl)+'">'+esc(mp)+'</span>' : '<span style="color:#cbd5e1">—</span>')+'</td>'+
+      '<td style="padding:7px 10px;font-size:.74rem;color:#64748b;text-align:center">'+esc(r.lugar_expedicion||'—')+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;font-size:.8rem">$'+parseFloat(r.subtotal||0).toLocaleString('es-MX',{minimumFractionDigits:2})+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;font-weight:700;font-size:.84rem;color:'+totColor+'">$'+parseFloat(r.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})+'</td>'+
+      '<td style="padding:7px 10px;font-size:.74rem;text-align:center;color:#64748b">'+esc(r.moneda||'MXN')+'</td>'+
+      '<td style="padding:7px 10px">'+
+        (r.uuid ? '<div style="display:flex;gap:4px">'+
+          '<button data-uid="'+esc(r.uuid)+'" onclick="satCfdisBdDescargarXml(this.dataset.uid)" '+
+          'style="background:#059669;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:.72rem;cursor:pointer" title="Descargar XML">⬇ XML</button>'+
+          '<button data-uid="'+esc(r.uuid)+'" onclick="satCfdisBdBorrarUno(this.dataset.uid)" '+
+          'style="background:transparent;border:1px solid #fca5a5;color:#dc2626;border-radius:4px;padding:3px 7px;font-size:.72rem;cursor:pointer" title="Eliminar este CFDI">🗑</button>'+
+        '</div>' : '—')+
+      '</td>'+
+    '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  // ── Paginación ──
+  html += '<div style="padding:10px 16px;display:flex;align-items:center;gap:8px;border-top:1px solid #e2e8f0;font-size:.8rem">'+
+    '<span style="flex:1;color:#64748b">'+(start+1)+'–'+Math.min(start+pg,rows.length)+' de '+rows.length+' CFDIs</span>'+
+    '<button onclick="_satCfdisBdChPage(-1)" '+(page<=1?'disabled':'')+' class="btn btn-secondary btn-sm">‹ Ant</button>'+
+    '<span style="color:#0D2B55;font-weight:600">Pág '+page+'/'+totalP+'</span>'+
+    '<button onclick="_satCfdisBdChPage(1)" '+(page>=totalP?'disabled':'')+' class="btn btn-secondary btn-sm">Sig ›</button>'+
+  '</div></div>';
+
+  el.innerHTML = html;
+}
+
+function _satCfdisBdChPage(d){
+  _cfdisbd_page = Math.max(1, _cfdisbd_page + d);
+  _satCfdisBdRender();
+}
+
+async function satCfdisBdDescargarXml(uuid){
+  toast('⏳ Descargando XML...');
+  try {
+    var token = localStorage.getItem('vef_token') || '';
+    var r = await fetch('/api/sat/cfdis/'+encodeURIComponent(uuid)+'/xml', {
+      headers:{ 'Authorization': 'Bearer '+token }
+    });
+    if(!r.ok) throw new Error('XML no encontrado en BD');
+    var blob = await r.blob();
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = uuid+'.xml';
+    a.click();
+    toast('✅ XML descargado');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+async function satCfdisBdReparsear(){
+  toast('⏳ Re-parseando XMLs de la BD, espera...');
+  try {
+    var r = await api('/api/sat/reparsear-xmls','POST',{});
+    if(r && r.ok){
+      toast('✅ '+r.actualizados+' CFDIs actualizados'+(r.errores&&r.errores.length?' ('+r.errores.length+' errores)':''));
+      setTimeout(satCfdisBdCargar, 500);
+    } else {
+      toast('❌ '+(r&&r.error||'Error al re-parsear'),'error');
+    }
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+function _satCfdisBdExportCSV(){
+  var rows = _cfdisbd_fil;
+  if(!rows.length){ toast('Sin datos para exportar','warn'); return; }
+  var cols = ['fecha_cfdi','tipo_comprobante','uuid','serie','folio','emisor_rfc','emisor_nombre',
+    'receptor_rfc','receptor_nombre','forma_pago','metodo_pago','lugar_expedicion','subtotal','total','moneda','no_certificado','fecha_timbrado'];
+  var csv = cols.join(',') + '\n' +
+    rows.map(function(r){ return cols.map(function(c){ return '"'+(String(r[c]||'').replace(/"/g,'""'))+'"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cfdis_bd_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('✅ CSV exportado');
+}
+// ══ FIN MÓDULO CFDIs EN BD ══════════════════════════════════════
+// ── Borrar un CFDI individual desde la tabla BD ──────────────────
+async function satCfdisBdBorrarUno(uuid){
+  if(!confirm('¿Eliminar este CFDI de la BD?\n\nUUID: '+uuid+'\n\nEsta acción no se puede deshacer.')) return;
+  try {
+    var token = localStorage.getItem('vef_token')||'';
+    var r = await fetch('/api/sat/cfdis/'+encodeURIComponent(uuid), {
+      method:'DELETE', headers:{'Authorization':'Bearer '+token}
+    });
+    var d = await r.json();
+    if(d.ok){ toast('✅ CFDI eliminado'); satCfdisBdCargar(); }
+    else toast('❌ '+(d.error||'Error al eliminar'),'error');
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+
+// ── Borrar TODOS los CFDIs de la BD ──────────────────────────────
+async function satCfdisBdBorrarTodo(){
+  var n = _cfdisbd_data.length;
+  if(!confirm('⚠️ ¿Eliminar TODOS los CFDIs de la base de datos?\n\n'+n+' CFDIs serán eliminados permanentemente.\n\nEsta acción NO se puede deshacer.')) return;
+  if(!confirm('Confirma de nuevo: ¿Borrar los '+n+' CFDIs?')) return;
+  try {
+    var r = await api('/api/sat/cfdis','DELETE');
+    if(r && r.ok){
+      toast('✅ '+r.eliminados+' CFDIs eliminados de la BD');
+      _cfdisbd_data=[]; _cfdisbd_fil=[];
+      satCfdisBdCargar();
+    } else toast('❌ '+(r&&r.error||'Error'),'error');
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+
+// ── Borrar una solicitud individual del historial ─────────────────
+async function satBorrarSolicitud(idSolicitud){
+  if(!confirm('¿Eliminar esta solicitud del historial?\n\nID: '+idSolicitud)) return;
+  try {
+    var token = localStorage.getItem('vef_token')||'';
+    var r = await fetch('/api/sat/solicitudes/'+encodeURIComponent(idSolicitud), {
+      method:'DELETE', headers:{'Authorization':'Bearer '+token}
+    });
+    var d = await r.json();
+    if(d.ok){ toast('✅ Solicitud eliminada'); satDescarga(); }
+    else toast('❌ '+(d.error||'Error'),'error');
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+
+// ── Borrar TODO el historial de solicitudes ───────────────────────
+async function satBorrarHistorialTodo(){
+  if(!confirm('⚠️ ¿Borrar TODO el historial de solicitudes SAT?\n\nEsta acción no se puede deshacer.')) return;
+  try {
+    var r = await api('/api/sat/solicitudes','DELETE');
+    if(r && r.ok){
+      toast('✅ Historial borrado ('+r.eliminados+' solicitudes)');
+      satDescarga();
+    } else toast('❌ '+(r&&r.error||'Error'),'error');
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  MÓDULO: AUTORIZACIONES — Panel para Admin/Gerencia
+// ════════════════════════════════════════════════════════════════
+async function moduloAutorizaciones(){
+  var rol=(typeof USER!=='undefined'?USER:JSON.parse(sessionStorage.getItem('vef_user')||'{}')).rol||'';
+  if(rol!=='admin'&&rol!=='gerencia'){
+    setContent('<div class="alert alert-err">⛔ Solo Administrador o Gerencia pueden acceder a este módulo.</div>');
+    return;
+  }
+  setPage('Autorizaciones de Envío');
+  _autorizacionesRender('pendiente');
+}
+
+async function _autorizacionesRender(estatus){
+  var data=[];
+  try{ data=await api('/api/autorizaciones?estatus='+estatus); }catch(e){}
+
+  var tabs=['pendiente','aprobado','rechazado'];
+  var tabLabels={pendiente:'⏳ Pendientes',aprobado:'✅ Aprobadas',rechazado:'❌ Rechazadas'};
+  var tabColors={pendiente:'#d97706',aprobado:'#059669',rechazado:'#dc2626'};
+  var q="'";
+
+  var html=
+  '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">'+
+    tabs.map(function(t){
+      var active=t===estatus;
+      return '<button onclick="_autorizacionesRender('+q+t+q+')" class="btn '+(active?'btn-primary':'btn-secondary')+' btn-sm">'+tabLabels[t]+'</button>';
+    }).join('')+
+  '</div>'+
+  '<div class="card">'+
+  '<div class="card-header"><div class="card-title">🔐 Solicitudes de Envío de Cotizaciones</div>'+
+  '<button class="btn btn-secondary btn-sm" onclick="_autorizacionesRender('+q+estatus+q+')">↺ Actualizar</button></div>';
+
+  if(!data.length){
+    html+='<div style="padding:50px;text-align:center;color:#94a3b8">'+
+      '<div style="font-size:2.5rem">📭</div>'+
+      '<div style="font-weight:600;margin:8px 0;color:#64748b">Sin solicitudes '+estatus+'s</div></div></div>';
+    setContent(html);
+    return;
+  }
+
+  html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.83rem">'+
+  '<thead><tr style="background:#0D2B55;color:#fff">'+
+    '<th style="padding:9px 12px;text-align:left">Fecha</th>'+
+    '<th style="padding:9px 12px;text-align:left">Cotización</th>'+
+    '<th style="padding:9px 12px;text-align:left">Solicitante</th>'+
+    '<th style="padding:9px 12px;text-align:left">Destinatario</th>'+
+    '<th style="padding:9px 12px;text-align:left">Asunto</th>'+
+    '<th style="padding:9px 12px;text-align:left">Mensaje</th>'+
+    (estatus==='pendiente'?'<th style="padding:9px 12px;text-align:center">Acciones</th>':
+     '<th style="padding:9px 12px">Estado</th>')+
+  '</tr></thead><tbody>';
+
+  data.forEach(function(s,i){
+    var bgRow=i%2===0?'#fff':'#f8fafc';
+    var fecha=(s.fecha_solicitud||'').slice(0,16).replace('T',' ');
+    var sc=tabColors[s.estatus]||'#64748b';
+    html+='<tr style="background:'+bgRow+';border-bottom:1px solid #f1f5f9">'+
+      '<td style="padding:8px 12px;white-space:nowrap;font-size:.78rem;color:#64748b">'+esc(fecha)+'</td>'+
+      '<td style="padding:8px 12px;font-weight:700;color:#0D2B55">'+esc(s.referencia_num||'—')+'</td>'+
+      '<td style="padding:8px 12px">'+esc(s.solicitante_nombre||'—')+'</td>'+
+      '<td style="padding:8px 12px;font-size:.8rem">'+esc(s.destinatario_email||'—')+
+        (s.destinatario_cc?'<div style="color:#94a3b8;font-size:.72rem">CC: '+esc(s.destinatario_cc)+'</div>':'')+'</td>'+
+      '<td style="padding:8px 12px;font-size:.8rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(s.asunto||'')+'">'+esc(s.asunto||'—')+'</td>'+
+      '<td style="padding:8px 12px;font-size:.78rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#64748b" title="'+esc(s.mensaje||'')+'">'+esc((s.mensaje||'').slice(0,80))+'</td>'+
+      (estatus==='pendiente'?
+        '<td style="padding:8px 12px;text-align:center;white-space:nowrap">'+
+          '<button data-id="'+s.id+'" onclick="autorizarSolicitud(this.dataset.id)" '+
+          'style="background:#059669;color:#fff;border:none;border-radius:5px;padding:4px 12px;font-size:.78rem;cursor:pointer;font-weight:600;margin-right:4px">✅ Aprobar</button>'+
+          '<button data-id="'+s.id+'" onclick="rechazarSolicitud(this.dataset.id)" '+
+          'style="background:#dc2626;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:.78rem;cursor:pointer;font-weight:600">❌ Rechazar</button>'+
+        '</td>' :
+        '<td style="padding:8px 12px"><span style="background:'+sc+'20;color:'+sc+';padding:2px 9px;border-radius:10px;font-size:.74rem;font-weight:700">'+esc(s.estatus)+'</span>'+
+        (s.notas_autorizador?'<div style="font-size:.72rem;color:#64748b;margin-top:2px">'+esc(s.notas_autorizador)+'</div>':'')+
+        '</td>')+
+    '</tr>';
+  });
+  html+='</tbody></table></div></div>';
+  setContent(html);
+  _autorizacionesBadge();
+}
+
+async function autorizarSolicitud(id){
+  // Cargar datos completos de la solicitud y abrir modal para revisar/editar antes de aprobar
+  var sol;
+  try {
+    var lista = await api('/api/autorizaciones?estatus=pendiente');
+    sol = (lista||[]).find(function(s){ return String(s.id)===String(id); });
+  } catch(e){}
+  if(!sol){ toast('No se encontró la solicitud','err'); return; }
+
+  openModalLg('✉️ Revisar y Aprobar Envío — Cot. '+esc(sol.referencia_num||''),
+    '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.83rem;color:#166534">'+
+      '<strong>👤 Solicitante:</strong> '+esc(sol.solicitante_nombre||'—')+'&nbsp;&nbsp;·&nbsp;&nbsp;'+
+      '<strong>📅 Fecha:</strong> '+(sol.fecha_solicitud||'').slice(0,16).replace('T',' ')+
+    '</div>'+
+    '<div class="form-grid form-grid-2" style="gap:12px">'+
+      '<div class="field-group">'+
+        '<label class="field-required">Para (destinatario)</label>'+
+        '<input id="apr_to" type="email" value="'+esc(sol.destinatario_email||'')+'">'+
+      '</div>'+
+      '<div class="field-group">'+
+        '<label>CC (con copia)</label>'+
+        '<input id="apr_cc" type="email" value="'+esc(sol.destinatario_cc||'')+'">'+
+      '</div>'+
+      '<div class="field-group" style="grid-column:1/-1">'+
+        '<label>Asunto</label>'+
+        '<input id="apr_asunto" value="'+esc(sol.asunto||'')+'">'+
+      '</div>'+
+      '<div class="field-group" style="grid-column:1/-1">'+
+        '<label>Mensaje del correo</label>'+
+        '<textarea id="apr_mensaje" rows="8" style="font-size:.87rem;line-height:1.6">'+esc(sol.mensaje||'')+'</textarea>'+
+        '<small style="color:#64748b;font-size:.75rem">El PDF de la cotización se adjuntará automáticamente al enviar</small>'+
+      '</div>'+
+      '<div class="field-group" style="grid-column:1/-1">'+
+        '<label>Notas internas (visibles solo en el historial)</label>'+
+        '<input id="apr_notas" placeholder="Ej: Aprobado con ajuste de destinatario...">'+
+      '</div>'+
+    '</div>',
+    '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>'+
+    '<button class="btn btn-danger" onclick="rechazarSolicitudModal('+id+')" style="background:#dc2626;color:#fff;border:none">❌ Rechazar</button>'+
+    '<button class="btn btn-primary" onclick="confirmarAprobacion('+id+','+sol.referencia_id+')">✅ Aprobar y Enviar</button>'
+  );
+}
+
+async function confirmarAprobacion(id, cotId){
+  var to = (document.getElementById('apr_to')||{}).value||'';
+  if(!to.trim()){ toast('El destinatario es requerido','err'); return; }
+  var btn = document.querySelector('[onclick="confirmarAprobacion('+id+','+cotId+')"]');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Enviando...'; }
+  try{
+    // Actualizar los datos del correo en la solicitud antes de aprobar
+    await api('/api/autorizaciones/'+id+'/actualizar','POST',{
+      destinatario_email: to,
+      destinatario_cc:  (document.getElementById('apr_cc')||{}).value||undefined,
+      asunto:           (document.getElementById('apr_asunto')||{}).value||undefined,
+      mensaje:          (document.getElementById('apr_mensaje')||{}).value||undefined,
+    });
+    await api('/api/autorizaciones/'+id+'/aprobar','POST',{
+      notas: (document.getElementById('apr_notas')||{}).value||undefined
+    });
+    toast('✅ Solicitud aprobada — correo enviado al cliente');
+    closeModal();
+    _autorizacionesRender('pendiente');
+    _autorizacionesBadge();
+  }catch(e){
+    toast(e.message,'err');
+    if(btn){ btn.disabled=false; btn.textContent='✅ Aprobar y Enviar'; }
+  }
+}
+
+async function rechazarSolicitudModal(id){
+  var notas = (document.getElementById('apr_notas')||{}).value||'';
+  if(!notas.trim()){
+    document.getElementById('apr_notas').focus();
+    document.getElementById('apr_notas').style.borderColor='#dc2626';
+    toast('Escribe un motivo en "Notas internas" antes de rechazar','err');
+    return;
+  }
+  try{
+    await api('/api/autorizaciones/'+id+'/rechazar','POST',{notas});
+    toast('Solicitud rechazada');
+    closeModal();
+    _autorizacionesRender('pendiente');
+    _autorizacionesBadge();
+  }catch(e){ toast(e.message,'err'); }
+}
+
+async function rechazarSolicitud(id){
+  // Fallback directo (desde tabla sin abrir modal)
+  var notas=prompt('Motivo del rechazo:','');
+  if(notas===null) return;
+  if(!notas.trim()){ toast('Escribe un motivo para rechazar','err'); return; }
+  try{
+    await api('/api/autorizaciones/'+id+'/rechazar','POST',{notas});
+    toast('Solicitud rechazada');
+    _autorizacionesRender('pendiente');
+    _autorizacionesBadge();
+  }catch(e){ toast(e.message,'err'); }
+}
+// ══ FIN MÓDULO AUTORIZACIONES ════════════════════════════════════
+
 </script>
 </body>
 </html>
