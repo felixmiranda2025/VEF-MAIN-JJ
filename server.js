@@ -71,15 +71,30 @@ try {
   global.s3Delete   = async () => {};
 }
 
-// ── ANTHROPIC IA ─────────────────────────────────────────────────
-let anthropic = null;
-try {
-  const Anthropic = require('@anthropic-ai/sdk');
-  if (process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes('XXXXXXXX')) {
-    anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    console.log('🤖 Anthropic IA configurada');
-  }
-} catch(e) { console.warn('Anthropic no disponible:', e.message); }
+// ── DEEPSEEK IA ──────────────────────────────────────────────────
+// DeepSeek usa API compatible con OpenAI — no requiere SDK especial
+// La API key se puede configurar por empresa en empresa_config.deepseek_api_key
+// o globalmente en .env como DEEPSEEK_API_KEY
+const _deepseekBaseUrl = 'https://api.deepseek.com/v1';
+function getDeepSeekKey(schema) {
+  // Primero buscar en empresa_config, luego en .env
+  return Q('SELECT deepseek_api_key FROM empresa_config LIMIT 1', [], schema)
+    .then(rows => rows[0]?.deepseek_api_key || process.env.DEEPSEEK_API_KEY || null)
+    .catch(() => process.env.DEEPSEEK_API_KEY || null);
+}
+async function deepseekChat(messages, schema, model='deepseek-chat', max_tokens=1500) {
+  const apiKey = await getDeepSeekKey(schema);
+  if (!apiKey) throw new Error('DeepSeek API Key no configurada. Ve a Configuración → IA para agregarla.');
+  const res = await fetch(`${_deepseekBaseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, max_tokens, temperature: 0.7 })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || `DeepSeek error ${res.status}`);
+  return data.choices[0]?.message?.content || '';
+}
+console.log('🤖 DeepSeek IA lista (API key por empresa o .env DEEPSEEK_API_KEY)');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -284,6 +299,28 @@ async function licencia(req, res, next) {
       codigo: 'LICENCIA_VENCIDA',
       requiere_pago: true
     });
+  } catch { return next(); }
+}
+
+// ── Middleware: bloquea escritura si empresa inactiva ────────────
+// Permite GET (lectura) pero bloquea POST/PUT/DELETE/PATCH
+async function empresaActiva(req, res, next) {
+  // Admin siempre puede
+  if (req.user?.rol === 'admin') return next();
+  // Solo aplica a métodos de escritura
+  if (req.method === 'GET') return next();
+  const empId = req.user?.empresa_id;
+  if (!empId) return next();
+  try {
+    const { rows } = await pool.query(
+      'SELECT activa FROM public.empresas WHERE id=$1', [empId]);
+    if (!rows.length) return next();
+    if (rows[0].activa === false)
+      return res.status(403).json({
+        error: 'Tu empresa está inactiva. Solo puedes consultar información. Contacta al administrador.',
+        codigo: 'EMPRESA_INACTIVA'
+      });
+    return next();
   } catch { return next(); }
 }
 
@@ -1363,6 +1400,7 @@ async function autoSetup() {
       "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS logo_data BYTEA",
       "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS logo_mime VARCHAR(30) DEFAULT 'image/png'",
       "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS sat_fiel_configurado BOOLEAN DEFAULT false",
+      "ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS deepseek_api_key TEXT",
       // SAT tables
       `CREATE TABLE IF NOT EXISTS sat_solicitudes (
         id SERIAL PRIMARY KEY, id_solicitud VARCHAR(100) UNIQUE,
@@ -1554,6 +1592,68 @@ app.post('/api/registro', async (req,res)=>{
       await client.query(`UPDATE empresa_config SET nombre=$1,email=$2,telefono=$3`,[empresa_nombre,email,telefono||'']);
     } finally { client.release(); }
     console.log('✅ Nuevo registro:', email, '→', schema, '→ trial hasta', trialHasta.toISOString().slice(0,10));
+
+    // ── Notificación a VEF por nuevo registro público ─────────────
+    try {
+      const ahora = new Date().toLocaleString('es-MX',{timeZone:'America/Mexico_City',
+        day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      await mailer.sendMail({
+        from: `"${VEF_NOMBRE}" <${process.env.SMTP_USER}>`,
+        to: VEF_CORREO,
+        subject: `🆕 Nuevo registro: ${empresa_nombre} — ${fullName}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+            <div style="background:linear-gradient(135deg,#059669,#047857);padding:24px 28px">
+              <div style="color:#fff;font-size:1.3rem;font-weight:700">🆕 Nuevo Cliente Registrado</div>
+              <div style="color:rgba(255,255,255,.6);font-size:.85rem;margin-top:4px">${VEF_NOMBRE} — ERP Industrial</div>
+            </div>
+            <div style="padding:24px 28px;background:#fff">
+              <table style="width:100%;border-collapse:collapse;font-size:.9rem">
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b;width:140px">Empresa</td>
+                  <td style="padding:10px 0;font-weight:700;color:#0D2B55">${empresa_nombre}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b">Contacto</td>
+                  <td style="padding:10px 0">${fullName}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b">Email</td>
+                  <td style="padding:10px 0"><a href="mailto:${email}" style="color:#2563eb">${email}</a></td>
+                </tr>
+                ${telefono ? `<tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b">Teléfono</td>
+                  <td style="padding:10px 0">${telefono}</td>
+                </tr>` : ''}
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b">Schema BD</td>
+                  <td style="padding:10px 0;font-family:monospace;font-size:.85rem;color:#6366f1">${schema}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b">Trial hasta</td>
+                  <td style="padding:10px 0">
+                    <span style="background:#fef9c3;color:#92400e;padding:2px 10px;border-radius:10px;font-size:.82rem;font-weight:700">
+                      ⏳ ${trialHasta.toISOString().slice(0,10)}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;color:#64748b">Fecha/Hora</td>
+                  <td style="padding:10px 0;color:#94a3b8;font-size:.85rem">${ahora}</td>
+                </tr>
+              </table>
+            </div>
+            <div style="background:#f8fafc;padding:14px 28px;font-size:.78rem;color:#94a3b8;text-align:center">
+              Registro automático desde el portal — ${VEF_NOMBRE} ERP
+            </div>
+          </div>`
+      });
+      console.log('📧 Notificación de nuevo registro enviada a', VEF_CORREO);
+    } catch(emailErr) {
+      console.warn('⚠️  No se pudo enviar notificación de registro:', emailErr.message);
+    }
+    // ─────────────────────────────────────────────────────────────
+
     res.status(201).json({
       ok:true,
       mensaje:'Cuenta creada exitosamente. Trial de 30 días activo.',
@@ -2064,6 +2164,64 @@ app.post('/api/admin/empresas', auth, async (req,res)=>{
        VALUES($1,$2,CURRENT_DATE + ($3::int * INTERVAL '1 day'),'trial',true) RETURNING *`,
       [cleanSlug, nombre, dias]);
     const schema = await crearSchemaEmpresa(cleanSlug, nombre);
+
+    // ── Notificación por correo a VEF ────────────────────────────
+    try {
+      const fechaVence = new Date();
+      fechaVence.setDate(fechaVence.getDate() + dias);
+      const fechaStr = fechaVence.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+      const creadoPor = req.user?.nombre || req.user?.username || 'Admin';
+      const ahora = new Date().toLocaleString('es-MX',{timeZone:'America/Mexico_City',
+        day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      await mailer.sendMail({
+        from: `"${VEF_NOMBRE}" <${process.env.SMTP_USER}>`,
+        to: VEF_CORREO,
+        subject: `🏢 Nueva empresa registrada: ${nombre}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+            <div style="background:linear-gradient(135deg,#0D2B55,#1a3a6b);padding:24px 28px">
+              <div style="color:#fff;font-size:1.3rem;font-weight:700">🏢 Nueva Empresa Creada</div>
+              <div style="color:rgba(255,255,255,.6);font-size:.85rem;margin-top:4px">${VEF_NOMBRE} — ERP Industrial</div>
+            </div>
+            <div style="padding:24px 28px;background:#fff">
+              <table style="width:100%;border-collapse:collapse;font-size:.9rem">
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b;width:140px">Empresa</td>
+                  <td style="padding:10px 0;font-weight:700;color:#0D2B55">${nombre}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b">Schema BD</td>
+                  <td style="padding:10px 0;font-family:monospace;font-size:.85rem;color:#6366f1">${schema}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b">Trial</td>
+                  <td style="padding:10px 0">
+                    <span style="background:#fef9c3;color:#92400e;padding:2px 10px;border-radius:10px;font-size:.82rem;font-weight:700">
+                      ⏳ ${dias} días — vence ${fechaStr}
+                    </span>
+                  </td>
+                </tr>
+                <tr style="border-bottom:1px solid #f1f5f9">
+                  <td style="padding:10px 0;color:#64748b">Creado por</td>
+                  <td style="padding:10px 0">${creadoPor}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;color:#64748b">Fecha/Hora</td>
+                  <td style="padding:10px 0;color:#94a3b8;font-size:.85rem">${ahora}</td>
+                </tr>
+              </table>
+            </div>
+            <div style="background:#f8fafc;padding:14px 28px;font-size:.78rem;color:#94a3b8;text-align:center">
+              Notificación automática — ${VEF_NOMBRE} ERP
+            </div>
+          </div>`
+      });
+      console.log('📧 Notificación de nueva empresa enviada a', VEF_CORREO);
+    } catch(emailErr) {
+      console.warn('⚠️  No se pudo enviar notificación de nueva empresa:', emailErr.message);
+    }
+    // ─────────────────────────────────────────────────────────────
+
     res.status(201).json({ok:true, empresa:emp.rows[0], schema});
   } catch(e){ 
     console.error('crear empresa:', e.message);
@@ -2226,7 +2384,7 @@ app.get('/api/clientes/:id', auth, licencia, async (req,res)=>{
   const r=await QR(req,'SELECT * FROM clientes WHERE id=$1',[req.params.id]);
   r[0]?res.json(r[0]):res.status(404).json({error:'No encontrado'});
 });
-app.post('/api/clientes', auth, licencia, async (req,res)=>{
+app.post('/api/clientes', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {nombre,contacto,direccion,telefono,email,rfc,regimen_fiscal,cp,ciudad,tipo_persona}=req.body;
     const cols=['nombre','contacto','direccion','telefono','email'];
@@ -2241,7 +2399,7 @@ app.post('/api/clientes', auth, licencia, async (req,res)=>{
     res.status(201).json(rows[0]);
   }catch(e){res.status(500).json({error:e.message});}
 });
-app.put('/api/clientes/:id', auth, licencia, async (req,res)=>{
+app.put('/api/clientes/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {nombre,contacto,direccion,telefono,email,rfc,regimen_fiscal,cp,ciudad,tipo_persona}=req.body;
     const sets=[]; const vals=[];let i=1;
@@ -2258,7 +2416,7 @@ app.put('/api/clientes/:id', auth, licencia, async (req,res)=>{
     res.json(rows[0]);
   }catch(e){res.status(500).json({error:e.message});}
 });
-app.delete('/api/clientes/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/clientes/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   if(has('clientes','activo')) await QR(req,'UPDATE clientes SET activo=false WHERE id=$1',[req.params.id]);
   else await QR(req,'DELETE FROM clientes WHERE id=$1',[req.params.id]);
   res.json({ok:true});
@@ -2449,7 +2607,7 @@ app.get('/api/proveedores', auth, licencia, async (req,res)=>{
   const w=has('proveedores','activo')?'WHERE activo=true':'';
   res.json(await QR(req,`SELECT * FROM proveedores ${w} ORDER BY nombre`));
 });
-app.post('/api/proveedores', auth, licencia, async (req,res)=>{
+app.post('/api/proveedores', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {nombre,contacto,direccion,telefono,email,rfc,condiciones_pago,tipo_persona}=req.body;
     const cols=['nombre','contacto','direccion','telefono','email'];
@@ -2462,7 +2620,7 @@ app.post('/api/proveedores', auth, licencia, async (req,res)=>{
     res.status(201).json(rows[0]);
   }catch(e){res.status(500).json({error:e.message});}
 });
-app.put('/api/proveedores/:id', auth, licencia, async (req,res)=>{
+app.put('/api/proveedores/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {nombre,contacto,direccion,telefono,email,rfc,condiciones_pago,tipo_persona}=req.body;
     const sets=[];const vals=[];let i=1;
@@ -2477,7 +2635,7 @@ app.put('/api/proveedores/:id', auth, licencia, async (req,res)=>{
     res.json(rows[0]);
   }catch(e){res.status(500).json({error:e.message});}
 });
-app.delete('/api/proveedores/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/proveedores/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   if(has('proveedores','activo')) await QR(req,'UPDATE proveedores SET activo=false WHERE id=$1',[req.params.id]);
   else await QR(req,'DELETE FROM proveedores WHERE id=$1',[req.params.id]);
   res.json({ok:true});
@@ -2583,7 +2741,7 @@ app.get('/api/proyectos', auth, licencia, async (req,res)=>{
     FROM proyectos p LEFT JOIN clientes c ON c.id=p.cliente_id
     ORDER BY p.id DESC`));
 });
-app.post('/api/proyectos', auth, licencia, async (req,res)=>{
+app.post('/api/proyectos', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {nombre,cliente_id,responsable,estatus}=req.body;
     const cols=['nombre','cliente_id','estatus'];
@@ -2594,7 +2752,7 @@ app.post('/api/proyectos', auth, licencia, async (req,res)=>{
     res.status(201).json(rows[0]);
   }catch(e){res.status(500).json({error:e.message});}
 });
-app.put('/api/proyectos/:id', auth, licencia, async (req,res)=>{
+app.put('/api/proyectos/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {nombre,cliente_id,responsable,estatus}=req.body;
     const sets=[];const vals=[];let i=1;
@@ -2606,7 +2764,7 @@ app.put('/api/proyectos/:id', auth, licencia, async (req,res)=>{
     res.json(rows[0]);
   }catch(e){res.status(500).json({error:e.message});}
 });
-app.delete('/api/proyectos/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/proyectos/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   await QR(req,'DELETE FROM proyectos WHERE id=$1',[req.params.id]); res.json({ok:true});
 });
 
@@ -2643,7 +2801,7 @@ app.get('/api/cotizaciones/:id', auth, licencia, async (req,res)=>{
   res.json({...c,items,seguimientos:segs});
 });
 
-app.post('/api/cotizaciones', auth, licencia, async (req,res)=>{
+app.post('/api/cotizaciones', auth, empresaActiva, licencia, async (req,res)=>{
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
@@ -2684,7 +2842,7 @@ app.post('/api/cotizaciones', auth, licencia, async (req,res)=>{
   finally{client.release();}
 });
 
-app.put('/api/cotizaciones/:id', auth, licencia, async (req,res)=>{
+app.put('/api/cotizaciones/:id', auth, empresaActiva, licencia, async (req,res)=>{
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
@@ -2719,7 +2877,7 @@ app.put('/api/cotizaciones/:id', auth, licencia, async (req,res)=>{
   finally{client.release();}
 });
 
-app.delete('/api/cotizaciones/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/cotizaciones/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   try {
     await QR(req,'DELETE FROM items_cotizacion WHERE cotizacion_id=$1',[req.params.id]);
     await QR(req,'DELETE FROM seguimientos WHERE cotizacion_id=$1',[req.params.id]);
@@ -2760,7 +2918,7 @@ app.get('/api/cotizaciones/:id/pdf', auth, licencia, async (req,res)=>{
   }catch(e){console.error(e);res.status(500).json({error:e.message});}
 });
 
-app.post('/api/cotizaciones/:id/email', auth, licencia, async (req,res)=>{
+app.post('/api/cotizaciones/:id/email', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {to,cc,asunto,mensaje}=req.body;
     if(!to) return res.status(400).json({error:'to requerido'});
@@ -2892,7 +3050,7 @@ app.get('/api/ordenes-proveedor/:id', auth, licencia, async (req,res)=>{
   res.json({...op,items,seguimientos:segs});
 });
 
-app.post('/api/ordenes-proveedor', auth, licencia, async (req,res)=>{
+app.post('/api/ordenes-proveedor', auth, empresaActiva, licencia, async (req,res)=>{
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
@@ -2918,7 +3076,7 @@ app.post('/api/ordenes-proveedor', auth, licencia, async (req,res)=>{
   finally{client.release();}
 });
 
-app.put('/api/ordenes-proveedor/:id', auth, licencia, async (req,res)=>{
+app.put('/api/ordenes-proveedor/:id', auth, empresaActiva, licencia, async (req,res)=>{
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
@@ -2958,7 +3116,7 @@ app.put('/api/ordenes-proveedor/:id', auth, licencia, async (req,res)=>{
   finally{client.release();}
 });
 
-app.delete('/api/ordenes-proveedor/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/ordenes-proveedor/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   try {
     await QR(req,'DELETE FROM items_orden_proveedor WHERE orden_id=$1',[req.params.id]);
     await QR(req,'DELETE FROM seguimientos_oc WHERE orden_id=$1',[req.params.id]);
@@ -3049,7 +3207,7 @@ app.get('/api/ordenes-proveedor/:id/pdf', auth, licencia, async (req,res)=>{
   }catch(e){res.status(500).json({error:e.message});}
 });
 
-app.post('/api/ordenes-proveedor/:id/email', auth, licencia, async (req,res)=>{
+app.post('/api/ordenes-proveedor/:id/email', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {to,cc,mensaje}=req.body;
     const [op]=await QR(req,`SELECT op.*,p.nombre proveedor_nombre,p.email proveedor_email,p.contacto proveedor_contacto,p.telefono proveedor_tel,p.direccion proveedor_dir,p.rfc proveedor_rfc FROM ordenes_proveedor op LEFT JOIN proveedores p ON p.id=op.proveedor_id WHERE op.id=$1`,[req.params.id]);
@@ -3102,7 +3260,7 @@ app.get('/api/facturas', auth, licencia, async (req,res)=>{
   res.json(await QR(req,sql,params));
 });
 
-app.post('/api/facturas', auth, licencia, async (req,res)=>{
+app.post('/api/facturas', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {cotizacion_id,cliente_id,moneda,subtotal,iva,total,fecha_vencimiento,notas}=req.body;
     const yr=new Date().getFullYear();
@@ -3130,7 +3288,7 @@ app.post('/api/facturas', auth, licencia, async (req,res)=>{
   }catch(e){res.status(500).json({error:e.message});}
 });
 
-app.put('/api/facturas/:id', auth, licencia, async (req,res)=>{
+app.put('/api/facturas/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {estatus,notas,fecha_vencimiento}=req.body;
     const sets=[];const vals=[];let i=1;
@@ -3177,7 +3335,7 @@ app.get('/api/facturas/:id/pagos', auth, async (req,res)=>{
   res.json(await QR(req,'SELECT * FROM pagos WHERE factura_id=$1 ORDER BY fecha DESC',[req.params.id]));
 });
 
-app.delete('/api/facturas/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/facturas/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   try {
     await QR(req,'DELETE FROM pagos WHERE factura_id=$1',[req.params.id]);
     await QR(req,'DELETE FROM facturas WHERE id=$1',[req.params.id]);
@@ -3252,7 +3410,7 @@ app.get('/api/inventario/:id/foto', auth, async (req,res)=>{
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
-app.post('/api/inventario', auth, licencia, async (req,res)=>{
+app.post('/api/inventario', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {codigo,nombre,descripcion,categoria,unidad,cantidad_actual,cantidad_minima,
            precio_costo,precio_venta,ubicacion,proveedor_id,notas,foto}=req.body;
@@ -3275,7 +3433,7 @@ app.post('/api/inventario', auth, licencia, async (req,res)=>{
   }catch(e){console.error('inv POST:',e.message);res.status(500).json({error:e.message});}
 });
 
-app.put('/api/inventario/:id', auth, licencia, async (req,res)=>{
+app.put('/api/inventario/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {codigo,nombre,descripcion,categoria,unidad,cantidad_minima,
            precio_costo,precio_venta,ubicacion,notas,foto}=req.body;
@@ -3372,7 +3530,7 @@ app.get('/api/inventario/movimientos', auth, async (req,res)=>{
     ORDER BY m.fecha DESC LIMIT 200`));
 });
 
-app.delete('/api/inventario/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/inventario/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   if(has('inventario','activo')) await QR(req,'UPDATE inventario SET activo=false WHERE id=$1',[req.params.id]);
   else await QR(req,'DELETE FROM inventario WHERE id=$1',[req.params.id]);
   res.json({ok:true});
@@ -3508,7 +3666,7 @@ app.get('/api/reportes-servicio/:id', auth, async (req,res)=>{
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-app.post('/api/reportes-servicio', auth, licencia, async (req,res)=>{
+app.post('/api/reportes-servicio', auth, empresaActiva, licencia, async (req,res)=>{
   try{
     const {titulo,cliente_id,proyecto_id,fecha_reporte,fecha_servicio,tecnico,
            introduccion,objetivo,alcance,descripcion_sistema,arquitectura,
@@ -3537,7 +3695,7 @@ app.post('/api/reportes-servicio', auth, licencia, async (req,res)=>{
   }catch(e){ console.error('RS POST:',e.message); res.status(500).json({error:e.message}); }
 });
 
-app.put('/api/reportes-servicio/:id', auth, licencia, async (req,res)=>{
+app.put('/api/reportes-servicio/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try{
     const b = req.body;
     const sets=[]; const vals=[]; let i=1;
@@ -3569,7 +3727,7 @@ app.put('/api/reportes-servicio/:id', auth, licencia, async (req,res)=>{
   }catch(e){ console.error('RS PUT:',e.message); res.status(500).json({error:e.message}); }
 });
 
-app.delete('/api/reportes-servicio/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/reportes-servicio/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   try{ await QR(req,'DELETE FROM reportes_servicio WHERE id=$1',[req.params.id]); res.json({ok:true}); }
   catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -3723,7 +3881,7 @@ app.get('/api/egresos/categorias', auth, async (req,res)=>{
   res.json(rows.map(r=>r.categoria));
 });
 
-app.post('/api/egresos', auth, licencia, async (req,res)=>{
+app.post('/api/egresos', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {fecha,proveedor_id,proveedor_nombre,categoria,descripcion,
            subtotal,iva,total,metodo,referencia,numero_factura,notas} = req.body;
@@ -3742,7 +3900,7 @@ app.post('/api/egresos', auth, licencia, async (req,res)=>{
   }
 });
 
-app.put('/api/egresos/:id', auth, licencia, async (req,res)=>{
+app.put('/api/egresos/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {fecha,proveedor_id,proveedor_nombre,categoria,descripcion,
            subtotal,iva,total,metodo,referencia,numero_factura,notas} = req.body;
@@ -3761,7 +3919,7 @@ app.put('/api/egresos/:id', auth, licencia, async (req,res)=>{
   }
 });
 
-app.delete('/api/egresos/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/egresos/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   try { await QR(req,'DELETE FROM egresos WHERE id=$1',[req.params.id]); res.json({ok:true}); }
   catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -4167,7 +4325,7 @@ app.get('/api/tareas', auth, licencia, async (req,res)=>{
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
-app.post('/api/tareas', auth, licencia, async (req,res)=>{
+app.post('/api/tareas', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {titulo,descripcion,proyecto_id,asignado_a,prioridad,estatus,
            fecha_inicio,fecha_vencimiento,notas} = req.body;
@@ -4183,7 +4341,7 @@ app.post('/api/tareas', auth, licencia, async (req,res)=>{
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
-app.put('/api/tareas/:id', auth, licencia, async (req,res)=>{
+app.put('/api/tareas/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
     const {titulo,descripcion,proyecto_id,asignado_a,prioridad,estatus,
            fecha_inicio,fecha_vencimiento,notas} = req.body;
@@ -4200,7 +4358,7 @@ app.put('/api/tareas/:id', auth, licencia, async (req,res)=>{
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
-app.delete('/api/tareas/:id', auth, licencia, adminOnly, async (req,res)=>{
+app.delete('/api/tareas/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
   try { await QR(req,'DELETE FROM tareas WHERE id=$1',[req.params.id]); res.json({ok:true}); }
   catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -4590,7 +4748,7 @@ app.get('/api/sat/pac-info', auth, async (req, res) => {
 });
 
 // Solicitar descarga de CFDIs EMITIDOS
-app.post('/api/sat/solicitar-emitidos', auth, licencia, async (req, res) => {
+app.post('/api/sat/solicitar-emitidos', auth, empresaActiva, licencia, async (req, res) => {
   try {
     const r = await satProxy('/solicitar-emitidos', req.body);
     res.json(r);
@@ -4599,7 +4757,7 @@ app.post('/api/sat/solicitar-emitidos', auth, licencia, async (req, res) => {
 
 
 // Descargar XML de un CFDI específico por UUID (proceso automático)
-app.post('/api/sat/descargar-uuid', auth, licencia, async (req, res) => {
+app.post('/api/sat/descargar-uuid', auth, empresaActiva, licencia, async (req, res) => {
   try {
     // Este endpoint puede tardar hasta 3 minutos — timeout extendido
     res.setTimeout(200000);
@@ -4609,7 +4767,7 @@ app.post('/api/sat/descargar-uuid', auth, licencia, async (req, res) => {
 });
 
 // Validar CFDI por UUID — consulta pública SAT sin FIEL
-app.post('/api/sat/validar-cfdi', auth, licencia, async (req, res) => {
+app.post('/api/sat/validar-cfdi', auth, empresaActiva, licencia, async (req, res) => {
   try {
     const r = await satProxy('/validar-cfdi', req.body);
     res.json(r);
@@ -4619,7 +4777,7 @@ app.post('/api/sat/validar-cfdi', auth, licencia, async (req, res) => {
 // Generar / Timbrar CFDI 4.0
 // Si no hay PAC configurado: genera el XML firmado para revisión (sin timbre fiscal)
 // Si hay PAC: timbra y devuelve el XML con UUID
-app.post('/api/sat/timbrar', auth, licencia, async (req, res) => {
+app.post('/api/sat/timbrar', auth, empresaActiva, licencia, async (req, res) => {
   try {
     const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
     const { factura_id, cer, key, password, ambiente } = req.body;
@@ -4736,7 +4894,7 @@ app.post('/api/sat/timbrar', auth, licencia, async (req, res) => {
 
 // Generar XML CFDI 4.0 (sin timbrar — para revisión de estructura)
 // Toma datos reales de la factura en BD y genera el XML firmado con CSD/FIEL
-app.post('/api/sat/generar-xml', auth, licencia, async (req, res) => {
+app.post('/api/sat/generar-xml', auth, empresaActiva, licencia, async (req, res) => {
   try {
     const { factura_id, cer, key, password } = req.body;
     if (!factura_id) return res.status(400).json({ error: 'factura_id requerido' });
@@ -4815,7 +4973,7 @@ app.post('/api/sat/generar-xml', auth, licencia, async (req, res) => {
 
 
 // Cancelar CFDI emitido
-app.post('/api/sat/cancelar', auth, licencia, async (req, res) => {
+app.post('/api/sat/cancelar', auth, empresaActiva, licencia, async (req, res) => {
   try {
     const r = await satProxy('/cancelar', req.body);
     if (r.ok && req.body.factura_id) {
@@ -4828,7 +4986,7 @@ app.post('/api/sat/cancelar', auth, licencia, async (req, res) => {
 });
 
 // Vincular XML de proveedor a Orden de Compra
-app.post('/api/sat/vincular-cfdi', auth, licencia, async (req, res) => {
+app.post('/api/sat/vincular-cfdi', auth, empresaActiva, licencia, async (req, res) => {
   try {
     const { xml, orden_id } = req.body;
     if (!xml) return res.status(400).json({error:'xml requerido'});
@@ -4849,7 +5007,7 @@ app.post('/api/sat/vincular-cfdi', auth, licencia, async (req, res) => {
 });
 
 // Validar lote de CFDIs de proveedores
-app.post('/api/sat/validar-lote', auth, licencia, async (req, res) => {
+app.post('/api/sat/validar-lote', auth, empresaActiva, licencia, async (req, res) => {
   const { cfdis } = req.body;
   if (!Array.isArray(cfdis)||!cfdis.length)
     return res.status(400).json({error:'Se requiere array de cfdis'});
@@ -4923,28 +5081,55 @@ app.get('/api/sat/health', async (req, res) => {  // sin auth — el frontend lo
 ;
 
 
-app.post('/api/ia/generar-cotizacion', auth, licencia, async (req, res) => {
-  if (!anthropic) return res.status(400).json({ error: 'IA no configurada. Agrega ANTHROPIC_API_KEY al .env' });
+
+// Guardar configuración de IA (DeepSeek API Key)
+app.post('/api/ia/guardar-config', auth, async (req, res) => {
+  try {
+    const { deepseek_api_key, deepseek_modelo } = req.body;
+    await QR(req, `ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS deepseek_api_key TEXT`).catch(()=>{});
+    await QR(req, `ALTER TABLE empresa_config ADD COLUMN IF NOT EXISTS deepseek_modelo VARCHAR(50)`).catch(()=>{});
+    const updates = [];
+    const vals = [];
+    let i = 1;
+    if (deepseek_api_key) { updates.push(`deepseek_api_key=$${i++}`); vals.push(deepseek_api_key); }
+    if (deepseek_modelo)  { updates.push(`deepseek_modelo=$${i++}`);  vals.push(deepseek_modelo); }
+    if (!updates.length) return res.status(400).json({ error: 'Nada que actualizar' });
+    await QR(req, `UPDATE empresa_config SET ${updates.join(',')}`, vals);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.get('/api/ia/estado', auth, async (req, res) => {
+  try {
+    const apiKey = await getDeepSeekKey(req.user.schema);
+    res.json({
+      ok: !!apiKey,
+      modelo: 'deepseek-chat',
+      proveedor: 'DeepSeek',
+      configurada: !!apiKey,
+      mensaje: apiKey ? 'DeepSeek configurado y listo' : 'Configura tu API Key en Configuración → IA'
+    });
+  } catch(e) { res.json({ ok: false, configurada: false }); }
+});
+
+app.post('/api/ia/generar-cotizacion', auth, empresaActiva, licencia, async (req, res) => {
   try {
     const { descripcion, cliente, tipo_servicio, urgente } = req.body;
     if (!descripcion) return res.status(400).json({ error: 'Descripción requerida' });
 
-    // Obtener cotizaciones recientes como contexto
     const ejemplos = await QR(req, `
-      SELECT c.numero_cotizacion, c.total, c.moneda,
-             array_agg(ic.descripcion || ' - $' || ic.precio_unitario) as items
-      FROM cotizaciones c
-      LEFT JOIN items_cotizacion ic ON ic.cotizacion_id = c.id
-      WHERE c.total > 0
-      GROUP BY c.id ORDER BY c.created_at DESC LIMIT 5`).catch(()=>[]);
+      SELECT c.numero_cotizacion, c.total, c.moneda
+      FROM cotizaciones c WHERE c.total > 0
+      ORDER BY c.created_at DESC LIMIT 5`).catch(()=>[]);
 
-    const empCfg = (await Q('SELECT nombre,rfc,regimen_fiscal FROM empresa_config LIMIT 1',[],req.user.schema))[0]||{};
+    const empCfg = (await Q('SELECT nombre,rfc FROM empresa_config LIMIT 1',[],req.user.schema))[0]||{};
 
     let ejemplosCtx = '';
     if (ejemplos.length) {
       ejemplosCtx = 'Cotizaciones de referencia:\n' +
         ejemplos.map(e => '- ' + e.numero_cotizacion + ': $' + e.total + ' ' + e.moneda).join('\n') + '\n';
     }
+
     const prompt = 'Eres el asistente de ' + (empCfg.nombre||'VEF Automatización') + ', empresa de automatización industrial en México.\n\n' +
       (ejemplosCtx || '') +
       'Genera una cotización para:\n' +
@@ -4952,29 +5137,27 @@ app.post('/api/ia/generar-cotizacion', auth, licencia, async (req, res) => {
       'Descripción: ' + descripcion + '\n' +
       'Tipo: ' + (tipo_servicio||'Automatización') + '\n' +
       'Urgente: ' + (urgente?'Sí':'No') + '\n\n' +
-      'Responde SOLO en JSON con: titulo, resumen, items(descripcion,cantidad,unidad,precio_unitario), notas, moneda, tiempo_entrega';
+      'Responde SOLO en JSON válido con esta estructura exacta: {"titulo":"...","resumen":"...","items":[{"descripcion":"...","cantidad":1,"unidad":"pza","precio_unitario":0}],"notas":"...","moneda":"USD","tiempo_entrega":"..."}';
 
-    const msg = await anthropic.messages.create({
-      model:      'claude-sonnet-4-20250514',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: prompt }]
-    });
+    const text = await deepseekChat(
+      [{ role: 'user', content: prompt }],
+      req.user.schema, 'deepseek-chat', 1500
+    );
 
-    const text = msg.content[0]?.text || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return res.status(400).json({ error: 'IA no generó respuesta válida', raw: text });
+    if (!jsonMatch) return res.status(400).json({ error: 'DeepSeek no generó respuesta válida', raw: text });
 
     const data = JSON.parse(jsonMatch[0]);
-    res.json({ ok: true, cotizacion: data, tokens: msg.usage });
+    res.json({ ok: true, cotizacion: data });
 
   } catch(e) {
-    console.error('IA error:', e.message);
-    res.status(500).json({ error: 'Error de IA: ' + e.message });
+    console.error('IA DeepSeek error:', e.message);
+    res.status(500).json({ error: e.message });
   }
 });
 
-app.post('/api/ia/mejorar-descripcion', auth, licencia, async (req, res) => {
-  if (!anthropic) return res.status(400).json({ error: 'IA no configurada' });
+app.post('/api/ia/mejorar-descripcion', auth, empresaActiva, licencia, async (req, res) => {
+  // DeepSeek - key validated per request
   try {
     const { texto, tipo = 'descripcion' } = req.body;
     if (!texto) return res.status(400).json({ error: 'texto requerido' });
@@ -4991,13 +5174,12 @@ ${texto}`,
 ${texto}`,
     };
 
-    const msg = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 400,
-      messages: [{ role: 'user', content: prompts[tipo] || prompts.descripcion }]
-    });
+    const result = await deepseekChat(
+      [{ role: 'user', content: prompts[tipo] || prompts.descripcion }],
+      req.user.schema, 'deepseek-chat', 400
+    );
 
-    res.json({ ok: true, texto: msg.content[0]?.text?.trim() || texto });
+    res.json({ ok: true, texto: result.trim() || texto });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

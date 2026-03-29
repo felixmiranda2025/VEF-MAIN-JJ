@@ -561,7 +561,19 @@ async function api(url, method='GET', body=null){
   const res = await fetch(url, opts);
   if(res.status === 401){ logout(); return; }
   const data = await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error || 'Error del servidor');
+  if(!res.ok){
+    // Empresa inactiva — solo lectura permitida
+    if(data.codigo === 'EMPRESA_INACTIVA'){
+      toast('🔒 '+data.error, 'warn');
+      throw new Error(data.error);
+    }
+    // Licencia vencida
+    if(data.codigo === 'LICENCIA_VENCIDA' || data.codigo === 'CUENTA_INACTIVA'){
+      toast('⚠️ '+data.error, 'warn');
+      throw new Error(data.error);
+    }
+    throw new Error(data.error || 'Error del servidor');
+  }
   return data;
 }
 
@@ -3237,6 +3249,8 @@ async function configuracion(){
   const smtpHost = emp.smtp_host||'smtp.zoho.com';
   const smtpPort = emp.smtp_port||465;
   const smtpUser = emp.smtp_user||'soporte.ventas@vef-automatizacion.com';
+  // Cargar estado IA al abrir config (en segundo plano)
+  setTimeout(iaCargarEstado, 800);
   const dbHost   = emp.db_host||'entorno-1.cx6c6s6i0ith.us-east-2.rds.amazonaws.com';
   const dbPort   = emp.db_port||5432;
   const dbName   = emp.db_name||'postgres';
@@ -3247,6 +3261,7 @@ async function configuracion(){
     <button class="tab-btn" data-group="cfg" onclick="switchTab(this,'cfg_fiscal')">📄 Fiscal / Contable</button>
     <button class="tab-btn" data-group="cfg" onclick="switchTab(this,'cfg_logo')">🖼 Logo</button>
     <button class="tab-btn" data-group="cfg" onclick="switchTab(this,'cfg_correo')">✉️ Correo</button>
+    <button class="tab-btn" data-group="cfg" onclick="switchTab(this,'cfg_ia')">🤖 IA (DeepSeek)</button>
     <button class="tab-btn" data-group="cfg" onclick="switchTab(this,'cfg_bd')">🗄 Base de Datos</button>
     <button class="tab-btn" data-group="cfg" onclick="switchTab(this,'cfg_sistema')">ℹ️ Sistema</button>
   </div>
@@ -3520,6 +3535,47 @@ async function configuracion(){
       <div class="card-body">
         <div id="dbDiagContent" style="min-height:120px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.9rem">
           Haz click en <strong>Diagnóstico Completo</strong> para ver el estado de la BD
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ IA DeepSeek -->
+  <div id="cfg_ia" class="tab-content" data-tabs="cfg" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🤖 Configuración de IA — DeepSeek</div>
+        <button class="btn btn-primary btn-sm" onclick="iaGuardar()">💾 Guardar</button>
+      </div>
+      <div class="card-body">
+        <div style="background:#eff6ff;border-left:3px solid #2563eb;padding:10px 14px;border-radius:4px;font-size:.84rem;margin-bottom:16px">
+          <strong>🔑 ¿Cómo obtener tu API Key de DeepSeek?</strong><br>
+          1. Ve a <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:#2563eb">platform.deepseek.com/api_keys</a><br>
+          2. Crea una cuenta o inicia sesión<br>
+          3. Crea una nueva API Key y cópiala aquí<br>
+          <span style="color:#64748b;font-size:.78rem">La API Key se guarda encriptada en la BD de tu empresa.</span>
+        </div>
+        <div class="form-grid form-grid-2" style="gap:14px">
+          <div class="field-group" style="grid-column:1/-1">
+            <label>API Key de DeepSeek</label>
+            <input id="cfg_deepseek_key" type="password" placeholder="sk-..." autocomplete="new-password">
+            <small style="color:#64748b;font-size:.75rem">Dejar vacío para mantener la actual. La key no se muestra por seguridad.</small>
+          </div>
+          <div class="field-group" style="grid-column:1/-1">
+            <label>Modelo</label>
+            <select id="cfg_deepseek_modelo" style="padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:.88rem">
+              <option value="deepseek-chat">deepseek-chat (recomendado — rápido y económico)</option>
+              <option value="deepseek-reasoner">deepseek-reasoner (más potente, más lento)</option>
+            </select>
+          </div>
+          <div class="field-group" style="grid-column:1/-1">
+            <div id="iaEstadoBox" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;font-size:.85rem;color:#64748b">
+              ⏳ Verificando estado de la IA...
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px">
+          <button class="btn btn-secondary" onclick="iaTestConexion()">🔍 Probar conexión</button>
         </div>
       </div>
     </div>
@@ -5425,9 +5481,12 @@ async function adminSistema(){
         (e.activa?'<span style="color:#059669;font-size:.82rem">Activa</span>':'<span style="color:#dc2626;font-size:.82rem">Inactiva</span>')+
       '</td>'+
       '<td style="white-space:nowrap">'+
-        '<button class="btn btn-secondary btn-xs" style="margin-right:4px" onclick="admSusc('+e.id+',&quot;'+esc(e.nombre)+'&quot;)">⏳</button>'+
-        '<button class="btn btn-secondary btn-xs" onclick="admToggleActiva('+e.id+','+e.activa+',&quot;'+esc(e.nombre)+'&quot;)">'+
-          (e.activa?'🔴':'✅')+'</button>'+
+        '<button class="btn btn-secondary btn-xs" style="margin-right:4px" onclick="admSusc('+e.id+',&quot;'+esc(e.nombre)+'&quot;)" title="Gestionar suscripción">⏳ Susc.</button>'+
+        '<button class="btn btn-secondary btn-xs" style="margin-right:4px" onclick="admToggleActiva('+e.id+','+e.activa+',&quot;'+esc(e.nombre)+'&quot;)" title="'+(e.activa?'Desactivar empresa':'Activar empresa')+'">'+
+          (e.activa?'🔴 Desactivar':'✅ Activar')+'</button>'+
+        (e.slug!=='vef'?'<button class="btn btn-xs" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5" '+
+          'onclick="admBorrarEmpresa('+e.id+',&quot;'+esc(e.nombre)+'&quot;)" title="Eliminar empresa y todos sus datos">🗑 Borrar</button>':
+          '<span style="font-size:.72rem;color:#94a3b8">Principal</span>')+
       '</td>'+
     '</tr>';
   }).join('') : '<tr><td colspan="5" style="color:#aaa;text-align:center;padding:24px">Sin empresas registradas</td></tr>';
@@ -5606,6 +5665,16 @@ async function admToggleActiva(id, activa, nombre){
   try{
     await api('/api/admin/empresas/'+id,'PUT',{activa:!activa});
     toast(activa?'Empresa desactivada':'Empresa activada ✅');
+    adminSistema();
+  }catch(e){toast(e.message,'err');}
+}
+
+async function admBorrarEmpresa(id, nombre){
+  if(!confirm('⚠️ ¿ELIMINAR la empresa "'+nombre+'"?\n\nEsto borrará:\n• Todos los datos (cotizaciones, clientes, facturas, etc.)\n• Todos los usuarios de esa empresa\n• El schema completo de la BD\n\nEsta acción es PERMANENTE e irreversible.'))return;
+  if(!confirm('Confirma de nuevo: ¿Borrar permanentemente "'+nombre+'" y todos sus datos?'))return;
+  try{
+    var r=await api('/api/admin/empresas/'+id,'DELETE');
+    toast('✅ Empresa "'+nombre+'" eliminada. Usuarios: '+r.usuarios_eliminados);
     adminSistema();
   }catch(e){toast(e.message,'err');}
 }
@@ -5875,7 +5944,7 @@ async function moduloIA() {
     // Header
     '<div class="card" style="margin-bottom:16px">'+
     '<div class="card-header">'+
-      '<div class="card-title">🤖 Asistente IA — Generador de Cotizaciones</div>'+
+      '<div class="card-title">🤖 Asistente DeepSeek — Generador de Cotizaciones</div>'+
     '</div>'+
     '<div class="card-body">'+
 
@@ -5886,7 +5955,7 @@ async function moduloIA() {
         '<span style="font-size:1.5rem">'+(estado.disponible?'🟢':'⚠️')+'</span>'+
         '<div>'+
           '<div style="font-weight:700;color:'+(estado.disponible?'#166534':'#92400e')+'">'+
-            (estado.disponible?'IA Activa — Claude':'IA no configurada')+'</div>'+
+            (estado.disponible?'IA Activa — Claude':'DeepSeek no configurado')+'</div>'+
           '<div style="font-size:.82rem;color:'+(estado.disponible?'#166534':'#92400e')+'">'+esc(estado.mensaje)+'</div>'+
         '</div>'+
       '</div>'+
@@ -7759,6 +7828,56 @@ async function satBorrarHistorialTodo(){
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
 
+
+// ════════════════════════════════════════════════════════════════
+//  MÓDULO: IA / DEEPSEEK — Configuración
+// ════════════════════════════════════════════════════════════════
+async function iaCargarEstado(){
+  var box = document.getElementById('iaEstadoBox');
+  if(!box) return;
+  try {
+    var r = await api('/api/ia/estado');
+    if(r && r.configurada){
+      box.innerHTML = '<span style="color:#059669;font-weight:700">✅ DeepSeek configurado</span> — Modelo: <code>'+esc(r.modelo||'deepseek-chat')+'</code>';
+      box.style.background='#f0fdf4'; box.style.borderColor='#bbf7d0';
+    } else {
+      box.innerHTML = '<span style="color:#d97706;font-weight:700">⚠️ Sin API Key</span> — '+esc(r?.mensaje||'Configura tu API Key de DeepSeek');
+      box.style.background='#fffbeb'; box.style.borderColor='#fde68a';
+    }
+  } catch(e) {
+    if(box){ box.innerHTML = '<span style="color:#dc2626">❌ Error: '+esc(e.message)+'</span>'; }
+  }
+}
+
+async function iaGuardar(){
+  var key = (ge('cfg_deepseek_key')||{}).value||'';
+  var modelo = (ge('cfg_deepseek_modelo')||{}).value||'deepseek-chat';
+  if(!key){ toast('Escribe la API Key de DeepSeek','err'); return; }
+  var btn = document.querySelector('[onclick="iaGuardar()"]');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Guardando...'; }
+  try {
+    await api('/api/ia/guardar-config','POST',{ deepseek_api_key: key, deepseek_modelo: modelo });
+    toast('✅ Configuración de IA guardada');
+    if(ge('cfg_deepseek_key')) ge('cfg_deepseek_key').value='';
+    setTimeout(iaCargarEstado, 500);
+  } catch(e){ toast(e.message,'err'); }
+  finally { if(btn){ btn.disabled=false; btn.textContent='💾 Guardar'; } }
+}
+
+async function iaTestConexion(){
+  var box = document.getElementById('iaEstadoBox');
+  if(box){ box.innerHTML='⏳ Probando conexión con DeepSeek...'; box.style.background='#f8fafc'; box.style.borderColor='#e2e8f0'; }
+  try {
+    var r = await api('/api/ia/mejorar-descripcion','POST',{ texto:'Servicio de automatización industrial', tipo:'descripcion' });
+    if(r && r.texto){
+      if(box){ box.innerHTML='<span style="color:#059669;font-weight:700">✅ Conexión exitosa</span> — DeepSeek respondió correctamente'; box.style.background='#f0fdf4'; box.style.borderColor='#bbf7d0'; }
+      toast('✅ DeepSeek funciona correctamente');
+    }
+  } catch(e){
+    if(box){ box.innerHTML='<span style="color:#dc2626;font-weight:700">❌ Error de conexión</span>: '+esc(e.message); box.style.background='#fef2f2'; box.style.borderColor='#fca5a5'; }
+    toast('❌ '+e.message,'err');
+  }
+}
 
 // ════════════════════════════════════════════════════════════════
 //  MÓDULO: AUTORIZACIONES — Panel para Admin/Gerencia

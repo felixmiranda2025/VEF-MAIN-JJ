@@ -633,10 +633,11 @@ async function doEditarEmpresa(){
 
 // ── Eliminar Empresa ──────────────────────────────────
 async function mEliminarEmpresa(id, nombre){
-  if(!confirm('⚠️ ¿Eliminar la empresa "'+nombre+'"?\n\nEsto desactivará la empresa.\nLos datos en su schema NO se borran de la BD.'))return;
+  if(!confirm('⚠️ ¿ELIMINAR la empresa "'+nombre+'"?\n\nEsto borrará permanentemente:\n• El schema completo de la BD\n• Todos los usuarios de esa empresa\n• Todos sus datos\n\n¡Esta acción NO se puede deshacer!'))return;
+  if(!confirm('Segunda confirmación: ¿Borrar permanentemente "'+nombre+'" y TODOS sus datos?'))return;
   try{
-    await api('/api/admin/empresas/'+id,'PUT',{activa:false});
-    toast('Empresa "'+nombre+'" desactivada');
+    const r = await api('/api/admin/empresas/'+id,'DELETE');
+    toast('✅ Empresa "'+nombre+'" eliminada. Usuarios: '+(r.usuarios_eliminados||0));
     await cargar();
   }catch(e){toast(e.message,'err');}
 }
@@ -645,7 +646,7 @@ async function mLimpiarDatos(id, nombre){
   if(!confirm('🚨 ADVERTENCIA CRÍTICA\n\n¿Eliminar TODOS los datos de la empresa "'+nombre+'"?\n\nEsto borrará permanentemente:\n• Clientes, Proveedores, Proyectos\n• Cotizaciones, Facturas, Egresos\n• Inventario, Tareas, PDFs\n\n¡Esta acción NO se puede deshacer!'))return;
   if(!confirm('Segunda confirmación: ¿Estás SEGURO que deseas borrar TODOS los datos de "'+nombre+'"?'))return;
   try{
-    const r = await fetch('/api/admin/schema-data/'+id+'?key=vef2025',{method:'DELETE',headers:{Authorization:'Bearer '+localStorage.getItem('adm_token')}});
+    const r = await fetch('/api/admin/schema-data/'+id+'?key=vef2025',{method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}});
     const data = await r.json();
     if(data.ok){
       toast('✅ Datos de "'+nombre+'" eliminados correctamente');
