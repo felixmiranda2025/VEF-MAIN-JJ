@@ -6,3 +6,5 @@ pdfs_guardados/
 npm-debug.log*
 .DS_Store
 Thumbs.db
+imagen/
+src/
