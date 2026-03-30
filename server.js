@@ -244,6 +244,7 @@ const QR = async (req, sql, p=[]) => {
 };
 
 // ── MIDDLEWARE ───────────────────────────────────────────────────
+app.set('trust proxy', 1); // Railway usa proxy inverso — necesario para rate-limit y cookies
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '50mb' }));
