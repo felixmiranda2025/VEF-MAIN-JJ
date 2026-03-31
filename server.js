@@ -5459,6 +5459,12 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
         [req.body.id_solicitud]).catch(()=>{});
       r.guardados = saved;
       if (errores.length) r.errores_bd = errores;
+      r.debug_cfdi = {
+        total: r.cfdis.length,
+        guardados: saved,
+        errores: errores.slice(0,3),
+        primer_cfdi_keys: r.cfdis[0] ? Object.keys(r.cfdis[0]).join(',') : 'vacío'
+      };
       // No enviar XML en respuesta (son muy grandes)
       r.cfdis = r.cfdis.map(c => ({ ...c, xml: undefined }));
     }
@@ -5479,8 +5485,7 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
         for (const col of ['estatus_sat VARCHAR(20)','rfc_pac VARCHAR(20)','fecha_cancelacion TIMESTAMP','monto_sat NUMERIC(15,2)'])
           await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{});
         let savedMeta = 0;
-        // LOG: ver estructura del primer metadato
-        if(r.metadatos[0]) console.log('[SAT META] Estructura primer registro:', JSON.stringify(r.metadatos[0]));
+        let erroresMeta = [];
         for (const m of r.metadatos) {
           const uuid = m.uuid || m.uuid_sat; if(!uuid) continue;
           try {
@@ -5505,14 +5510,20 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
                req.body.id_paquete||null]);
             savedMeta++;
           } catch(em){
-            console.error('[SAT META ERROR] uuid='+uuid+' error='+em.message);
-            console.error('[SAT META DATA]', JSON.stringify({uuid,fecha:m.fecha_emision||m.fecha,tipo:m.tipo||m.efecto,monto:m.monto,rfc_emisor:m.rfc_emisor,rfc_receptor:m.rfc_receptor}));
+            erroresMeta.push({ uuid, error: em.message, data: {fecha:m.fecha_emision||m.fecha,tipo:m.tipo||m.efecto,monto:m.monto,rfc_emisor:m.rfc_emisor} });
           }
         }
         r.guardados_meta = savedMeta;
-        console.log('SAT METADATA guardados:',savedMeta,'/',r.metadatos.length);
+        r.debug_meta = {
+          total: r.metadatos.length,
+          guardados: savedMeta,
+          primer_registro: r.metadatos[0] ? JSON.stringify(r.metadatos[0]).slice(0,300) : 'vacío',
+          errores_sample: erroresMeta ? erroresMeta.slice(0,2) : []
+        };
         await QR(req,`UPDATE sat_solicitudes SET estatus='descargado' WHERE id_solicitud=$1`,[req.body.id_solicitud]).catch(()=>{});
-      } catch(eM){ console.error('SAT meta error:',eM.message); }
+      } catch(eM){
+        r.debug_meta_error = eM.message;
+      }
     }
     res.json(r);
   } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
