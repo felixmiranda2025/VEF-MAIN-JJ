@@ -254,6 +254,7 @@ function buildCols(){
     {id:'total',label:'Total',sort:'total'},
     {id:'moneda',label:'Mon.'},
     {id:'xml',label:'XML'},
+    {id:'verXml',label:'Ver XML'},
   ];
   return all.filter(c=>!c.tog||colOn(c.tog));
 }
@@ -282,6 +283,7 @@ function cellFor(c,r){
     case 'total':return`<td class="monto ${tipo==='E'?'mn':'mp'}">${fmt(r.total)}</td>`;
     case 'moneda':return`<td class="dim">${r.moneda||'MXN'}</td>`;
     case 'xml':return`<td>${r.uuid?`<button class="btn btn-xml btn-sm" onclick="dlXml('${r.uuid}')">⬇ XML</button>`:'—'}</td>`;
+    case 'verXml':return`<td>${r.uuid?`<button class="btn btn-xml btn-sm" style="background:#1a365d;color:#90cdf4;border-color:#2b6cb0" onclick="verXml('${r.uuid}')">👁 Ver</button>`:'—'}</td>`;
     default:return'<td>—</td>';
   }
 }
@@ -359,6 +361,94 @@ document.getElementById('fBusca').addEventListener('input',applyFilter);
 document.getElementById('fMetodo').addEventListener('change',applyFilter);
 document.querySelectorAll('.modal input').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
 (function(){if(token){document.getElementById('loginModal').style.display='none';document.getElementById('sUrl').value=base;loadCfdis();}else{hide('stLoad');}})();
+
+// ── Visor XML ────────────────────────────────────────────────────
+let _xmlActual = { uuid:'', text:'' };
+
+function formatXml(xml) {
+  // Indenta y colorea el XML para lectura en pantalla
+  let formatted = '', indent = 0;
+  const tab = '  ';
+  xml.replace(/>\s*</g,'>\n<').split('\n').forEach(node => {
+    node = node.trim();
+    if (!node) return;
+    if (node.match(/^<\/\w/)) indent = Math.max(0, indent - 1);
+    formatted += tab.repeat(indent) + node + '\n';
+    if (node.match(/^<\w[^>]*[^\/]>$/) && !node.startsWith('<?') && !node.startsWith('<!')) indent++;
+  });
+  // Colorear con spans
+  return formatted
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/&lt;(\/?)([\w:]+)/g,'<span style="color:#fc8181">&lt;$1</span><span style="color:#90cdf4">$2</span>')
+    .replace(/(\s)([\w:]+)(=)(&quot;[^&]*&quot;)/g,'$1<span style="color:#fbd38d">$2</span><span style="color:#a0aec0">$3</span><span style="color:#68d391">$4</span>')
+    .replace(/&gt;/g,'<span style="color:#fc8181">&gt;</span>');
+}
+
+async function verXml(uuid) {
+  const bg = document.getElementById('xmlModalBg');
+  const pre = document.getElementById('xmlContent');
+  const title = document.getElementById('xmlModalTitle');
+  bg.style.display = 'flex';
+  pre.innerHTML = '<span style="color:#718096">⏳ Cargando XML...</span>';
+  title.textContent = 'XML — ' + uuid;
+  try {
+    const r = await fetch(`${base}/api/sat/cfdis/${uuid}/xml`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!r.ok) throw new Error('XML no encontrado (HTTP ' + r.status + ')');
+    const text = await r.text();
+    _xmlActual = { uuid, text };
+    pre.innerHTML = formatXml(text);
+  } catch(e) {
+    pre.innerHTML = '<span style="color:#fc8181">❌ ' + e.message + '</span>';
+  }
+}
+
+function cerrarModalXml() {
+  document.getElementById('xmlModalBg').style.display = 'none';
+  _xmlActual = { uuid:'', text:'' };
+}
+
+function copiarXml() {
+  if (!_xmlActual.text) return toast('Sin XML cargado', 2000);
+  navigator.clipboard.writeText(_xmlActual.text)
+    .then(() => toast('✅ XML copiado al portapapeles', 2000))
+    .catch(() => toast('❌ No se pudo copiar', 2500));
+}
+
+function descargarXmlActual() {
+  if (!_xmlActual.text) return toast('Sin XML cargado', 2000);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([_xmlActual.text], {type:'application/xml'}));
+  a.download = (_xmlActual.uuid || 'cfdi') + '.xml';
+  a.click();
+  toast('✅ XML descargado', 2000);
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') cerrarModalXml();
+});
+// Cerrar al click fuera del panel
+document.getElementById('xmlModalBg').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModalXml();
+});
+
 </script>
+<!-- ── Modal visor XML ─────────────────────────────── -->
+<div id="xmlModalBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;align-items:center;justify-content:center">
+  <div style="background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;width:92vw;max-width:900px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid #2d3748;flex-shrink:0">
+      <span style="font-size:.85rem;font-weight:700;color:#f7fafc;flex:1" id="xmlModalTitle">XML CFDI</span>
+      <button class="btn btn-outline btn-sm" onclick="copiarXml()" title="Copiar XML">📋 Copiar</button>
+      <button class="btn btn-outline btn-sm" onclick="descargarXmlActual()" title="Descargar">⬇ Descargar</button>
+      <button class="btn btn-sm" style="background:#742a2a;color:#fc8181;border:none" onclick="cerrarModalXml()">✕ Cerrar</button>
+    </div>
+    <div style="overflow:auto;flex:1;padding:16px 20px">
+      <pre id="xmlContent" style="font-family:monospace;font-size:.76rem;line-height:1.55;color:#e2e8f0;white-space:pre-wrap;word-break:break-all;margin:0"></pre>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -225,11 +225,17 @@ const Q = async (sql, p=[], schema=null) => {
       // Sin comillas — los schemas en minúsculas no las necesitan
       await client.query(`SET search_path TO ${s},public`);
       return (await client.query(sql, p)).rows;
-    } catch(e){ console.error('Query error:', e.message, '\n  SQL:', sql.slice(0,120)); return []; }
+    } catch(e){
+      console.error('DB ERROR ['+s+']:', e.message, '\n  SQL:', sql.slice(0,200));
+      throw e;
+    }
     finally { client.release(); }
   }
   try { return (await pool.query(sql, p)).rows; }
-  catch(e) { console.error('Query error:', e.message, '\n  SQL:', sql.slice(0,120)); return []; }
+  catch(e) {
+    console.error('DB ERROR [public]:', e.message, '\n  SQL:', sql.slice(0,200));
+    throw e;
+  }
 };
 
 // QR(req, sql, params) — usa schema del usuario autenticado — NUNCA usa schema de otra empresa
@@ -5456,6 +5462,58 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
       // No enviar XML en respuesta (son muy grandes)
       r.cfdis = r.cfdis.map(c => ({ ...c, xml: undefined }));
     }
+    // ── Guardar METADATOS en sat_cfdis ──────────────────────────────
+    if (r.ok && r.metadatos && r.metadatos.length) {
+      try {
+        await QR(req, `CREATE TABLE IF NOT EXISTS sat_cfdis (
+          id SERIAL PRIMARY KEY, uuid VARCHAR(100) UNIQUE, fecha_cfdi TIMESTAMP,
+          tipo_comprobante VARCHAR(5), subtotal NUMERIC(15,2) DEFAULT 0,
+          total NUMERIC(15,2) DEFAULT 0, moneda VARCHAR(10) DEFAULT 'MXN',
+          emisor_rfc VARCHAR(20), emisor_nombre VARCHAR(300),
+          receptor_rfc VARCHAR(20), receptor_nombre VARCHAR(300), uso_cfdi VARCHAR(10),
+          forma_pago VARCHAR(5), metodo_pago VARCHAR(5), lugar_expedicion VARCHAR(10),
+          serie VARCHAR(50), folio VARCHAR(50), no_certificado VARCHAR(30),
+          version VARCHAR(5), fecha_timbrado TIMESTAMP, rfc_prov_certif VARCHAR(20),
+          xml_content TEXT, id_paquete VARCHAR(200),
+          created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`).catch(()=>{});
+        for (const col of ['estatus_sat VARCHAR(20)','rfc_pac VARCHAR(20)','fecha_cancelacion TIMESTAMP','monto_sat NUMERIC(15,2)'])
+          await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{});
+        let savedMeta = 0;
+        // LOG: ver estructura del primer metadato
+        if(r.metadatos[0]) console.log('[SAT META] Estructura primer registro:', JSON.stringify(r.metadatos[0]));
+        for (const m of r.metadatos) {
+          const uuid = m.uuid || m.uuid_sat; if(!uuid) continue;
+          try {
+            await QR(req, `INSERT INTO sat_cfdis(uuid,fecha_cfdi,tipo_comprobante,total,monto_sat,moneda,emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,estatus_sat,rfc_pac,fecha_cancelacion,id_paquete)
+              VALUES($1,$2,$3,$4,$5,'MXN',$6,$7,$8,$9,$10,$11,$12,$13)
+              ON CONFLICT (uuid) DO UPDATE SET
+                tipo_comprobante=COALESCE(EXCLUDED.tipo_comprobante,sat_cfdis.tipo_comprobante),
+                fecha_cfdi=COALESCE(EXCLUDED.fecha_cfdi,sat_cfdis.fecha_cfdi),
+                emisor_rfc=COALESCE(EXCLUDED.emisor_rfc,sat_cfdis.emisor_rfc),
+                emisor_nombre=COALESCE(EXCLUDED.emisor_nombre,sat_cfdis.emisor_nombre),
+                receptor_rfc=COALESCE(EXCLUDED.receptor_rfc,sat_cfdis.receptor_rfc),
+                receptor_nombre=COALESCE(EXCLUDED.receptor_nombre,sat_cfdis.receptor_nombre),
+                estatus_sat=EXCLUDED.estatus_sat, monto_sat=EXCLUDED.monto_sat,
+                rfc_pac=COALESCE(EXCLUDED.rfc_pac,sat_cfdis.rfc_pac),
+                fecha_cancelacion=COALESCE(EXCLUDED.fecha_cancelacion,sat_cfdis.fecha_cancelacion),
+                updated_at=NOW()`,
+              [uuid, m.fecha_emision||m.fecha||null, m.tipo||m.efecto||null,
+               parseFloat(m.monto||0), parseFloat(m.monto||0),
+               m.rfc_emisor||null, m.nombre_emisor||null,
+               m.rfc_receptor||null, m.nombre_receptor||null,
+               m.estatus||null, m.rfc_pac||null, m.fecha_cancelacion||null,
+               req.body.id_paquete||null]);
+            savedMeta++;
+          } catch(em){
+            console.error('[SAT META ERROR] uuid='+uuid+' error='+em.message);
+            console.error('[SAT META DATA]', JSON.stringify({uuid,fecha:m.fecha_emision||m.fecha,tipo:m.tipo||m.efecto,monto:m.monto,rfc_emisor:m.rfc_emisor,rfc_receptor:m.rfc_receptor}));
+          }
+        }
+        r.guardados_meta = savedMeta;
+        console.log('SAT METADATA guardados:',savedMeta,'/',r.metadatos.length);
+        await QR(req,`UPDATE sat_solicitudes SET estatus='descargado' WHERE id_solicitud=$1`,[req.body.id_solicitud]).catch(()=>{});
+      } catch(eM){ console.error('SAT meta error:',eM.message); }
+    }
     res.json(r);
   } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
 });
@@ -5486,10 +5544,13 @@ app.get('/api/sat/cfdis', auth, async (req, res) => {
     if (rfc)   { where += ` AND (emisor_rfc=$${i++} OR receptor_rfc=$${i++})`; vals.push(rfc,rfc); }
     if (desde) { where += ` AND fecha_cfdi>=$${i++}`; vals.push(desde); }
     if (hasta) { where += ` AND fecha_cfdi<=$${i++}`; vals.push(hasta); }
-    const rows = await QR(req, `SELECT id,uuid,fecha_cfdi,tipo_comprobante,subtotal,total,moneda,
+    const rows = await QR(req, `SELECT id,uuid,fecha_cfdi,tipo_comprobante,
+      COALESCE(subtotal,monto_sat,0)::numeric AS subtotal,
+      COALESCE(total,monto_sat,0)::numeric AS total, moneda,
       emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,uso_cfdi,
       forma_pago,metodo_pago,lugar_expedicion,serie,folio,no_certificado,
-      version,fecha_timbrado,rfc_prov_certif,created_at
+      version,fecha_timbrado,rfc_prov_certif,
+      estatus_sat,monto_sat,rfc_pac,fecha_cancelacion,created_at
       FROM sat_cfdis ${where} ORDER BY fecha_cfdi DESC NULLS LAST LIMIT 500`, vals);
     res.json(Array.isArray(rows) ? rows : []);
   } catch(e) { console.error('GET /api/sat/cfdis:', e.message); res.status(500).json({ error: e.message }); }
