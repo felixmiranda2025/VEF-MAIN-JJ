@@ -239,6 +239,17 @@ const Q = async (sql, p=[], schema=null) => {
 };
 
 // QR(req, sql, params) — usa schema del usuario autenticado — NUNCA usa schema de otra empresa
+// Helper: convierte fecha SAT a formato que acepta PostgreSQL
+function satFecha(f) {
+  if (!f) return null;
+  try {
+    // Si ya es ISO válido
+    const d = new Date(f);
+    if (!isNaN(d.getTime())) return d.toISOString();
+    return null;
+  } catch(e) { return null; }
+}
+
 const QR = async (req, sql, p=[]) => {
   const schema = req.user?.schema || req.user?.schema_name;
   if(!schema) {
@@ -5440,13 +5451,13 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
               serie=EXCLUDED.serie, folio=EXCLUDED.folio, no_certificado=EXCLUDED.no_certificado,
               version=EXCLUDED.version, fecha_timbrado=EXCLUDED.fecha_timbrado,
               rfc_prov_certif=EXCLUDED.rfc_prov_certif, updated_at=NOW()`,
-            [cfdi.uuid, cfdi.fecha||null, cfdi.tipo||null,
+            [cfdi.uuid, satFecha(cfdi.fecha), cfdi.tipo||null,
              parseFloat(cfdi.subtotal)||0, parseFloat(cfdi.total)||0, cfdi.moneda||'MXN',
              cfdi.emisor_rfc||null, cfdi.emisor_nombre||null,
              cfdi.receptor_rfc||null, cfdi.receptor_nombre||null, cfdi.uso_cfdi||null,
              cfdi.forma_pago||null, cfdi.metodo_pago||null, cfdi.lugar_expedicion||null,
              cfdi.serie||null, cfdi.folio||null, cfdi.no_certificado||null,
-             cfdi.version||null, cfdi.fecha_timbrado||null, cfdi.rfc_prov_certif||null,
+             cfdi.version||null, satFecha(cfdi.fecha_timbrado), cfdi.rfc_prov_certif||null,
              cfdi.xml||null, req.body.id_paquete||null]);
           saved++;
         } catch(eCfdi) {
@@ -5459,12 +5470,6 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
         [req.body.id_solicitud]).catch(()=>{});
       r.guardados = saved;
       if (errores.length) r.errores_bd = errores;
-      r.debug_cfdi = {
-        total: r.cfdis.length,
-        guardados: saved,
-        errores: errores.slice(0,3),
-        primer_cfdi_keys: r.cfdis[0] ? Object.keys(r.cfdis[0]).join(',') : 'vacío'
-      };
       // No enviar XML en respuesta (son muy grandes)
       r.cfdis = r.cfdis.map(c => ({ ...c, xml: undefined }));
     }
@@ -5485,7 +5490,8 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
         for (const col of ['estatus_sat VARCHAR(20)','rfc_pac VARCHAR(20)','fecha_cancelacion TIMESTAMP','monto_sat NUMERIC(15,2)'])
           await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{});
         let savedMeta = 0;
-        let erroresMeta = [];
+        // LOG: ver estructura del primer metadato
+        if(r.metadatos[0]) console.log('[SAT META] Estructura primer registro:', JSON.stringify(r.metadatos[0]));
         for (const m of r.metadatos) {
           const uuid = m.uuid || m.uuid_sat; if(!uuid) continue;
           try {
@@ -5502,28 +5508,25 @@ app.post('/api/sat/descargar', auth, async (req, res) => {
                 rfc_pac=COALESCE(EXCLUDED.rfc_pac,sat_cfdis.rfc_pac),
                 fecha_cancelacion=COALESCE(EXCLUDED.fecha_cancelacion,sat_cfdis.fecha_cancelacion),
                 updated_at=NOW()`,
-              [uuid, m.fecha_emision||m.fecha||null, m.tipo||m.efecto||null,
+              [uuid,
+               satFecha(m.fecha_emision||m.fecha),
+               m.tipo||m.efecto||null,
                parseFloat(m.monto||0), parseFloat(m.monto||0),
                m.rfc_emisor||null, m.nombre_emisor||null,
                m.rfc_receptor||null, m.nombre_receptor||null,
-               m.estatus||null, m.rfc_pac||null, m.fecha_cancelacion||null,
+               m.estatus||null, m.rfc_pac||null,
+               satFecha(m.fecha_cancelacion),
                req.body.id_paquete||null]);
             savedMeta++;
           } catch(em){
-            erroresMeta.push({ uuid, error: em.message, data: {fecha:m.fecha_emision||m.fecha,tipo:m.tipo||m.efecto,monto:m.monto,rfc_emisor:m.rfc_emisor} });
+            console.error('[SAT META ERROR] uuid='+uuid+' error='+em.message);
+            console.error('[SAT META DATA]', JSON.stringify({uuid,fecha:m.fecha_emision||m.fecha,tipo:m.tipo||m.efecto,monto:m.monto,rfc_emisor:m.rfc_emisor,rfc_receptor:m.rfc_receptor}));
           }
         }
         r.guardados_meta = savedMeta;
-        r.debug_meta = {
-          total: r.metadatos.length,
-          guardados: savedMeta,
-          primer_registro: r.metadatos[0] ? JSON.stringify(r.metadatos[0]).slice(0,300) : 'vacío',
-          errores_sample: erroresMeta ? erroresMeta.slice(0,2) : []
-        };
+        console.log('SAT METADATA guardados:',savedMeta,'/',r.metadatos.length);
         await QR(req,`UPDATE sat_solicitudes SET estatus='descargado' WHERE id_solicitud=$1`,[req.body.id_solicitud]).catch(()=>{});
-      } catch(eM){
-        r.debug_meta_error = eM.message;
-      }
+      } catch(eM){ console.error('SAT meta error:',eM.message); }
     }
     res.json(r);
   } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
