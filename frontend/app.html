@@ -600,7 +600,7 @@ function toast(msg,type='ok'){
 }
 
 function badge(s){
-  const cls={borrador:'badge-borrador',enviada:'badge-enviada',aprobada:'badge-aprobada',rechazada:'badge-rechazada',pagada:'badge-pagada',pendiente:'badge-pendiente',parcial:'badge-parcial',vencida:'badge-vencida',activo:'badge-activo',cerrado:'badge-cerrado',admin:'badge-admin',usuario:'badge-usuario',confirmada:'badge-enviada','en proceso':'badge-parcial',recibida:'badge-aprobada',cancelada:'badge-rechazada',entrada:'badge-aprobada',salida:'badge-rechazada',ajuste:'badge-pendiente',ventas:'badge-enviada',compras:'badge-parcial',almacen:'badge-borrador',gerencia:'badge-admin'};
+  const cls={borrador:'badge-borrador',enviada:'badge-enviada',aprobada:'badge-aprobada',rechazada:'badge-rechazada',pagada:'badge-pagada',pendiente:'badge-pendiente',parcial:'badge-parcial',vencida:'badge-vencida',activo:'badge-activo',cerrado:'badge-cerrado',admin:'badge-admin',usuario:'badge-usuario',confirmada:'badge-enviada','en proceso':'badge-parcial',recibida:'badge-aprobada',cancelada:'badge-rechazada',entrada:'badge-aprobada',salida:'badge-rechazada',ajuste:'badge-pendiente',ventas:'badge-enviada',compras:'badge-parcial',almacen:'badge-borrador',gerencia:'badge-admin',soporte:'badge-activo'};
   return `<span class="badge ${cls[s]||'badge-borrador'}">${esc(s||'—')}</span>`;
 }
 
@@ -654,7 +654,8 @@ var _PERMISOS = {
   gerencia: ['dashboard','clientes','proveedores','proyectos','cotizaciones','ordenes','oc-prov','egresos','inventario','sat','sat-descarga','pdfs','tareas'],
   compras:  ['dashboard','ordenes','oc-prov','egresos','inventario','pdfs'],
   almacen:  ['dashboard','inventario','pdfs'],
-  ventas:   ['dashboard','inventario','proyectos','cotizaciones','egresos','pdfs'],
+  ventas:   ['dashboard','inventario','proyectos','cotizaciones','egresos','pdfs','reportes-servicio'],
+  soporte:  ['dashboard','inventario','reportes-servicio','pdfs'],
 };
 
 function rolTieneAcceso(page){
@@ -2726,20 +2727,22 @@ async function inventario(){
   const ca=r=>parseFloat(r.qty_actual??r.cantidad_actual??r.stock_actual??0);
   const cm=r=>parseFloat(r.qty_minima??r.cantidad_minima??r.stock_minimo??0);
   const bajos=(data||[]).filter(p=>ca(p)<=cm(p));
+  const _rol=(typeof USER!=='undefined'?USER:JSON.parse(sessionStorage.getItem('vef_user')||'{}')).rol||'usuario';
+  const _soloLectura=(_rol==='soporte');
   setContent(`
   ${bajos.length?`<div class="alert alert-warn">⚠ ${bajos.length} producto(s) con stock bajo: ${bajos.slice(0,5).map(p=>esc(p.nombre)).join(', ')}${bajos.length>5?'...':''}</div>`:''}
   <div class="card">
-    <div class="card-header"><div class="card-title">🗃 Inventario</div></div>
+    <div class="card-header"><div class="card-title">🗃 Inventario${_soloLectura?' <span style="font-size:.75rem;font-weight:400;color:#64748b;margin-left:6px">(solo lectura)</span>':''}</div></div>
     <div class="card-body">
       <div class="btn-toolbar">
-        <button class="btn btn-primary"   onclick="invForm()">➕ Nuevo Producto</button>
-        <button class="btn btn-secondary" onclick="invEdit()">✏️ Modificar</button>
-        <button class="btn btn-success"   onclick="invMov('entrada')">📥 Entrada</button>
-        <button class="btn btn-warning"   onclick="invMov('salida')">📤 Salida</button>
-        <button class="btn btn-secondary" onclick="invMov('ajuste')">🔧 Ajustar</button>
+        ${!_soloLectura?`<button class="btn btn-primary"   onclick="invForm()">➕ Nuevo Producto</button>`:''}
+        ${!_soloLectura?`<button class="btn btn-secondary" onclick="invEdit()">✏️ Modificar</button>`:''}
+        ${!_soloLectura?`<button class="btn btn-success"   onclick="invMov('entrada')">📥 Entrada</button>`:''}
+        ${!_soloLectura?`<button class="btn btn-warning"   onclick="invMov('salida')">📤 Salida</button>`:''}
+        ${!_soloLectura?`<button class="btn btn-secondary" onclick="invMov('ajuste')">🔧 Ajustar</button>`:''}
         <button class="btn btn-secondary" onclick="invHistorial()">📋 Historial</button>
-        <button class="btn btn-secondary" onclick="invLimpiarDuplicados()">🧹 Limpiar Duplicados</button>
-        <button class="btn btn-danger btn-sm" onclick="invDel()">🗑 Eliminar</button>
+        ${!_soloLectura?`<button class="btn btn-secondary" onclick="invLimpiarDuplicados()">🧹 Limpiar Duplicados</button>`:''}
+        ${!_soloLectura?`<button class="btn btn-danger btn-sm" onclick="invDel()">🗑 Eliminar</button>`:''}
       </div>
       <div id="invResumen" style="margin-top:10px"></div>
       <div class="search-bar" style="margin-top:8px">
@@ -5774,6 +5777,8 @@ async function reportesServicio(){
   _rsSel=null; _rsData=null;
 
   const statusColor={borrador:'#64748b',en_proceso:'#d97706',finalizado:'#059669',cancelado:'#dc2626'};
+  const _rol=(typeof USER!=='undefined'?USER:JSON.parse(sessionStorage.getItem('vef_user')||'{}')).rol||'usuario';
+  const _esAdmin=(_rol==='admin'||_rol==='gerencia');
 
   window._rsRows = data||[];
   setContent(
@@ -5786,7 +5791,8 @@ async function reportesServicio(){
       '<div class="btn-toolbar" style="margin-bottom:10px">'+
         '<button class="btn btn-secondary" onclick="rsEditar()">✏️ Editar</button>'+
         '<button class="btn btn-dark" onclick="rsPDF()">📄 Generar PDF</button>'+
-        '<button class="btn btn-danger btn-sm" onclick="rsEliminar()">🗑 Eliminar</button>'+
+        '<button class="btn btn-info" onclick="rsEmail()" style="background:#0891b2;color:#fff;border-color:#0891b2">✉️ Enviar por Email</button>'+
+        (_esAdmin?'<button class="btn btn-danger btn-sm" onclick="rsEliminar()">🗑 Eliminar</button>':'')+
       '</div>'+
       '<div class="search-bar" style="margin-bottom:10px">'+
         '<input class="search-input" placeholder="Buscar reporte, cliente, técnico..." oninput="filterTable(this,&quot;tblRS&quot;)">'+
@@ -5833,6 +5839,38 @@ async function rsPDF(){
   if(!_rsSel){toast('Selecciona un reporte primero','err');return;}
   toast('⏳ Generando PDF...');
   abrirYGuardarPDF('/api/reportes-servicio/'+_rsSel+'/pdf','RS-'+(_rsData?.numero_reporte||_rsSel));
+}
+
+function rsEmail(){
+  if(!_rsSel){toast('Selecciona un reporte primero','err');return;}
+  const r=_rsData||{};
+  const defTo=r.cliente_email||'';
+  openModal('✉️ Enviar Reporte por Email',`
+    <div class="field-group"><label>Para (email del cliente)*</label>
+      <input id="rsEmailTo" value="${esc(defTo)}" placeholder="cliente@empresa.com"></div>
+    <div class="field-group"><label>CC (opcional)</label>
+      <input id="rsEmailCc" placeholder="otro@empresa.com"></div>
+    <div class="field-group"><label>Asunto</label>
+      <input id="rsEmailAsunto" value="Reporte de Servicio ${esc(r.numero_reporte||'')} — ${esc(r.titulo||'')}"></div>
+    <div class="field-group"><label>Mensaje</label>
+      <textarea id="rsEmailMsg" rows="5">Estimado/a ${esc(r.cliente_nombre||'Cliente')},\n\nAdjunto encontrará el Reporte de Servicio correspondiente a los trabajos realizados.\n\nQuedamos a sus órdenes para cualquier comentario o aclaración.\n\nSaludos cordiales,</textarea></div>
+    <p style="font-size:.78rem;color:#64748b;margin-top:6px">📎 El PDF del reporte se adjuntará automáticamente.</p>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+   <button class="btn btn-primary" onclick="rsEmailEnviar()">✉️ Enviar</button>`);
+}
+
+async function rsEmailEnviar(){
+  const to=document.getElementById('rsEmailTo')?.value?.trim();
+  if(!to){toast('Ingresa el email del destinatario','err');return;}
+  const cc=document.getElementById('rsEmailCc')?.value?.trim();
+  const asunto=document.getElementById('rsEmailAsunto')?.value?.trim();
+  const mensaje=document.getElementById('rsEmailMsg')?.value?.trim();
+  try{
+    toast('⏳ Enviando...');
+    await api('/api/reportes-servicio/'+_rsSel+'/email','POST',{to,cc,asunto,mensaje});
+    closeModal();
+    toast('✅ Reporte enviado a '+to);
+  }catch(e){ toast(e.message,'err'); }
 }
 
 function rsForm(ed){
@@ -7272,6 +7310,7 @@ async function satDescargarPaquete(idSol, idPaquete, tipo){
         if(btnXml){ btnXml.textContent='\uD83D\uDCC4 XMLs ('+(_satXmlDescargados||[]).length+')';
           btnXml.style.background='#059669'; btnXml.style.color='#fff';
           setTimeout(function(){btnXml.style.background='';btnXml.style.color='';},3000); }
+        // Recargar CFDIs en BD
         setTimeout(function(){ satCfdisBdCargar(); }, 1500);
       }
     } else {
@@ -7777,7 +7816,7 @@ async function satCfdisBdVerXml(uuid){
   try{
     var tok=sessionStorage.getItem('vef_token')||'';
     var resp=await fetch('/api/sat/cfdis/'+encodeURIComponent(uuid)+'/xml',{headers:{'Authorization':'Bearer '+tok}});
-    if(!resp.ok)throw new Error('HTTP '+resp.status+' - descarga tipo CFDI para ver XML');
+    if(!resp.ok)throw new Error('HTTP '+resp.status+' - XML no disponible');
     var txt=await resp.text();
     window._satBdXmlText=txt;
     pre.innerHTML=_satFmtXml(txt);

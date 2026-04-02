@@ -239,17 +239,6 @@ const Q = async (sql, p=[], schema=null) => {
 };
 
 // QR(req, sql, params) — usa schema del usuario autenticado — NUNCA usa schema de otra empresa
-// Helper: convierte fecha SAT a formato que acepta PostgreSQL
-function satFecha(f) {
-  if (!f) return null;
-  try {
-    // Si ya es ISO válido
-    const d = new Date(f);
-    if (!isNaN(d.getTime())) return d.toISOString();
-    return null;
-  } catch(e) { return null; }
-}
-
 const QR = async (req, sql, p=[]) => {
   const schema = req.user?.schema || req.user?.schema_name;
   if(!schema) {
@@ -340,6 +329,19 @@ async function empresaActiva(req, res, next) {
       });
     return next();
   } catch { return next(); }
+}
+
+// ── Middleware: solo lectura en inventario para rol soporte ──────
+// El rol soporte puede VER inventario pero NO crear/modificar/eliminar
+function soloLecturaInventario(req, res, next) {
+  if (req.method === 'GET') return next();
+  if (req.user?.rol === 'soporte') {
+    return res.status(403).json({
+      error: 'El rol Soporte solo puede consultar el inventario, no modificarlo.',
+      codigo: 'SIN_PERMISO_ESCRITURA'
+    });
+  }
+  return next();
 }
 
 // ── EMAIL ────────────────────────────────────────────────────────
@@ -1511,6 +1513,7 @@ async function autoSetup() {
       {u:'compras',  n:'Agente de Compras',   r:'compras', p:'compras123'},
       {u:'almacen',  n:'Encargado Almacén',   r:'almacen', p:'almacen123'},
       {u:'gerencia', n:'Gerencia General',    r:'admin',   p:'gerencia123'},
+      {u:'soporte',  n:'Técnico de Soporte',  r:'soporte', p:'soporte123'},
     ];
     for(const u of USERS){
       try {
@@ -3428,7 +3431,7 @@ app.get('/api/inventario/:id/foto', auth, async (req,res)=>{
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
-app.post('/api/inventario', auth, empresaActiva, licencia, async (req,res)=>{
+app.post('/api/inventario', auth, soloLecturaInventario, empresaActiva, licencia, async (req,res)=>{
   try {
     const {codigo,nombre,descripcion,categoria,unidad,cantidad_actual,cantidad_minima,
            precio_costo,precio_venta,ubicacion,proveedor_id,notas,foto}=req.body;
@@ -3451,7 +3454,7 @@ app.post('/api/inventario', auth, empresaActiva, licencia, async (req,res)=>{
   }catch(e){console.error('inv POST:',e.message);res.status(500).json({error:e.message});}
 });
 
-app.put('/api/inventario/:id', auth, empresaActiva, licencia, async (req,res)=>{
+app.put('/api/inventario/:id', auth, soloLecturaInventario, empresaActiva, licencia, async (req,res)=>{
   try {
     const {codigo,nombre,descripcion,categoria,unidad,cantidad_minima,
            precio_costo,precio_venta,ubicacion,notas,foto}=req.body;
@@ -3488,7 +3491,7 @@ app.put('/api/inventario/:id', auth, empresaActiva, licencia, async (req,res)=>{
   }
 });
 
-app.post('/api/inventario/:id/movimiento', auth, async (req,res)=>{
+app.post('/api/inventario/:id/movimiento', auth, soloLecturaInventario, async (req,res)=>{
   const client=await pool.connect();
   try {
     const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
@@ -3772,6 +3775,75 @@ app.get('/api/reportes-servicio/:id/pdf', auth, licencia, async (req,res)=>{
     res.setHeader('Content-Disposition',`inline; filename="RS-${r.numero_reporte||r.id}.pdf"`);
     res.send(buf);
   }catch(e){ console.error('RS PDF:',e.message); res.status(500).json({error:e.message}); }
+});
+
+// ── Enviar Reporte de Servicio por email ─────────────────────────
+app.post('/api/reportes-servicio/:id/email', auth, empresaActiva, licencia, async (req,res)=>{
+  try{
+    const {to,cc,asunto,mensaje}=req.body;
+    if(!to) return res.status(400).json({error:'to requerido'});
+    const rows = await QR(req,`
+      SELECT rs.*,
+        cl.nombre cliente_nombre,cl.rfc cliente_rfc,cl.email cliente_email,
+        cl.telefono cliente_tel,cl.direccion cliente_dir,
+        cl.contacto cliente_contacto,cl.ciudad cliente_ciudad,
+        p.nombre proyecto_nombre
+      FROM reportes_servicio rs
+      LEFT JOIN clientes cl ON cl.id=rs.cliente_id
+      LEFT JOIN proyectos p ON p.id=rs.proyecto_id
+      WHERE rs.id=$1`,[req.params.id]);
+    if(!rows.length) return res.status(404).json({error:'No encontrado'});
+    const r = rows[0];
+    const emp = await getEmpConfig(req.user?.schema);
+    const buf = await buildPDFReporteServicio(r, emp);
+    const dynMailer = await getMailer(req.user?.schema);
+    const fromEmail = await getFromEmail(req.user?.schema);
+    const empCfg = (await Q('SELECT nombre,telefono,email FROM empresa_config LIMIT 1',[],req.user?.schema))[0]||{};
+    const nomEmp = empCfg.nombre||VEF_NOMBRE;
+    const msgHtml = (mensaje||`Estimado/a ${r.cliente_nombre||'Cliente'},\n\nAdjunto encontrará el Reporte de Servicio correspondiente a los trabajos realizados.\n\nQuedamos a sus órdenes para cualquier comentario o aclaración.\n\nSaludos cordiales,`)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br>');
+    const htmlBody = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif">
+<div style="max-width:620px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+  <div style="background:#0D2B55;padding:28px 32px">
+    <h1 style="color:#fff;margin:0;font-size:22px;font-weight:700">${nomEmp}</h1>
+    ${empCfg.telefono?`<p style="color:#A8C5F0;margin:6px 0 0;font-size:13px">📞 ${empCfg.telefono}</p>`:''}
+    ${(empCfg.email||fromEmail)?`<p style="color:#A8C5F0;margin:4px 0 0;font-size:13px">✉️ ${empCfg.email||fromEmail}</p>`:''}
+  </div>
+  <div style="background:#1A4A8A;padding:14px 32px">
+    <span style="color:#A8C5F0;font-size:11px;text-transform:uppercase;letter-spacing:1px">Reporte de Servicio</span>
+    <div style="color:#fff;font-size:18px;font-weight:700;font-family:monospace">${r.numero_reporte||'—'}</div>
+  </div>
+  <div style="padding:32px;color:#1e293b;line-height:1.7;font-size:15px">${msgHtml}</div>
+  <div style="margin:0 32px 24px;background:#f0f7ff;border-left:4px solid #1A4A8A;border-radius:0 8px 8px 0;padding:16px">
+    <p style="margin:0;font-size:13px;color:#334155">
+      <strong>📋 Reporte:</strong> ${r.numero_reporte||'—'}<br>
+      <strong>📌 Título:</strong> ${r.titulo||'—'}<br>
+      ${r.cliente_nombre?`<strong>👤 Cliente:</strong> ${r.cliente_nombre}<br>`:''}
+      ${r.proyecto_nombre?`<strong>📁 Proyecto:</strong> ${r.proyecto_nombre}<br>`:''}
+      <strong>📅 Fecha:</strong> ${r.fecha_reporte||new Date().toISOString().slice(0,10)}<br>
+      <strong>👷 Técnico:</strong> ${r.tecnico||'—'}
+    </p>
+  </div>
+  <div style="background:#0D2B55;padding:16px 32px;text-align:center">
+    <p style="color:#A8C5F0;margin:0;font-size:12px">
+      ${nomEmp}${empCfg.telefono?` · 📞 ${empCfg.telefono}`:''}${(empCfg.email||fromEmail)?` · ✉️ ${empCfg.email||fromEmail}`:''}
+    </p>
+    <p style="color:#64748b;margin:4px 0 0;font-size:11px">Este correo fue generado automáticamente por el sistema ERP</p>
+  </div>
+</div>
+</body></html>`;
+    await dynMailer.sendMail({
+      from:`"${nomEmp}" <${fromEmail}>`,
+      to, cc:cc||undefined,
+      subject:asunto||`Reporte de Servicio ${r.numero_reporte} — ${nomEmp}`,
+      html: htmlBody,
+      attachments:[{filename:`RS-${r.numero_reporte||r.id}.pdf`,content:buf}]
+    });
+    res.json({ok:true, msg:`Correo enviado a ${to}`});
+  }catch(e){ console.error('RS email:',e.message); res.status(500).json({error:e.message}); }
 });
 
 // ================================================================
@@ -5405,129 +5477,167 @@ app.post('/api/sat/verificar', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
+// ── Helpers SAT ────────────────────────────────────────────────
+function satFecha(f){
+  if(!f||f==='') return null;
+  try{ const d=new Date(String(f).trim()); return isNaN(d.getTime())?null:d.toISOString(); }catch(e){ return null; }
+}
+function xmlAttr(xml,attr){
+  const m=String(xml||'').match(new RegExp('\\b'+attr+'="([^"]*)"','i'));
+  return m?m[1]:'';
+}
+// ── Fin helpers ──────────────────────────────────────────────────
+
 app.post('/api/sat/descargar', auth, async (req, res) => {
   try {
     const r = await satProxy('/descargar', req.body);
-    if (r.ok && r.cfdis?.length) {
+    console.log('[SAT/descargar] ok='+r.ok+' cfdis='+(r.cfdis?.length||0)+' metadatos='+(r.metadatos?.length||0)+' schema='+req.user?.schema);
+
+    // ── Asegurar tabla con TODAS las columnas ─────────────────────
+    const ensureTable = async () => {
+      await QR(req, `CREATE TABLE IF NOT EXISTS sat_cfdis (
+        id SERIAL PRIMARY KEY, uuid VARCHAR(100) UNIQUE, fecha_cfdi TIMESTAMP,
+        tipo_comprobante VARCHAR(5), subtotal NUMERIC(15,2) DEFAULT 0,
+        total NUMERIC(15,2) DEFAULT 0, moneda VARCHAR(10) DEFAULT 'MXN',
+        emisor_rfc VARCHAR(20), emisor_nombre VARCHAR(300),
+        receptor_rfc VARCHAR(20), receptor_nombre VARCHAR(300), uso_cfdi VARCHAR(10),
+        forma_pago VARCHAR(5), metodo_pago VARCHAR(5), lugar_expedicion VARCHAR(10),
+        serie VARCHAR(50), folio VARCHAR(50), no_certificado VARCHAR(30),
+        version VARCHAR(5), fecha_timbrado TIMESTAMP, rfc_prov_certif VARCHAR(20),
+        xml_content TEXT, id_paquete VARCHAR(200),
+        estatus_sat VARCHAR(20), monto_sat NUMERIC(15,2), rfc_pac VARCHAR(20),
+        fecha_cancelacion TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`).catch(()=>{});
+      for (const col of [
+        'forma_pago VARCHAR(5)','metodo_pago VARCHAR(5)','lugar_expedicion VARCHAR(10)',
+        'serie VARCHAR(50)','folio VARCHAR(50)','no_certificado VARCHAR(30)',
+        'version VARCHAR(5)','fecha_timbrado TIMESTAMP','rfc_prov_certif VARCHAR(20)',
+        'estatus_sat VARCHAR(20)','monto_sat NUMERIC(15,2)','rfc_pac VARCHAR(20)',
+        'fecha_cancelacion TIMESTAMP','xml_content TEXT'
+      ]) { await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{}); }
+    };
+
+    // ── GUARDAR CFDIs (XML completo) ──────────────────────────────
+    if (r.ok && r.cfdis && r.cfdis.length > 0) {
+      await ensureTable();
       let saved = 0;
       const errores = [];
-      // Asegurar que la tabla sat_cfdis existe con todas las columnas
-      try {
-        await QR(req, `CREATE TABLE IF NOT EXISTS sat_cfdis (
-          id SERIAL PRIMARY KEY, uuid VARCHAR(100) UNIQUE, fecha_cfdi TIMESTAMP,
-          tipo_comprobante VARCHAR(5), subtotal NUMERIC(15,2) DEFAULT 0,
-          total NUMERIC(15,2) DEFAULT 0, moneda VARCHAR(10) DEFAULT 'MXN',
-          emisor_rfc VARCHAR(20), emisor_nombre VARCHAR(300),
-          receptor_rfc VARCHAR(20), receptor_nombre VARCHAR(300), uso_cfdi VARCHAR(10),
-          forma_pago VARCHAR(5), metodo_pago VARCHAR(5), lugar_expedicion VARCHAR(10),
-          serie VARCHAR(50), folio VARCHAR(50), no_certificado VARCHAR(30),
-          version VARCHAR(5), fecha_timbrado TIMESTAMP, rfc_prov_certif VARCHAR(20),
-          xml_content TEXT, id_paquete VARCHAR(200),
-          created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`);
-        // Migración en caliente — agregar columnas si la tabla ya existía sin ellas
-        for (const col of [
-          'forma_pago VARCHAR(5)','metodo_pago VARCHAR(5)','lugar_expedicion VARCHAR(10)',
-          'serie VARCHAR(50)','folio VARCHAR(50)','no_certificado VARCHAR(30)',
-          'version VARCHAR(5)','fecha_timbrado TIMESTAMP','rfc_prov_certif VARCHAR(20)'
-        ]) { await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{}); }
-      } catch(eTable) {
-        console.error('SAT descargar — no se pudo crear sat_cfdis:', eTable.message);
-        return res.status(500).json({ ok: false, error: 'Error creando tabla sat_cfdis: ' + eTable.message });
-      }
-
       for (const cfdi of r.cfdis) {
-        if (!cfdi.uuid) continue;
+        if (!cfdi.uuid) { console.log('[SAT] CFDI sin uuid, skip'); continue; }
         try {
           await QR(req, `INSERT INTO sat_cfdis(
-            uuid,fecha_cfdi,tipo_comprobante,subtotal,total,moneda,
-            emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,uso_cfdi,
-            forma_pago,metodo_pago,lugar_expedicion,serie,folio,
-            no_certificado,version,fecha_timbrado,rfc_prov_certif,
-            xml_content,id_paquete)
+              uuid,fecha_cfdi,tipo_comprobante,subtotal,total,moneda,
+              emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,uso_cfdi,
+              forma_pago,metodo_pago,lugar_expedicion,serie,folio,
+              no_certificado,version,fecha_timbrado,rfc_prov_certif,
+              xml_content,id_paquete)
             VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
             ON CONFLICT (uuid) DO UPDATE SET
-              xml_content=EXCLUDED.xml_content, forma_pago=EXCLUDED.forma_pago,
-              metodo_pago=EXCLUDED.metodo_pago, lugar_expedicion=EXCLUDED.lugar_expedicion,
-              serie=EXCLUDED.serie, folio=EXCLUDED.folio, no_certificado=EXCLUDED.no_certificado,
+              xml_content=EXCLUDED.xml_content,
+              tipo_comprobante=COALESCE(EXCLUDED.tipo_comprobante,sat_cfdis.tipo_comprobante),
+              fecha_cfdi=COALESCE(EXCLUDED.fecha_cfdi,sat_cfdis.fecha_cfdi),
+              emisor_rfc=COALESCE(EXCLUDED.emisor_rfc,sat_cfdis.emisor_rfc),
+              emisor_nombre=COALESCE(EXCLUDED.emisor_nombre,sat_cfdis.emisor_nombre),
+              receptor_rfc=COALESCE(EXCLUDED.receptor_rfc,sat_cfdis.receptor_rfc),
+              receptor_nombre=COALESCE(EXCLUDED.receptor_nombre,sat_cfdis.receptor_nombre),
+              forma_pago=COALESCE(EXCLUDED.forma_pago,sat_cfdis.forma_pago),
+              metodo_pago=COALESCE(EXCLUDED.metodo_pago,sat_cfdis.metodo_pago),
+              uso_cfdi=COALESCE(EXCLUDED.uso_cfdi,sat_cfdis.uso_cfdi),
               version=EXCLUDED.version, fecha_timbrado=EXCLUDED.fecha_timbrado,
               rfc_prov_certif=EXCLUDED.rfc_prov_certif, updated_at=NOW()`,
-            [cfdi.uuid, satFecha(cfdi.fecha), cfdi.tipo||null,
-             parseFloat(cfdi.subtotal)||0, parseFloat(cfdi.total)||0, cfdi.moneda||'MXN',
+            [cfdi.uuid,
+             satFecha(cfdi.fecha),
+             cfdi.tipo||null,
+             parseFloat(cfdi.subtotal)||0,
+             parseFloat(cfdi.total)||0,
+             cfdi.moneda||'MXN',
              cfdi.emisor_rfc||null, cfdi.emisor_nombre||null,
              cfdi.receptor_rfc||null, cfdi.receptor_nombre||null, cfdi.uso_cfdi||null,
              cfdi.forma_pago||null, cfdi.metodo_pago||null, cfdi.lugar_expedicion||null,
              cfdi.serie||null, cfdi.folio||null, cfdi.no_certificado||null,
-             cfdi.version||null, satFecha(cfdi.fecha_timbrado), cfdi.rfc_prov_certif||null,
+             cfdi.version||null, satFecha(cfdi.fecha_timbrado), cfdi.pac_rfc||cfdi.rfc_prov_certif||null,
              cfdi.xml||null, req.body.id_paquete||null]);
           saved++;
         } catch(eCfdi) {
-          // FIX: Registrar error en lugar de ignorarlo silenciosamente
-          console.error('SAT descargar — error guardando UUID', cfdi.uuid, ':', eCfdi.message);
+          console.error('[SAT CFDI ERROR] uuid='+cfdi.uuid+' msg='+eCfdi.message);
           errores.push({ uuid: cfdi.uuid, error: eCfdi.message });
         }
       }
+      console.log('[SAT] CFDIs guardados='+saved+'/'+r.cfdis.length+(errores.length?' errores='+errores.length:''));
       await QR(req, `UPDATE sat_solicitudes SET estatus='descargado' WHERE id_solicitud=$1`,
         [req.body.id_solicitud]).catch(()=>{});
       r.guardados = saved;
       if (errores.length) r.errores_bd = errores;
-      // No enviar XML en respuesta (son muy grandes)
-      r.cfdis = r.cfdis.map(c => ({ ...c, xml: undefined }));
+      r.cfdis = r.cfdis.map(function(c){ return Object.assign({},c,{xml:undefined}); });
     }
-    // ── Guardar METADATOS en sat_cfdis ──────────────────────────────
-    if (r.ok && r.metadatos && r.metadatos.length) {
-      try {
-        await QR(req, `CREATE TABLE IF NOT EXISTS sat_cfdis (
-          id SERIAL PRIMARY KEY, uuid VARCHAR(100) UNIQUE, fecha_cfdi TIMESTAMP,
-          tipo_comprobante VARCHAR(5), subtotal NUMERIC(15,2) DEFAULT 0,
-          total NUMERIC(15,2) DEFAULT 0, moneda VARCHAR(10) DEFAULT 'MXN',
-          emisor_rfc VARCHAR(20), emisor_nombre VARCHAR(300),
-          receptor_rfc VARCHAR(20), receptor_nombre VARCHAR(300), uso_cfdi VARCHAR(10),
-          forma_pago VARCHAR(5), metodo_pago VARCHAR(5), lugar_expedicion VARCHAR(10),
-          serie VARCHAR(50), folio VARCHAR(50), no_certificado VARCHAR(30),
-          version VARCHAR(5), fecha_timbrado TIMESTAMP, rfc_prov_certif VARCHAR(20),
-          xml_content TEXT, id_paquete VARCHAR(200),
-          created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`).catch(()=>{});
-        for (const col of ['estatus_sat VARCHAR(20)','rfc_pac VARCHAR(20)','fecha_cancelacion TIMESTAMP','monto_sat NUMERIC(15,2)'])
-          await QR(req, `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS ${col}`).catch(()=>{});
-        let savedMeta = 0;
-        // LOG: ver estructura del primer metadato
-        if(r.metadatos[0]) console.log('[SAT META] Estructura primer registro:', JSON.stringify(r.metadatos[0]));
-        for (const m of r.metadatos) {
-          const uuid = m.uuid || m.uuid_sat; if(!uuid) continue;
-          try {
-            await QR(req, `INSERT INTO sat_cfdis(uuid,fecha_cfdi,tipo_comprobante,total,monto_sat,moneda,emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,estatus_sat,rfc_pac,fecha_cancelacion,id_paquete)
-              VALUES($1,$2,$3,$4,$5,'MXN',$6,$7,$8,$9,$10,$11,$12,$13)
-              ON CONFLICT (uuid) DO UPDATE SET
-                tipo_comprobante=COALESCE(EXCLUDED.tipo_comprobante,sat_cfdis.tipo_comprobante),
-                fecha_cfdi=COALESCE(EXCLUDED.fecha_cfdi,sat_cfdis.fecha_cfdi),
-                emisor_rfc=COALESCE(EXCLUDED.emisor_rfc,sat_cfdis.emisor_rfc),
-                emisor_nombre=COALESCE(EXCLUDED.emisor_nombre,sat_cfdis.emisor_nombre),
-                receptor_rfc=COALESCE(EXCLUDED.receptor_rfc,sat_cfdis.receptor_rfc),
-                receptor_nombre=COALESCE(EXCLUDED.receptor_nombre,sat_cfdis.receptor_nombre),
-                estatus_sat=EXCLUDED.estatus_sat, monto_sat=EXCLUDED.monto_sat,
-                rfc_pac=COALESCE(EXCLUDED.rfc_pac,sat_cfdis.rfc_pac),
-                fecha_cancelacion=COALESCE(EXCLUDED.fecha_cancelacion,sat_cfdis.fecha_cancelacion),
-                updated_at=NOW()`,
-              [uuid,
-               satFecha(m.fecha_emision||m.fecha),
-               m.tipo||m.efecto||null,
-               parseFloat(m.monto||0), parseFloat(m.monto||0),
-               m.rfc_emisor||null, m.nombre_emisor||null,
-               m.rfc_receptor||null, m.nombre_receptor||null,
-               m.estatus||null, m.rfc_pac||null,
-               satFecha(m.fecha_cancelacion),
-               req.body.id_paquete||null]);
-            savedMeta++;
-          } catch(em){
-            console.error('[SAT META ERROR] uuid='+uuid+' error='+em.message);
-            console.error('[SAT META DATA]', JSON.stringify({uuid,fecha:m.fecha_emision||m.fecha,tipo:m.tipo||m.efecto,monto:m.monto,rfc_emisor:m.rfc_emisor,rfc_receptor:m.rfc_receptor}));
-          }
+
+    // ── GUARDAR METADATOS ─────────────────────────────────────────
+    if (r.ok && r.metadatos && r.metadatos.length > 0) {
+      await ensureTable();
+      let savedMeta = 0, skipped = 0;
+      console.log('[SAT META] registros='+r.metadatos.length+' primer keys='+Object.keys(r.metadatos[0]).join(','));
+      for (const mRaw of r.metadatos) {
+        // Buscar UUID en todas las variantes posibles
+        const uuid = String(
+          mRaw.uuid||mRaw.Uuid||mRaw.UUID||mRaw.uuid_sat||
+          (mRaw.raw&&typeof mRaw.raw==='object'?
+            mRaw.raw.Uuid||mRaw.raw.UUID||mRaw.raw.uuid||
+            Object.values(mRaw.raw).find(function(v){ return v&&/^[0-9a-f-]{36}$/i.test(String(v).trim()); })||''
+          :'')||''
+        ).trim();
+        if(!uuid||uuid.length<10){ skipped++; continue; }
+        try {
+          await QR(req, `INSERT INTO sat_cfdis(
+              uuid,fecha_cfdi,tipo_comprobante,subtotal,total,monto_sat,moneda,
+              emisor_rfc,emisor_nombre,receptor_rfc,receptor_nombre,
+              uso_cfdi,forma_pago,metodo_pago,lugar_expedicion,
+              serie,folio,version,rfc_prov_certif,
+              estatus_sat,rfc_pac,fecha_cancelacion,id_paquete)
+            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+            ON CONFLICT (uuid) DO UPDATE SET
+              tipo_comprobante  = COALESCE(EXCLUDED.tipo_comprobante,sat_cfdis.tipo_comprobante),
+              fecha_cfdi        = COALESCE(EXCLUDED.fecha_cfdi,sat_cfdis.fecha_cfdi),
+              subtotal          = COALESCE(NULLIF(EXCLUDED.subtotal,0),sat_cfdis.subtotal),
+              total             = COALESCE(NULLIF(EXCLUDED.total,0),sat_cfdis.total),
+              monto_sat         = COALESCE(NULLIF(EXCLUDED.monto_sat,0),sat_cfdis.monto_sat),
+              emisor_rfc        = COALESCE(EXCLUDED.emisor_rfc,sat_cfdis.emisor_rfc),
+              emisor_nombre     = COALESCE(EXCLUDED.emisor_nombre,sat_cfdis.emisor_nombre),
+              receptor_rfc      = COALESCE(EXCLUDED.receptor_rfc,sat_cfdis.receptor_rfc),
+              receptor_nombre   = COALESCE(EXCLUDED.receptor_nombre,sat_cfdis.receptor_nombre),
+              uso_cfdi          = COALESCE(EXCLUDED.uso_cfdi,sat_cfdis.uso_cfdi),
+              forma_pago        = COALESCE(EXCLUDED.forma_pago,sat_cfdis.forma_pago),
+              metodo_pago       = COALESCE(EXCLUDED.metodo_pago,sat_cfdis.metodo_pago),
+              estatus_sat       = EXCLUDED.estatus_sat,
+              rfc_pac           = COALESCE(EXCLUDED.rfc_pac,sat_cfdis.rfc_pac),
+              fecha_cancelacion = COALESCE(EXCLUDED.fecha_cancelacion,sat_cfdis.fecha_cancelacion),
+              updated_at        = NOW()`,
+            [uuid,
+             satFecha(mRaw.fecha_emision||mRaw.fecha),
+             mRaw.tipo||mRaw.efecto||null,
+             parseFloat(mRaw.subtotal||mRaw.monto||0),
+             parseFloat(mRaw.total||mRaw.monto||0),
+             parseFloat(mRaw.monto||0),
+             mRaw.moneda||'MXN',
+             mRaw.rfc_emisor||null, mRaw.nombre_emisor||null,
+             mRaw.rfc_receptor||null, mRaw.nombre_receptor||null,
+             mRaw.uso_cfdi||null, mRaw.forma_pago||null, mRaw.metodo_pago||null,
+             mRaw.lugar_expedicion||null,
+             mRaw.serie||null, mRaw.folio||null,
+             mRaw.version||null, mRaw.rfc_pac||null,
+             mRaw.estatus||'Vigente', mRaw.rfc_pac||null,
+             satFecha(mRaw.fecha_cancelacion),
+             req.body.id_paquete||null]);
+          savedMeta++;
+        } catch(em) {
+          console.error('[SAT META ERROR] uuid='+uuid+' err='+em.message);
         }
-        r.guardados_meta = savedMeta;
-        console.log('SAT METADATA guardados:',savedMeta,'/',r.metadatos.length);
-        await QR(req,`UPDATE sat_solicitudes SET estatus='descargado' WHERE id_solicitud=$1`,[req.body.id_solicitud]).catch(()=>{});
-      } catch(eM){ console.error('SAT meta error:',eM.message); }
+      }
+      console.log('[SAT META] guardados='+savedMeta+' skipped='+skipped+' de '+r.metadatos.length);
+      await QR(req, `UPDATE sat_solicitudes SET estatus='descargado' WHERE id_solicitud=$1`,
+        [req.body.id_solicitud]).catch(()=>{});
+      r.guardados_meta = savedMeta;
     }
+
     res.json(r);
   } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
 });

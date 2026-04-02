@@ -331,18 +331,88 @@ async def verificar(request):
         logger.exception('Error /verificar')
         return json_resp({'ok': False, 'error': str(e)}, 500)
 
+def parse_cfdi_metadata_xml(xml_str: str) -> list:
+    """Parsea un archivo XML de metadata que contiene múltiples CFDIs."""
+    registros = []
+    try:
+        from lxml import etree
+        raw = xml_str.encode('utf-8') if isinstance(xml_str, str) else xml_str
+        if raw.startswith(b'\xef\xbb\xbf'): raw = raw[3:]
+        root = etree.fromstring(raw)
+        # El SAT usa varios namespaces posibles
+        ns_map = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/4',
+            'cfdi3': 'http://www.sat.gob.mx/cfd/3',
+        }
+        # Buscar todos los nodos Comprobante
+        comprobantes = (
+            root.findall('.//cfdi:Comprobante', ns_map) or
+            root.findall('.//cfdi3:Comprobante', ns_map) or
+            root.findall('.//{http://www.sat.gob.mx/cfd/4}Comprobante') or
+            root.findall('.//{http://www.sat.gob.mx/cfd/3}Comprobante') or
+            ([root] if root.get('Version') else [])
+        )
+        for comp in comprobantes:
+            # Timbre fiscal
+            tfd_ns = 'http://www.sat.gob.mx/TimbreFiscalDigital'
+            tf = comp.find(f'.//{{{tfd_ns}}}TimbreFiscalDigital') or comp.find('.//TimbreFiscalDigital')
+            uuid = tf.get('UUID','') if tf is not None else ''
+            if not uuid:
+                continue
+            # Emisor y receptor
+            em  = comp.find('.//{http://www.sat.gob.mx/cfd/4}Emisor') or comp.find('.//{http://www.sat.gob.mx/cfd/3}Emisor') or comp.find('.//Emisor')
+            rec = comp.find('.//{http://www.sat.gob.mx/cfd/4}Receptor') or comp.find('.//{http://www.sat.gob.mx/cfd/3}Receptor') or comp.find('.//Receptor')
+            efecto = comp.get('TipoDeComprobante','')
+            est_raw = comp.get('Estatus','1')
+            estatus = {'1':'Vigente','2':'Cancelado'}.get(est_raw, 'Vigente')
+            registros.append({
+                'uuid':            uuid,
+                'rfc_emisor':      em.get('Rfc','')  if em  is not None else '',
+                'nombre_emisor':   em.get('Nombre','') if em  is not None else '',
+                'rfc_receptor':    rec.get('Rfc','') if rec is not None else '',
+                'nombre_receptor': rec.get('Nombre','') if rec is not None else '',
+                'rfc_pac':         tf.get('RfcProvCertif','') if tf is not None else '',
+                'fecha_emision':   comp.get('Fecha',''),
+                'fecha_certificacion': tf.get('FechaTimbrado','') if tf is not None else '',
+                'monto':           comp.get('Total','0'),
+                'subtotal':        comp.get('SubTotal','0'),
+                'total':           comp.get('Total','0'),
+                'moneda':          comp.get('Moneda','MXN'),
+                'forma_pago':      comp.get('FormaPago',''),
+                'metodo_pago':     comp.get('MetodoPago',''),
+                'uso_cfdi':        rec.get('UsoCFDI','') if rec is not None else '',
+                'lugar_expedicion':comp.get('LugarExpedicion',''),
+                'serie':           comp.get('Serie',''),
+                'folio':           comp.get('Folio',''),
+                'version':         comp.get('Version',''),
+                'efecto':          efecto,
+                'tipo':            efecto,
+                'estatus':         estatus,
+                'fecha_cancelacion': '',
+                'xml_content':     xml_str if isinstance(xml_str,str) else xml_str.decode('utf-8','replace'),
+                'raw':             {'uuid': uuid},
+            })
+        logger.info(f'XML metadata parseado: {len(registros)} CFDIs')
+    except Exception as e:
+        logger.exception(f'Error parseando XML metadata: {e}')
+    return registros
+
+
 def parse_metadata_zip(paq_bytes: bytes) -> list:
     """
     Parsea un ZIP de METADATA del SAT.
-    El SAT envía un .txt delimitado por | con encoding Windows-1252.
+    Soporta:
+    - TXT delimitado por | o ~ (formato clásico)
+    - XML con múltiples CFDIs (formato nuevo SAT v1.5)
+    - ZIP con XMLs individuales por CFDI
     """
     registros = []
     try:
         with zipfile.ZipFile(io.BytesIO(paq_bytes), 'r') as zf:
             for name in zf.namelist():
                 raw_bytes = zf.read(name)
-                # SAT usa Windows-1252 (latin-1) para los metadatos
-                for enc in ('windows-1252', 'latin-1', 'utf-8-sig', 'utf-8'):
+                # Decodificar
+                for enc in ('utf-8-sig', 'utf-8', 'windows-1252', 'latin-1'):
                     try:
                         raw = raw_bytes.decode(enc)
                         break
@@ -351,17 +421,31 @@ def parse_metadata_zip(paq_bytes: bytes) -> list:
                 else:
                     raw = raw_bytes.decode('utf-8', 'replace')
 
+                raw_strip = raw.lstrip('\ufeff').lstrip()
+                logger.info(f'Metadata archivo={name} lineas={len(raw.splitlines())} enc={enc}')
+
+                # ── Detectar si es XML ────────────────────────────
+                if raw_strip.startswith('<?xml') or raw_strip.startswith('<cfdi:') or '<Comprobante' in raw_strip:
+                    logger.info(f'Archivo XML detectado: {name}')
+                    nuevos = parse_cfdi_metadata_xml(raw_strip)
+                    registros.extend(nuevos)
+                    continue
+
+                # ── Formato TXT delimitado ────────────────────────
                 lineas = raw.splitlines()
-                logger.info(f'Metadata archivo={name} lineas={len(lineas)} enc={enc}')
                 if len(lineas) < 2:
                     logger.warning(f'Archivo vacío o sin datos: {name}')
                     continue
 
-                # Detectar separador: SAT usa ~ (tilde) en v1.5
-                primera = lineas[0]
+                primera = lineas[0].lstrip('\ufeff')
                 sep = '~' if '~' in primera else '|'
                 headers = [h.strip() for h in primera.split(sep)]
-                logger.info(f'Headers ({sep}): {headers}')
+                logger.info(f'Headers ({sep}): {headers[:5]}...')
+
+                # Verificar que los headers sean válidos (no XML)
+                if not any(h in headers for h in ['Uuid','UUID','uuid','RfcEmisor','Monto']):
+                    logger.warning(f'Headers no reconocidos en {name}: {headers[:3]}')
+                    continue
 
                 for linea in lineas[1:]:
                     if not linea.strip():
@@ -371,14 +455,16 @@ def parse_metadata_zip(paq_bytes: bytes) -> list:
                         valores.append('')
                     reg = dict(zip(headers, valores))
 
-                    # Mapear campos SAT v1.5
                     efecto  = reg.get('EfectoComprobante', '')
-                    # Estatus: 1=Vigente, 2=Cancelado (SAT v1.5 usa números)
                     est_raw = reg.get('Estatus', '')
                     estatus = {'1':'Vigente','2':'Cancelado'}.get(est_raw, est_raw)
 
+                    uuid = reg.get('Uuid', reg.get('UUID', reg.get('uuid','')))
+                    if not uuid:
+                        continue
+
                     registros.append({
-                        'uuid':               reg.get('Uuid',               reg.get('UUID', '')),
+                        'uuid':               uuid,
                         'rfc_emisor':         reg.get('RfcEmisor',          ''),
                         'nombre_emisor':      reg.get('NombreEmisor',       ''),
                         'rfc_receptor':       reg.get('RfcReceptor',        ''),
@@ -387,12 +473,24 @@ def parse_metadata_zip(paq_bytes: bytes) -> list:
                         'fecha_emision':      reg.get('FechaEmision',       ''),
                         'fecha_certificacion':reg.get('FechaCertificacionSat', ''),
                         'monto':              reg.get('Monto',              '0'),
+                        'subtotal':           reg.get('SubTotal',           reg.get('Monto','0')),
+                        'total':              reg.get('Total',              reg.get('Monto','0')),
+                        'moneda':             reg.get('Moneda',             'MXN'),
+                        'forma_pago':         reg.get('FormaPago',          ''),
+                        'metodo_pago':        reg.get('MetodoPago',         ''),
+                        'uso_cfdi':           reg.get('UsoCFDI',            ''),
+                        'lugar_expedicion':   reg.get('LugarExpedicion',    ''),
+                        'serie':              reg.get('Serie',              ''),
+                        'folio':              reg.get('Folio',              ''),
+                        'version':            reg.get('Version',            ''),
                         'efecto':             efecto,
-                        'tipo':               efecto,  # I=Ingreso E=Egreso T=Traslado N=Nomina P=Pago
+                        'tipo':               efecto,
                         'estatus':            estatus,
                         'fecha_cancelacion':  reg.get('FechaCancelacion',   ''),
                         'raw':                reg,
                     })
+
+        logger.info(f'Total metadata parseada: {len(registros)} registros')
     except Exception as e:
         logger.exception('Error parseando metadata ZIP')
     return registros
