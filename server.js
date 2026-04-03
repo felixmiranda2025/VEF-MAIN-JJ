@@ -332,14 +332,10 @@ async function empresaActiva(req, res, next) {
 }
 
 // ── Middleware: solo lectura en inventario para rol soporte ──────
-// El rol soporte puede VER inventario pero NO crear/modificar/eliminar
 function soloLecturaInventario(req, res, next) {
   if (req.method === 'GET') return next();
   if (req.user?.rol === 'soporte') {
-    return res.status(403).json({
-      error: 'El rol Soporte solo puede consultar el inventario, no modificarlo.',
-      codigo: 'SIN_PERMISO_ESCRITURA'
-    });
+    return res.status(403).json({ error: 'El rol Soporte solo puede consultar el inventario, no modificarlo.', codigo: 'SIN_PERMISO_ESCRITURA' });
   }
   return next();
 }
@@ -3776,6 +3772,7 @@ app.get('/api/reportes-servicio/:id/pdf', auth, licencia, async (req,res)=>{
     res.send(buf);
   }catch(e){ console.error('RS PDF:',e.message); res.status(500).json({error:e.message}); }
 });
+
 // ── Enviar Reporte de Servicio por email ─────────────────────────
 app.post('/api/reportes-servicio/:id/email', auth, empresaActiva, licencia, async (req,res)=>{
   try{
@@ -3801,32 +3798,22 @@ app.post('/api/reportes-servicio/:id/email', auth, empresaActiva, licencia, asyn
     const nomEmp = empCfg.nombre||VEF_NOMBRE;
     const msgHtml = (mensaje||`Estimado/a ${r.cliente_nombre||'Cliente'},\n\nAdjunto encontrará el Reporte de Servicio.\n\nSaludos cordiales,`)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-    const htmlBody = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif">
+    const htmlBody = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,sans-serif">
 <div style="max-width:620px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-  <div style="background:#0D2B55;padding:28px 32px">
-    <h1 style="color:#fff;margin:0;font-size:22px;font-weight:700">${nomEmp}</h1>
-    ${empCfg.telefono?`<p style="color:#A8C5F0;margin:6px 0 0;font-size:13px">📞 ${empCfg.telefono}</p>`:''}
-    ${(empCfg.email||fromEmail)?`<p style="color:#A8C5F0;margin:4px 0 0;font-size:13px">✉️ ${empCfg.email||fromEmail}</p>`:''}
+  <div style="background:#0D2B55;padding:28px 32px"><h1 style="color:#fff;margin:0;font-size:22px">${nomEmp}</h1>
+  ${empCfg.telefono?`<p style="color:#A8C5F0;margin:6px 0 0;font-size:13px">📞 ${empCfg.telefono}</p>`:''}
+  ${(empCfg.email||fromEmail)?`<p style="color:#A8C5F0;margin:4px 0 0;font-size:13px">✉️ ${empCfg.email||fromEmail}</p>`:''}
   </div>
-  <div style="background:#1A4A8A;padding:14px 32px">
-    <span style="color:#A8C5F0;font-size:11px;text-transform:uppercase;letter-spacing:1px">Reporte de Servicio</span>
-    <div style="color:#fff;font-size:18px;font-weight:700;font-family:monospace">${r.numero_reporte||'—'}</div>
+  <div style="background:#1A4A8A;padding:14px 32px"><span style="color:#A8C5F0;font-size:11px;text-transform:uppercase">Reporte de Servicio</span>
+  <div style="color:#fff;font-size:18px;font-weight:700">${r.numero_reporte||'—'}</div></div>
+  <div style="padding:32px;color:#1e293b;line-height:1.7">${msgHtml}</div>
+  <div style="margin:0 32px 24px;background:#f0f7ff;border-left:4px solid #1A4A8A;padding:16px">
+    <p style="margin:0;font-size:13px;color:#334155"><strong>📋 Reporte:</strong> ${r.numero_reporte||'—'}<br>
+    <strong>📌 Título:</strong> ${r.titulo||'—'}<br>
+    ${r.cliente_nombre?`<strong>👤 Cliente:</strong> ${r.cliente_nombre}<br>`:''}
+    <strong>📅 Fecha:</strong> ${r.fecha_reporte||''}<br><strong>👷 Técnico:</strong> ${r.tecnico||'—'}</p>
   </div>
-  <div style="padding:32px;color:#1e293b;line-height:1.7;font-size:15px">${msgHtml}</div>
-  <div style="margin:0 32px 24px;background:#f0f7ff;border-left:4px solid #1A4A8A;border-radius:0 8px 8px 0;padding:16px">
-    <p style="margin:0;font-size:13px;color:#334155">
-      <strong>📋 Reporte:</strong> ${r.numero_reporte||'—'}<br>
-      <strong>📌 Título:</strong> ${r.titulo||'—'}<br>
-      ${r.cliente_nombre?`<strong>👤 Cliente:</strong> ${r.cliente_nombre}<br>`:''}
-      <strong>📅 Fecha:</strong> ${r.fecha_reporte||''}<br>
-      <strong>👷 Técnico:</strong> ${r.tecnico||'—'}
-    </p>
-  </div>
-  <div style="background:#0D2B55;padding:16px 32px;text-align:center">
-    <p style="color:#A8C5F0;margin:0;font-size:12px">${nomEmp}</p>
-    <p style="color:#64748b;margin:4px 0 0;font-size:11px">Generado automáticamente por VEF ERP</p>
-  </div>
+  <div style="background:#0D2B55;padding:16px 32px;text-align:center"><p style="color:#A8C5F0;margin:0;font-size:12px">${nomEmp}</p></div>
 </div></body></html>`;
     await dynMailer.sendMail({
       from:`"${nomEmp}" <${fromEmail}>`,
@@ -3838,8 +3825,6 @@ app.post('/api/reportes-servicio/:id/email', auth, empresaActiva, licencia, asyn
     res.json({ok:true,msg:`Correo enviado a ${to}`});
   }catch(e){ console.error('RS email:',e.message); res.status(500).json({error:e.message}); }
 });
-
-
 
 // ================================================================
 // LOGO
@@ -4540,95 +4525,103 @@ app.get('/api/reportes/sat/resumen', auth, async (req,res)=>{
 // ── PDF Reporte de Servicio ──────────────────────────────────────
 async function buildPDFReporteServicio(r, emp={}) {
   return new Promise((resolve,reject)=>{
-    const doc = new PDFKit({margin:50, size:'A4', bufferPages:true,
+    // bufferPages:true es OBLIGATORIO para poder usar switchToPage en el pie
+    const doc = new PDFKit({margin:28, size:'A4', bufferPages:true,
       info:{Title:'Reporte de Servicio '+(r.numero_reporte||''), Author:emp.nombre||VEF_NOMBRE}});
     const ch=[]; doc.on('data',c=>ch.push(c)); doc.on('end',()=>resolve(Buffer.concat(ch))); doc.on('error',reject);
-    const M=50, W=495, AZUL='#0D2B55', AZUL_MED='#1A4A8A', GRIS='#f8fafc', TEXTO='#1e293b';
-    const _lp = getLogoPath();
+
+    // Usar mismas constantes de color que el resto del ERP
+    const M=28, W=539;
+    const AZUL=C.AZUL, AZUL_MED=C.AZUL_MED, GRIS=C.GRIS, GRIS_B=C.GRIS_B, TEXTO=C.TEXTO;
+    const empNom = emp.nombre||emp.razon_social||VEF_NOMBRE;
     let secNum = 0;
 
-    // ── PORTADA ──────────────────────────────────────────────
-    // Header azul con logo y nombre empresa
-    doc.rect(M,30,W,90).fill(AZUL);
-    if(_lp){
-      doc.rect(M,30,120,90).fill('#fff');
-      try{ doc.image(_lp, M+6,34,{fit:[108,82],align:'center',valign:'center'}); }catch(e){}
-    }
-    const tx = _lp?M+130:M+14;
-    const tw = _lp?W-140:W-28;
-    const empNom = emp.nombre||VEF_NOMBRE;
-    doc.fillColor('#fff').fontSize(13).font('Helvetica-Bold').text(empNom, tx, 44, {width:tw});
-    if(emp.rfc) doc.fontSize(8).font('Helvetica').fillColor('#A8C5F0').text('RFC: '+emp.rfc, tx, 60, {width:tw});
-    if(emp.telefono||emp.email){
-      const contact=[emp.telefono,emp.email].filter(Boolean).join('  |  ');
-      doc.fontSize(8).font('Helvetica').fillColor('#A8C5F0').text(contact, tx, 71, {width:tw});
-    }
-
-    // Título del documento
-    doc.moveDown(2.5);
-    doc.fillColor(AZUL).fontSize(22).font('Helvetica-Bold')
-       .text('REPORTE DE SERVICIO', M, doc.y, {width:W, align:'center'});
-    doc.moveDown(0.4);
-    doc.fillColor(AZUL_MED).fontSize(14).font('Helvetica')
-       .text(r.titulo||'Sin título', M, doc.y, {width:W, align:'center'});
-    doc.moveDown(1.5);
-
-    // ── CAJA DATOS DEL REPORTE ───────────────────────────────
-    const bY = doc.y;
-    const dataRows=[
-      ['No. Reporte:', r.numero_reporte||'—',       'Fecha Reporte:',  fmt(r.fecha_reporte)||'—'],
-      ['Fecha Servicio:', fmt(r.fecha_servicio)||'—','Técnico:',        r.tecnico||'—'],
-      ['Estatus:',    (r.estatus||'borrador').toUpperCase(), 'Proyecto:', r.proyecto_nombre||'—'],
-    ];
-    const boxH = 10 + dataRows.length*22 + 8;
-    doc.rect(M, bY, W, boxH).fill(GRIS).stroke('#e2e8f0');
-    const col1=M+16, col2=M+W/2+16, colW=(W/2)-24;
-    let dy = bY+10;
-    for(const row of dataRows){
-      doc.fillColor(AZUL).fontSize(8).font('Helvetica-Bold').text(row[0],col1,dy,{width:88});
-      doc.fillColor(TEXTO).fontSize(8).font('Helvetica').text(row[1],col1+90,dy,{width:colW-90});
-      doc.fillColor(AZUL).fontSize(8).font('Helvetica-Bold').text(row[2],col2,dy,{width:88});
-      doc.fillColor(TEXTO).fontSize(8).font('Helvetica').text(row[3],col2+90,dy,{width:colW-90});
-      dy+=22;
-    }
-    doc.y = bY+boxH+12;
-
-    // ── CAJA DATOS DEL CLIENTE ────────────────────────────────
-    if(r.cliente_nombre){
-      const cY = doc.y;
-      doc.rect(M, cY, W, 36).fill(AZUL_MED);
-      doc.fillColor('#fff').fontSize(9).font('Helvetica-Bold')
-         .text('DATOS DEL CLIENTE', M+14, cY+10, {width:W-28});
-      doc.y = cY+36;
-      const cboxH = 10 + 4*20 + 8;
-      doc.rect(M, doc.y, W, cboxH).fill('#f0f4ff').stroke('#bfdbfe');
-      const cY2 = doc.y;
-      const cRows=[
-        ['Cliente / Razón Social:', r.cliente_nombre||'—',   'RFC:',       r.cliente_rfc||'—'],
-        ['Contacto:',               r.cliente_contacto||'—', 'Ciudad:',    r.cliente_ciudad||'—'],
-        ['Teléfono:',               r.cliente_tel||'—',      'Email:',     r.cliente_email||'—'],
-        ['Dirección:',              r.cliente_dir||'—',       '',           ''],
-      ];
-      let cdy = cY2+10;
-      for(const row of cRows){
-        doc.fillColor(AZUL).fontSize(8).font('Helvetica-Bold').text(row[0],col1,cdy,{width:110});
-        doc.fillColor(TEXTO).fontSize(8).font('Helvetica').text(row[1],col1+112,cdy,{width:colW-112});
-        if(row[2]){
-          doc.fillColor(AZUL).fontSize(8).font('Helvetica-Bold').text(row[2],col2,cdy,{width:88});
-          doc.fillColor(TEXTO).fontSize(8).font('Helvetica').text(row[3],col2+90,cdy,{width:colW-90});
-        }
-        cdy+=20;
+    // ── Helper: fila de dos columnas con altura dinámica ─────────────────
+    // LABEL_W = ancho fijo para la etiqueta; VALUE_W = ancho del valor
+    function rsRow(doc, y, lbl1, val1, lbl2, val2, bgColor) {
+      const LW=110, VW1=W/2-LW-10, LW2=110, VW2=W/2-LW2-6;
+      const col1=M, col2=M+W/2;
+      // Calcular altura necesaria para el texto más largo
+      const lines1 = Math.max(1, Math.ceil(String(val1||'').length / (VW1/5.5)));
+      const lines2 = lbl2 ? Math.max(1, Math.ceil(String(val2||'').length / (VW2/5.5))) : 0;
+      const rowH   = Math.max(26, Math.max(lines1,lines2)*13 + 10);
+      // Fondo alternado
+      doc.rect(col1, y, W, rowH).fill(bgColor||GRIS);
+      doc.rect(col1, y, W, rowH).lineWidth(0.4).strokeColor(GRIS_B).stroke();
+      // Línea divisoria vertical central
+      doc.moveTo(col2, y).lineTo(col2, y+rowH).lineWidth(0.4).strokeColor(GRIS_B).stroke();
+      // Columna izquierda: etiqueta + valor
+      doc.fillColor(AZUL).fontSize(8.5).font('Helvetica-Bold')
+         .text(lbl1, col1+8, y+7, {width:LW-4, lineBreak:false});
+      doc.fillColor(TEXTO).fontSize(9).font('Helvetica')
+         .text(String(val1||'—'), col1+LW+4, y+6, {width:VW1, lineGap:2});
+      // Columna derecha: etiqueta + valor (si existe)
+      if(lbl2){
+        doc.fillColor(AZUL).fontSize(8.5).font('Helvetica-Bold')
+           .text(lbl2, col2+8, y+7, {width:LW2-4, lineBreak:false});
+        doc.fillColor(TEXTO).fontSize(9).font('Helvetica')
+           .text(String(val2||'—'), col2+LW2+4, y+6, {width:VW2, lineGap:2});
       }
-      doc.y = cY2+cboxH+10;
+      return rowH;
     }
 
-    // ── ÍNDICE ────────────────────────────────────────────────
-    doc.addPage();
-    doc.fillColor(AZUL).fontSize(16).font('Helvetica-Bold').text('ÍNDICE', M, 50, {width:W});
-    doc.moveTo(M,70).lineTo(M+W,70).lineWidth(2).strokeColor(AZUL_MED).stroke();
-    doc.moveDown(0.8);
+    // ── Helper: cabecera de sección (barra azul + título) ────────────────
+    function rsSecHeader(titulo) {
+      doc.moveDown(0.5);
+      const sy = doc.y;
+      doc.rect(M, sy, W, 22).fill(AZUL_MED);
+      doc.fillColor('#fff').fontSize(10).font('Helvetica-Bold')
+         .text(titulo.toUpperCase(), M+10, sy+6, {width:W-20, lineBreak:false});
+      doc.y = sy+22;
+      doc.moveDown(0.1);
+    }
 
-    const secciones = [
+    // ═══════════════════════════════════════════════════════════════
+    // PÁGINA 1 — PORTADA
+    // Usa pdfHeader/pdfWatermark idénticos a cotizaciones (logo BD o disco)
+    // ═══════════════════════════════════════════════════════════════
+    pdfWatermark(doc, emp);
+    pdfHeader(doc, 'REPORTE DE SERVICIO', [
+      \`No. \${r.numero_reporte||'—'}  |  Fecha: \${fmt(r.fecha_reporte)||'—'}  |  Técnico: \${r.tecnico||'—'}\`,
+      \`Proyecto: \${r.proyecto_nombre||'—'}  |  Estatus: \${(r.estatus||'borrador').toUpperCase()}\`,
+    ], emp);
+
+    // Título del reporte centrado
+    doc.moveDown(0.8);
+    const titleY = doc.y;
+    doc.rect(M, titleY, W, 2).fill(AZUL_MED);  // línea decorativa
+    doc.moveDown(0.4);
+    doc.fillColor(AZUL).fontSize(17).font('Helvetica-Bold')
+       .text(r.titulo||'Sin título', M, doc.y, {width:W, align:'center', lineGap:3});
+    doc.moveDown(0.3);
+    doc.rect(M, doc.y, W, 2).fill(AZUL_MED);
+    doc.moveDown(1.0);
+
+    // ── BLOQUE: DATOS DEL REPORTE ────────────────────────────────
+    rsSecHeader('Datos del Reporte');
+    let ry = doc.y;
+    const bgs = [GRIS, C.BLANCO];
+    let bi = 0;
+    const addRow = (l1,v1,l2,v2) => { ry += rsRow(doc,ry,l1,v1,l2,v2,bgs[bi++%2]); };
+    addRow('No. Reporte:',    r.numero_reporte||'—',              'Fecha Reporte:',   fmt(r.fecha_reporte)||'—');
+    addRow('Fecha Servicio:', fmt(r.fecha_servicio)||'—',         'Técnico:',         r.tecnico||'—');
+    addRow('Estatus:',        (r.estatus||'borrador').toUpperCase(), 'Proyecto:',     r.proyecto_nombre||'—');
+    doc.y = ry + 14;
+
+    // ── BLOQUE: DATOS DEL CLIENTE ────────────────────────────────
+    if(r.cliente_nombre){
+      rsSecHeader('Datos del Cliente');
+      let cy = doc.y; let ci = 0;
+      const addC = (l1,v1,l2,v2) => { cy += rsRow(doc,cy,l1,v1,l2,v2,bgs[ci++%2]); };
+      addC('Cliente / Razón Social:', r.cliente_nombre||'—', 'RFC:',     r.cliente_rfc||'—');
+      addC('Contacto:',               r.cliente_contacto||'—','Ciudad:', r.cliente_ciudad||'—');
+      addC('Teléfono:',               r.cliente_tel||'—',     'Email:',  r.cliente_email||'—');
+      if(r.cliente_dir) addC('Dirección:', r.cliente_dir||'—', '', '');
+      doc.y = cy + 14;
+    }
+
+    // ── ÍNDICE (solo si hay secciones con contenido) ─────────────
+    const todasSecciones = [
       {num:1, titulo:'Introducción',             campo:'introduccion'},
       {num:2, titulo:'Objetivo',                  campo:'objetivo'},
       {num:3, titulo:'Alcance',                   campo:'alcance'},
@@ -4641,59 +4634,83 @@ async function buildPDFReporteServicio(r, emp={}) {
       {num:10,titulo:'Conclusiones',              campo:'conclusiones'},
       {num:11,titulo:'Recomendaciones',           campo:'recomendaciones'},
       {num:12,titulo:'Anexos',                    campo:'anexos'},
-    ].filter(s => r[s.campo] && String(r[s.campo]).trim());
+    ].filter(sc => r[sc.campo] && String(r[sc.campo]).trim());
 
-    let iy = doc.y;
-    for(const s of secciones){
-      const hasContent = r[s.campo]&&String(r[s.campo]).trim();
-      if(!hasContent) continue;
-      doc.fillColor(AZUL_MED).fontSize(10).font('Helvetica-Bold')
-         .text(`${s.num}.`, M, iy, {width:24});
-      doc.fillColor(TEXTO).fontSize(10).font('Helvetica')
-         .text(s.titulo, M+28, iy, {width:W-80});
-      doc.fillColor('#94a3b8').fontSize(10).font('Helvetica')
-         .text('..................', M+W-60, iy, {width:60,align:'right'});
-      iy += 22;
+    if(todasSecciones.length > 1){
+      doc.addPage();
+      pdfHeader(doc,'REPORTE DE SERVICIO',[
+        \`No. \${r.numero_reporte||'—'}  |  Índice de Contenido\`,
+      ], emp);
+      doc.moveDown(0.8);
+      rsSecHeader('Índice de Contenido');
+      let iy = doc.y;
+      todasSecciones.forEach((sc,idx)=>{
+        const bg = idx%2===0?GRIS:C.BLANCO;
+        doc.rect(M, iy, W, 24).fill(bg);
+        doc.rect(M, iy, W, 24).lineWidth(0.3).strokeColor(GRIS_B).stroke();
+        // Número
+        doc.rect(M, iy, 32, 24).fill(AZUL_MED);
+        doc.fillColor('#fff').fontSize(9).font('Helvetica-Bold')
+           .text(String(sc.num), M, iy+7, {width:32, align:'center', lineBreak:false});
+        // Título
+        doc.fillColor(TEXTO).fontSize(9.5).font('Helvetica')
+           .text(sc.titulo, M+40, iy+7, {width:W-80, lineBreak:false});
+        // Puntos
+        doc.fillColor('#94a3b8').fontSize(9).font('Helvetica')
+           .text('· · · · · ·', M+W-54, iy+7, {width:54, align:'right', lineBreak:false});
+        iy += 24;
+      });
+      doc.y = iy + 16;
     }
 
-    // ── SECCIONES DEL REPORTE ────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════
+    // SECCIONES DE CONTENIDO
+    // Cada sección: nueva página, header estándar con logo, contenido con
+    // párrafos justificados y bien espaciados
+    // ═══════════════════════════════════════════════════════════════
     function addSeccion(titulo, contenido){
       if(!contenido||!String(contenido).trim()) return;
       secNum++;
       doc.addPage();
-      // Encabezado de sección
-      doc.rect(M, 30, W, 36).fill(AZUL);
-      doc.fillColor('#fff').fontSize(14).font('Helvetica-Bold')
-         .text(`${secNum}. ${titulo}`, M+14, 41, {width:W-28});
-      // Número de reporte en esquina
-      doc.fillColor('#A8C5F0').fontSize(8).font('Helvetica')
-         .text(r.numero_reporte||'', M+W-80, 37, {width:80, align:'right'});
-      doc.y = 80;
+      // Header con logo idéntico a cotizaciones
+      pdfHeader(doc,'REPORTE DE SERVICIO',[
+        \`No. \${r.numero_reporte||'—'}  |  \${fmt(r.fecha_reporte)||'—'}  |  \${r.cliente_nombre||''}\`,
+      ], emp);
+      doc.moveDown(0.6);
+      // Título de sección con barra lateral azul
+      const stY = doc.y;
+      doc.rect(M, stY, 4, 22).fill(AZUL_MED);  // barra lateral
+      doc.fillColor(AZUL).fontSize(13).font('Helvetica-Bold')
+         .text(\`\${secNum}. \${titulo}\`, M+12, stY+4, {width:W-12, lineBreak:false});
+      doc.y = stY+26;
+      doc.moveTo(M, doc.y).lineTo(M+W, doc.y).lineWidth(0.8).strokeColor(AZUL_MED).stroke();
+      doc.moveDown(0.7);
+      // Contenido justificado con buen interlineado
       doc.fillColor(TEXTO).fontSize(10).font('Helvetica')
-         .text(String(contenido).trim(), M, doc.y, {width:W, lineGap:4});
+         .text(String(contenido).trim(), M, doc.y, {
+           width:W, lineGap:5, paragraphGap:8, align:'justify'
+         });
     }
 
-    addSeccion('Introducción',            r.introduccion);
-    addSeccion('Objetivo',                r.objetivo);
-    addSeccion('Alcance',                 r.alcance);
-    addSeccion('Descripción del Sistema', r.descripcion_sistema);
-    addSeccion('Arquitectura del Sistema',r.arquitectura);
-    addSeccion('Desarrollo Técnico',      r.desarrollo_tecnico);
-    addSeccion('Resultados de Pruebas',   r.resultados_pruebas);
-    addSeccion('Problemas Detectados',    r.problemas_detectados);
-    addSeccion('Soluciones Implementadas',r.soluciones_implementadas);
-    addSeccion('Conclusiones',            r.conclusiones);
-    addSeccion('Recomendaciones',         r.recomendaciones);
-    addSeccion('Anexos',                  r.anexos);
+    addSeccion('Introducción',             r.introduccion);
+    addSeccion('Objetivo',                 r.objetivo);
+    addSeccion('Alcance',                  r.alcance);
+    addSeccion('Descripción del Sistema',  r.descripcion_sistema);
+    addSeccion('Arquitectura del Sistema', r.arquitectura);
+    addSeccion('Desarrollo Técnico',       r.desarrollo_tecnico);
+    addSeccion('Resultados de Pruebas',    r.resultados_pruebas);
+    addSeccion('Problemas Detectados',     r.problemas_detectados);
+    addSeccion('Soluciones Implementadas', r.soluciones_implementadas);
+    addSeccion('Conclusiones',             r.conclusiones);
+    addSeccion('Recomendaciones',          r.recomendaciones);
+    addSeccion('Anexos',                   r.anexos);
 
-    // ── PIE EN CADA PÁGINA ───────────────────────────────────
+    // ── PIE PROFESIONAL EN TODAS LAS PÁGINAS ─────────────────────
+    // bufferPages:true permite recorrer todas las páginas al final
     const pages = doc.bufferedPageRange();
     for(let i = pages.start; i < pages.start + pages.count; i++){
       doc.switchToPage(i);
-      const py = doc.page.height - 40;
-      doc.rect(M, py-8, W, 28).fill(AZUL);
-      doc.fillColor('#fff').fontSize(8).font('Helvetica-Bold')
-         .text(`${empNom}  |  ${r.numero_reporte||''}  |  Pág. ${i - pages.start + 1} / ${pages.count}`, M, py, {width:W, align:'center'});
+      pdfPie(doc, emp);
     }
 
     doc.end();
