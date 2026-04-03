@@ -331,12 +331,10 @@ async function empresaActiva(req, res, next) {
   } catch { return next(); }
 }
 
-// ── Middleware: solo lectura en inventario para rol soporte ──────
-function soloLecturaInventario(req, res, next) {
-  if (req.method === 'GET') return next();
-  if (req.user?.rol === 'soporte') {
-    return res.status(403).json({ error: 'El rol Soporte solo puede consultar el inventario, no modificarlo.', codigo: 'SIN_PERMISO_ESCRITURA' });
-  }
+// ── Middleware: solo lectura inventario para rol soporte ────────
+function soloLecturaInventario(req,res,next){
+  if(req.method==='GET') return next();
+  if(req.user?.rol==='soporte') return res.status(403).json({error:'El rol Soporte solo puede consultar el inventario.',codigo:'SIN_PERMISO_ESCRITURA'});
   return next();
 }
 
@@ -3779,51 +3777,30 @@ app.post('/api/reportes-servicio/:id/email', auth, empresaActiva, licencia, asyn
     const {to,cc,asunto,mensaje}=req.body;
     if(!to) return res.status(400).json({error:'to requerido'});
     const rows = await QR(req,`
-      SELECT rs.*,
-        cl.nombre cliente_nombre,cl.rfc cliente_rfc,cl.email cliente_email,
-        cl.telefono cliente_tel,cl.direccion cliente_dir,
-        cl.contacto cliente_contacto,cl.ciudad cliente_ciudad,
-        p.nombre proyecto_nombre
+      SELECT rs.*,cl.nombre cliente_nombre,cl.rfc cliente_rfc,cl.email cliente_email,
+        cl.telefono cliente_tel,cl.direccion cliente_dir,cl.contacto cliente_contacto,
+        cl.ciudad cliente_ciudad,p.nombre proyecto_nombre
       FROM reportes_servicio rs
       LEFT JOIN clientes cl ON cl.id=rs.cliente_id
       LEFT JOIN proyectos p ON p.id=rs.proyecto_id
       WHERE rs.id=$1`,[req.params.id]);
     if(!rows.length) return res.status(404).json({error:'No encontrado'});
-    const r = rows[0];
-    const emp = await getEmpConfig(req.user?.schema);
-    const buf = await buildPDFReporteServicio(r, emp);
-    const dynMailer = await getMailer(req.user?.schema);
-    const fromEmail = await getFromEmail(req.user?.schema);
-    const empCfg = (await Q('SELECT nombre,telefono,email FROM empresa_config LIMIT 1',[],req.user?.schema))[0]||{};
-    const nomEmp = empCfg.nombre||VEF_NOMBRE;
-    const msgHtml = (mensaje||`Estimado/a ${r.cliente_nombre||'Cliente'},\n\nAdjunto encontrará el Reporte de Servicio.\n\nSaludos cordiales,`)
+    const r=rows[0]; const emp=await getEmpConfig(req.user?.schema);
+    const buf=await buildPDFReporteServicio(r,emp);
+    const dynMailer=await getMailer(req.user?.schema);
+    const fromEmail=await getFromEmail(req.user?.schema);
+    const empCfg=(await Q('SELECT nombre,telefono,email FROM empresa_config LIMIT 1',[],req.user?.schema))[0]||{};
+    const nomEmp=empCfg.nombre||VEF_NOMBRE;
+    const msgHtml=(mensaje||`Estimado/a ${r.cliente_nombre||'Cliente'},\n\nAdjunto el Reporte de Servicio.\n\nSaludos,`)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-    const htmlBody = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,sans-serif">
-<div style="max-width:620px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-  <div style="background:#0D2B55;padding:28px 32px"><h1 style="color:#fff;margin:0;font-size:22px">${nomEmp}</h1>
-  ${empCfg.telefono?`<p style="color:#A8C5F0;margin:6px 0 0;font-size:13px">📞 ${empCfg.telefono}</p>`:''}
-  ${(empCfg.email||fromEmail)?`<p style="color:#A8C5F0;margin:4px 0 0;font-size:13px">✉️ ${empCfg.email||fromEmail}</p>`:''}
-  </div>
-  <div style="background:#1A4A8A;padding:14px 32px"><span style="color:#A8C5F0;font-size:11px;text-transform:uppercase">Reporte de Servicio</span>
-  <div style="color:#fff;font-size:18px;font-weight:700">${r.numero_reporte||'—'}</div></div>
-  <div style="padding:32px;color:#1e293b;line-height:1.7">${msgHtml}</div>
-  <div style="margin:0 32px 24px;background:#f0f7ff;border-left:4px solid #1A4A8A;padding:16px">
-    <p style="margin:0;font-size:13px;color:#334155"><strong>📋 Reporte:</strong> ${r.numero_reporte||'—'}<br>
-    <strong>📌 Título:</strong> ${r.titulo||'—'}<br>
-    ${r.cliente_nombre?`<strong>👤 Cliente:</strong> ${r.cliente_nombre}<br>`:''}
-    <strong>📅 Fecha:</strong> ${r.fecha_reporte||''}<br><strong>👷 Técnico:</strong> ${r.tecnico||'—'}</p>
-  </div>
-  <div style="background:#0D2B55;padding:16px 32px;text-align:center"><p style="color:#A8C5F0;margin:0;font-size:12px">${nomEmp}</p></div>
-</div></body></html>`;
     await dynMailer.sendMail({
-      from:`"${nomEmp}" <${fromEmail}>`,
-      to, cc:cc||undefined,
+      from:`"${nomEmp}" <${fromEmail}>`,to,cc:cc||undefined,
       subject:asunto||`Reporte de Servicio ${r.numero_reporte} — ${nomEmp}`,
-      html:htmlBody,
+      html:`<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto"><div style="background:#0D2B55;padding:20px 24px"><h2 style="color:#fff;margin:0">${nomEmp}</h2></div><div style="background:#1A4A8A;padding:10px 24px"><span style="color:#A8C5F0;font-size:11px">REPORTE DE SERVICIO</span><div style="color:#fff;font-weight:700">${r.numero_reporte||'—'}</div></div><div style="padding:24px">${msgHtml}</div></div>`,
       attachments:[{filename:`RS-${r.numero_reporte||r.id}.pdf`,content:buf}]
     });
     res.json({ok:true,msg:`Correo enviado a ${to}`});
-  }catch(e){ console.error('RS email:',e.message); res.status(500).json({error:e.message}); }
+  }catch(e){console.error('RS email:',e.message);res.status(500).json({error:e.message});}
 });
 
 // ================================================================
@@ -4525,198 +4502,242 @@ app.get('/api/reportes/sat/resumen', auth, async (req,res)=>{
 // ── PDF Reporte de Servicio ──────────────────────────────────────
 async function buildPDFReporteServicio(r, emp={}) {
   return new Promise((resolve,reject)=>{
-    // bufferPages:true es OBLIGATORIO para poder usar switchToPage en el pie
-    const doc = new PDFKit({margin:28, size:'A4', bufferPages:true,
-      info:{Title:'Reporte de Servicio '+(r.numero_reporte||''), Author:emp.nombre||VEF_NOMBRE}});
+    const doc = new PDFKit({
+      margin:28, size:'A4', bufferPages:true,
+      info:{Title:'Reporte de Servicio '+(r.numero_reporte||''), Author:emp.nombre||VEF_NOMBRE}
+    });
     const ch=[]; doc.on('data',c=>ch.push(c)); doc.on('end',()=>resolve(Buffer.concat(ch))); doc.on('error',reject);
 
-    // Usar mismas constantes de color que el resto del ERP
-    const M=28, W=539;
+    const M=28, W=539, PH=842;
+    // Pie siempre a Y fija — deja 52px al fondo para el pie
+    const PIE_Y   = PH - 52;   // donde empieza el pie
+    const SAFE_Y  = PIE_Y - 6; // límite máximo de contenido
     const AZUL=C.AZUL, AZUL_MED=C.AZUL_MED, GRIS=C.GRIS, GRIS_B=C.GRIS_B, TEXTO=C.TEXTO;
     const empNom = emp.nombre||emp.razon_social||VEF_NOMBRE;
-    let secNum = 0;
+    const bgs = [GRIS, C.BLANCO];
 
-    // ── Helper: fila de dos columnas con altura dinámica ─────────────────
-    // LABEL_W = ancho fijo para la etiqueta; VALUE_W = ancho del valor
-    function rsRow(doc, y, lbl1, val1, lbl2, val2, bgColor) {
-      const LW=110, VW1=W/2-LW-10, LW2=110, VW2=W/2-LW2-6;
-      const col1=M, col2=M+W/2;
-      // Calcular altura necesaria para el texto más largo
-      const lines1 = Math.max(1, Math.ceil(String(val1||'').length / (VW1/5.5)));
-      const lines2 = lbl2 ? Math.max(1, Math.ceil(String(val2||'').length / (VW2/5.5))) : 0;
-      const rowH   = Math.max(26, Math.max(lines1,lines2)*13 + 10);
-      // Fondo alternado
-      doc.rect(col1, y, W, rowH).fill(bgColor||GRIS);
-      doc.rect(col1, y, W, rowH).lineWidth(0.4).strokeColor(GRIS_B).stroke();
-      // Línea divisoria vertical central
-      doc.moveTo(col2, y).lineTo(col2, y+rowH).lineWidth(0.4).strokeColor(GRIS_B).stroke();
-      // Columna izquierda: etiqueta + valor
-      doc.fillColor(AZUL).fontSize(8.5).font('Helvetica-Bold')
-         .text(lbl1, col1+8, y+7, {width:LW-4, lineBreak:false});
-      doc.fillColor(TEXTO).fontSize(9).font('Helvetica')
-         .text(String(val1||'—'), col1+LW+4, y+6, {width:VW1, lineGap:2});
-      // Columna derecha: etiqueta + valor (si existe)
-      if(lbl2){
-        doc.fillColor(AZUL).fontSize(8.5).font('Helvetica-Bold')
-           .text(lbl2, col2+8, y+7, {width:LW2-4, lineBreak:false});
-        doc.fillColor(TEXTO).fontSize(9).font('Helvetica')
-           .text(String(val2||'—'), col2+LW2+4, y+6, {width:VW2, lineGap:2});
+    // ── Mini-header compacto para páginas 2+ ────────────────────
+    function miniHeader() {
+      const _logoBuf = emp._logo_data||null;
+      const _lp = !_logoBuf ? getLogoPath() : null;
+      doc.rect(M,14,W,22).fill(AZUL);
+      if(_logoBuf||_lp){
+        doc.rect(M,14,58,22).fill('#fff');
+        try{
+          if(_logoBuf) doc.image(_logoBuf,M+2,15,{fit:[54,20],align:'center',valign:'center'});
+          else         doc.image(_lp,     M+2,15,{fit:[54,20],align:'center',valign:'center'});
+        }catch(e){}
+        doc.fillColor('#fff').fontSize(7).font('Helvetica-Bold')
+           .text(empNom+'  |  Reporte '+(r.numero_reporte||''), M+62, 21, {width:W-68, lineBreak:false});
+      } else {
+        doc.fillColor('#fff').fontSize(7).font('Helvetica-Bold')
+           .text(empNom+'  |  Reporte '+(r.numero_reporte||''), M+6, 21, {width:W-12, lineBreak:false});
       }
-      return rowH;
+      doc.y = 44;
     }
 
-    // ── Helper: cabecera de sección (barra azul + título) ────────────────
-    function rsSecHeader(titulo) {
-      doc.moveDown(0.5);
-      const sy = doc.y;
-      doc.rect(M, sy, W, 22).fill(AZUL_MED);
-      doc.fillColor('#fff').fontSize(10).font('Helvetica-Bold')
-         .text(titulo.toUpperCase(), M+10, sy+6, {width:W-20, lineBreak:false});
-      doc.y = sy+22;
-      doc.moveDown(0.1);
+    // ── Salto de página si no cabe 'needed' px ──────────────────
+    function checkSpace(needed) {
+      if (doc.y + needed > SAFE_Y) {
+        doc.addPage();
+        miniHeader();
+      }
     }
 
-    // ═══════════════════════════════════════════════════════════════
+    // ── Fila dos columnas con altura dinámica ───────────────────
+    function row2(lbl1,val1,lbl2,val2,bg) {
+      const LW=108, VW=(W/2)-LW-6, C2=M+W/2;
+      const v1=String(val1||'—'), v2=String(val2||'');
+      const est = (txt,w) => Math.max(1,Math.ceil(txt.length/(w/5.2)));
+      const h = Math.max(18, Math.max(est(v1,VW), lbl2?est(v2,VW):0)*11+8);
+      checkSpace(h);
+      const y=doc.y;
+      doc.rect(M,y,W,h).fill(bg||GRIS);
+      doc.rect(M,y,W,h).lineWidth(0.3).strokeColor(GRIS_B).stroke();
+      doc.moveTo(C2,y).lineTo(C2,y+h).lineWidth(0.3).strokeColor(GRIS_B).stroke();
+      doc.fillColor(AZUL).fontSize(8).font('Helvetica-Bold')
+         .text(lbl1, M+5, y+5, {width:LW-4, lineBreak:false});
+      doc.fillColor(TEXTO).fontSize(8.5).font('Helvetica')
+         .text(v1, M+LW+2, y+4, {width:VW, lineGap:1});
+      if(lbl2){
+        doc.fillColor(AZUL).fontSize(8).font('Helvetica-Bold')
+           .text(lbl2, C2+5, y+5, {width:LW-4, lineBreak:false});
+        doc.fillColor(TEXTO).fontSize(8.5).font('Helvetica')
+           .text(String(val2||'—'), C2+LW+2, y+4, {width:VW, lineGap:1});
+      }
+      doc.y = y+h;
+    }
+
+    // ── Barra de título de sección ──────────────────────────────
+    function secBar(titulo) {
+      checkSpace(20);
+      const y=doc.y;
+      doc.rect(M,y,W,17).fill(AZUL_MED);
+      doc.fillColor('#fff').fontSize(8.5).font('Helvetica-Bold')
+         .text(titulo.toUpperCase(), M+7, y+4, {width:W-14, lineBreak:false});
+      doc.y = y+17;
+    }
+
+    // ── Sección de texto (flujo continuo) ───────────────────────
+    function secTexto(titulo, contenido) {
+      if(!contenido||!String(contenido).trim()) return;
+      checkSpace(30);
+      secBar(titulo);
+      doc.fillColor(TEXTO).fontSize(9.5).font('Helvetica')
+         .text(String(contenido).trim(), M+4, doc.y+3, {
+           width:W-8, lineGap:2, paragraphGap:0, align:'justify'
+         });
+      doc.y += 5;
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // PÁGINA 1 — PORTADA
-    // Usa pdfHeader/pdfWatermark idénticos a cotizaciones (logo BD o disco)
-    // ═══════════════════════════════════════════════════════════════
+    // Header idéntico a cotizaciones (logo BD o disco, RFC, dirección)
+    // ═══════════════════════════════════════════════════════════
     pdfWatermark(doc, emp);
     pdfHeader(doc, 'REPORTE DE SERVICIO', [
-      \`No. \${r.numero_reporte||'—'}  |  Fecha: \${fmt(r.fecha_reporte)||'—'}  |  Técnico: \${r.tecnico||'—'}\`,
-      \`Proyecto: \${r.proyecto_nombre||'—'}  |  Estatus: \${(r.estatus||'borrador').toUpperCase()}\`,
+      'No. '+(r.numero_reporte||'—')+'  |  Fecha: '+(fmt(r.fecha_reporte)||'—')+'  |  Técnico: '+(r.tecnico||'—'),
+      'Proyecto: '+(r.proyecto_nombre||'—')+'  |  Estatus: '+((r.estatus||'borrador').toUpperCase()),
     ], emp);
 
-    // Título del reporte centrado
-    doc.moveDown(0.8);
-    const titleY = doc.y;
-    doc.rect(M, titleY, W, 2).fill(AZUL_MED);  // línea decorativa
-    doc.moveDown(0.4);
-    doc.fillColor(AZUL).fontSize(17).font('Helvetica-Bold')
-       .text(r.titulo||'Sin título', M, doc.y, {width:W, align:'center', lineGap:3});
     doc.moveDown(0.3);
-    doc.rect(M, doc.y, W, 2).fill(AZUL_MED);
-    doc.moveDown(1.0);
+    doc.fillColor(AZUL).fontSize(13).font('Helvetica-Bold')
+       .text(r.titulo||'Sin título', M, doc.y, {width:W, align:'center', lineGap:2});
+    doc.moveDown(0.4);
 
-    // ── BLOQUE: DATOS DEL REPORTE ────────────────────────────────
-    rsSecHeader('Datos del Reporte');
-    let ry = doc.y;
-    const bgs = [GRIS, C.BLANCO];
-    let bi = 0;
-    const addRow = (l1,v1,l2,v2) => { ry += rsRow(doc,ry,l1,v1,l2,v2,bgs[bi++%2]); };
-    addRow('No. Reporte:',    r.numero_reporte||'—',              'Fecha Reporte:',   fmt(r.fecha_reporte)||'—');
-    addRow('Fecha Servicio:', fmt(r.fecha_servicio)||'—',         'Técnico:',         r.tecnico||'—');
-    addRow('Estatus:',        (r.estatus||'borrador').toUpperCase(), 'Proyecto:',     r.proyecto_nombre||'—');
-    doc.y = ry + 14;
+    // ── DATOS DEL REPORTE ──────────────────────────────────────
+    secBar('Datos del Reporte');
+    let bi=0;
+    row2('No. Reporte:',    r.numero_reporte||'—',              'Fecha Reporte:', fmt(r.fecha_reporte)||'—', bgs[bi++%2]);
+    row2('Fecha Servicio:', fmt(r.fecha_servicio)||'—',         'Técnico:',       r.tecnico||'—',            bgs[bi++%2]);
+    row2('Estatus:',        (r.estatus||'borrador').toUpperCase(), 'Proyecto:',   r.proyecto_nombre||'—',    bgs[bi++%2]);
+    doc.y += 5;
 
-    // ── BLOQUE: DATOS DEL CLIENTE ────────────────────────────────
+    // ── DATOS DEL CLIENTE ──────────────────────────────────────
     if(r.cliente_nombre){
-      rsSecHeader('Datos del Cliente');
-      let cy = doc.y; let ci = 0;
-      const addC = (l1,v1,l2,v2) => { cy += rsRow(doc,cy,l1,v1,l2,v2,bgs[ci++%2]); };
-      addC('Cliente / Razón Social:', r.cliente_nombre||'—', 'RFC:',     r.cliente_rfc||'—');
-      addC('Contacto:',               r.cliente_contacto||'—','Ciudad:', r.cliente_ciudad||'—');
-      addC('Teléfono:',               r.cliente_tel||'—',     'Email:',  r.cliente_email||'—');
-      if(r.cliente_dir) addC('Dirección:', r.cliente_dir||'—', '', '');
-      doc.y = cy + 14;
+      secBar('Datos del Cliente');
+      let ci=0;
+      row2('Cliente:',  r.cliente_nombre||'—',   'RFC:',    r.cliente_rfc||'—',    bgs[ci++%2]);
+      row2('Contacto:', r.cliente_contacto||'—', 'Ciudad:', r.cliente_ciudad||'—', bgs[ci++%2]);
+      row2('Teléfono:', r.cliente_tel||'—',       'Email:',  r.cliente_email||'—', bgs[ci++%2]);
+      if(r.cliente_dir) row2('Dirección:', r.cliente_dir||'—', '', '', bgs[ci++%2]);
+      doc.y += 5;
     }
 
-    // ── ÍNDICE (solo si hay secciones con contenido) ─────────────
+    // ── ÍNDICE DE CONTENIDO ────────────────────────────────────
     const todasSecciones = [
-      {num:1, titulo:'Introducción',             campo:'introduccion'},
-      {num:2, titulo:'Objetivo',                  campo:'objetivo'},
-      {num:3, titulo:'Alcance',                   campo:'alcance'},
-      {num:4, titulo:'Descripción del Sistema',   campo:'descripcion_sistema'},
-      {num:5, titulo:'Arquitectura del Sistema',  campo:'arquitectura'},
-      {num:6, titulo:'Desarrollo Técnico',        campo:'desarrollo_tecnico'},
-      {num:7, titulo:'Resultados de Pruebas',     campo:'resultados_pruebas'},
-      {num:8, titulo:'Problemas Detectados',      campo:'problemas_detectados'},
-      {num:9, titulo:'Soluciones Implementadas',  campo:'soluciones_implementadas'},
-      {num:10,titulo:'Conclusiones',              campo:'conclusiones'},
-      {num:11,titulo:'Recomendaciones',           campo:'recomendaciones'},
-      {num:12,titulo:'Anexos',                    campo:'anexos'},
+      {titulo:'Introducción',             campo:'introduccion'},
+      {titulo:'Objetivo',                  campo:'objetivo'},
+      {titulo:'Alcance',                   campo:'alcance'},
+      {titulo:'Descripción del Sistema',   campo:'descripcion_sistema'},
+      {titulo:'Arquitectura del Sistema',  campo:'arquitectura'},
+      {titulo:'Desarrollo Técnico',        campo:'desarrollo_tecnico'},
+      {titulo:'Resultados de Pruebas',     campo:'resultados_pruebas'},
+      {titulo:'Problemas Detectados',      campo:'problemas_detectados'},
+      {titulo:'Soluciones Implementadas',  campo:'soluciones_implementadas'},
+      {titulo:'Conclusiones',              campo:'conclusiones'},
+      {titulo:'Recomendaciones',           campo:'recomendaciones'},
+      {titulo:'Anexos',                    campo:'anexos'},
     ].filter(sc => r[sc.campo] && String(r[sc.campo]).trim());
 
-    if(todasSecciones.length > 1){
-      doc.addPage();
-      pdfHeader(doc,'REPORTE DE SERVICIO',[
-        \`No. \${r.numero_reporte||'—'}  |  Índice de Contenido\`,
-      ], emp);
-      doc.moveDown(0.8);
-      rsSecHeader('Índice de Contenido');
-      let iy = doc.y;
-      todasSecciones.forEach((sc,idx)=>{
-        const bg = idx%2===0?GRIS:C.BLANCO;
-        doc.rect(M, iy, W, 24).fill(bg);
-        doc.rect(M, iy, W, 24).lineWidth(0.3).strokeColor(GRIS_B).stroke();
-        // Número
-        doc.rect(M, iy, 32, 24).fill(AZUL_MED);
-        doc.fillColor('#fff').fontSize(9).font('Helvetica-Bold')
-           .text(String(sc.num), M, iy+7, {width:32, align:'center', lineBreak:false});
-        // Título
-        doc.fillColor(TEXTO).fontSize(9.5).font('Helvetica')
-           .text(sc.titulo, M+40, iy+7, {width:W-80, lineBreak:false});
-        // Puntos
-        doc.fillColor('#94a3b8').fontSize(9).font('Helvetica')
-           .text('· · · · · ·', M+W-54, iy+7, {width:54, align:'right', lineBreak:false});
-        iy += 24;
+    if(todasSecciones.length){
+      // El índice completo debe caber junto — si no hay espacio, nueva página
+      checkSpace(20 + todasSecciones.length * 17);
+      secBar('Índice de Contenido');
+      todasSecciones.forEach((sc, idx) => {
+        const y = doc.y;
+        const bg = idx%2===0 ? GRIS : C.BLANCO;
+        doc.rect(M, y, W, 16).fill(bg);
+        doc.rect(M, y, W, 16).lineWidth(0.3).strokeColor(GRIS_B).stroke();
+        doc.rect(M, y, 24, 16).fill(AZUL_MED);
+        doc.fillColor('#fff').fontSize(8).font('Helvetica-Bold')
+           .text(String(idx+1), M, y+4, {width:24, align:'center', lineBreak:false});
+        doc.fillColor(TEXTO).fontSize(9).font('Helvetica')
+           .text(sc.titulo, M+30, y+4, {width:W-60, lineBreak:false});
+        doc.fillColor('#94a3b8').fontSize(8).font('Helvetica')
+           .text('· · · · ·', M+W-44, y+4, {width:44, align:'right', lineBreak:false});
+        doc.y = y + 16;
       });
-      doc.y = iy + 16;
+      doc.y += 8;
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // SECCIONES DE CONTENIDO
-    // Cada sección: nueva página, header estándar con logo, contenido con
-    // párrafos justificados y bien espaciados
-    // ═══════════════════════════════════════════════════════════════
-    function addSeccion(titulo, contenido){
-      if(!contenido||!String(contenido).trim()) return;
-      secNum++;
-      doc.addPage();
-      // Header con logo idéntico a cotizaciones
-      pdfHeader(doc,'REPORTE DE SERVICIO',[
-        \`No. \${r.numero_reporte||'—'}  |  \${fmt(r.fecha_reporte)||'—'}  |  \${r.cliente_nombre||''}\`,
-      ], emp);
-      doc.moveDown(0.6);
-      // Título de sección con barra lateral azul
-      const stY = doc.y;
-      doc.rect(M, stY, 4, 22).fill(AZUL_MED);  // barra lateral
-      doc.fillColor(AZUL).fontSize(13).font('Helvetica-Bold')
-         .text(\`\${secNum}. \${titulo}\`, M+12, stY+4, {width:W-12, lineBreak:false});
-      doc.y = stY+26;
-      doc.moveTo(M, doc.y).lineTo(M+W, doc.y).lineWidth(0.8).strokeColor(AZUL_MED).stroke();
-      doc.moveDown(0.7);
-      // Contenido justificado con buen interlineado
-      doc.fillColor(TEXTO).fontSize(10).font('Helvetica')
-         .text(String(contenido).trim(), M, doc.y, {
-           width:W, lineGap:5, paragraphGap:8, align:'justify'
-         });
-    }
+    // ── SECCIONES TÉCNICAS ─────────────────────────────────────
+    secTexto('Introducción',             r.introduccion);
+    secTexto('Objetivo',                 r.objetivo);
+    secTexto('Alcance',                  r.alcance);
+    secTexto('Descripción del Sistema',  r.descripcion_sistema);
+    secTexto('Arquitectura del Sistema', r.arquitectura);
+    secTexto('Desarrollo Técnico',       r.desarrollo_tecnico);
+    secTexto('Resultados de Pruebas',    r.resultados_pruebas);
+    secTexto('Problemas Detectados',     r.problemas_detectados);
+    secTexto('Soluciones Implementadas', r.soluciones_implementadas);
+    secTexto('Conclusiones',             r.conclusiones);
+    secTexto('Recomendaciones',          r.recomendaciones);
+    secTexto('Anexos',                   r.anexos);
 
-    addSeccion('Introducción',             r.introduccion);
-    addSeccion('Objetivo',                 r.objetivo);
-    addSeccion('Alcance',                  r.alcance);
-    addSeccion('Descripción del Sistema',  r.descripcion_sistema);
-    addSeccion('Arquitectura del Sistema', r.arquitectura);
-    addSeccion('Desarrollo Técnico',       r.desarrollo_tecnico);
-    addSeccion('Resultados de Pruebas',    r.resultados_pruebas);
-    addSeccion('Problemas Detectados',     r.problemas_detectados);
-    addSeccion('Soluciones Implementadas', r.soluciones_implementadas);
-    addSeccion('Conclusiones',             r.conclusiones);
-    addSeccion('Recomendaciones',          r.recomendaciones);
-    addSeccion('Anexos',                   r.anexos);
+    // ── FIRMAS ─────────────────────────────────────────────────
+    checkSpace(100);
+    doc.y += 8;
+    secBar('Conformidad y Firmas');
+    doc.y += 14;
 
-    // ── PIE PROFESIONAL EN TODAS LAS PÁGINAS ─────────────────────
-    // bufferPages:true permite recorrer todas las páginas al final
+    const fW  = (W - 30) / 2;
+    const fY  = doc.y;
+    const fX1 = M;
+    const fX2 = M + fW + 30;
+
+    // Técnico
+    doc.rect(fX1, fY, fW, 62).fill(GRIS).stroke(GRIS_B);
+    doc.moveTo(fX1+16, fY+42).lineTo(fX1+fW-16, fY+42).lineWidth(1).strokeColor('#94a3b8').stroke();
+    doc.fillColor(AZUL).fontSize(8).font('Helvetica-Bold')
+       .text('TÉCNICO RESPONSABLE', fX1, fY+8, {width:fW, align:'center', lineBreak:false});
+    doc.fillColor(TEXTO).fontSize(8.5).font('Helvetica')
+       .text(r.tecnico||'________________________________', fX1, fY+45, {width:fW, align:'center', lineBreak:false});
+    doc.fillColor('#64748b').fontSize(7).font('Helvetica')
+       .text('Fecha: _____ / _____ / _______', fX1, fY+54, {width:fW, align:'center', lineBreak:false});
+
+    // Cliente
+    doc.rect(fX2, fY, fW, 62).fill(GRIS).stroke(GRIS_B);
+    doc.moveTo(fX2+16, fY+42).lineTo(fX2+fW-16, fY+42).lineWidth(1).strokeColor('#94a3b8').stroke();
+    doc.fillColor(AZUL).fontSize(8).font('Helvetica-Bold')
+       .text('CLIENTE / RECEPTOR', fX2, fY+8, {width:fW, align:'center', lineBreak:false});
+    doc.fillColor(TEXTO).fontSize(8.5).font('Helvetica')
+       .text(r.cliente_contacto||r.cliente_nombre||'________________________________', fX2, fY+45, {width:fW, align:'center', lineBreak:false});
+    doc.fillColor('#64748b').fontSize(7).font('Helvetica')
+       .text('Fecha: _____ / _____ / _______', fX2, fY+54, {width:fW, align:'center', lineBreak:false});
+
+    doc.y = fY + 70;
+    doc.fillColor('#64748b').fontSize(7.5).font('Helvetica')
+       .text('La firma de este documento confirma que los trabajos descritos fueron realizados a conformidad del cliente.',
+         M, doc.y, {width:W, align:'center', lineBreak:false});
+
+    // ── PIE FIJO AL FONDO DE CADA PÁGINA ──────────────────────
+    // Se dibuja en Y absoluta (PIE_Y) para que nunca interfiera con el contenido
     const pages = doc.bufferedPageRange();
+    const nom  = emp.nombre||VEF_NOMBRE;
+    const tel  = emp.telefono||VEF_TELEFONO;
+    const mail = emp.email||VEF_CORREO;
+    const rfc  = emp.rfc ? '  |  RFC: '+emp.rfc : '';
     for(let i = pages.start; i < pages.start + pages.count; i++){
       doc.switchToPage(i);
-      pdfPie(doc, emp);
+      // Línea separadora
+      doc.moveTo(M, PIE_Y).lineTo(M+W, PIE_Y).lineWidth(0.8).strokeColor(AZUL_MED).stroke();
+      // Caja azul del pie
+      doc.rect(M, PIE_Y+1, W, 34).fill(AZUL);
+      // Nombre + RFC
+      doc.fillColor(C.BLANCO).fontSize(8).font('Helvetica-Bold')
+         .text(nom+rfc, M, PIE_Y+7, {width:W, align:'center', lineBreak:false});
+      // Tel + email
+      doc.fillColor('#A8C5F0').fontSize(7.5).font('Helvetica')
+         .text('Tel: '+tel+'   |   '+mail, M, PIE_Y+18, {width:W, align:'center', lineBreak:false});
+      // Número de página
+      doc.fillColor('#A8C5F0').fontSize(7).font('Helvetica')
+         .text('Pág. '+(i - pages.start + 1)+' / '+pages.count, M, PIE_Y+28, {width:W, align:'center', lineBreak:false});
     }
 
     doc.end();
   });
 }
-
 const pdfDir = path.join(__dirname,'pdfs_guardados');
 
 // Helper para guardar PDF en disco y registrar en BD
