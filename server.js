@@ -3776,7 +3776,6 @@ app.get('/api/reportes-servicio/:id/pdf', auth, licencia, async (req,res)=>{
     res.send(buf);
   }catch(e){ console.error('RS PDF:',e.message); res.status(500).json({error:e.message}); }
 });
-
 // ── Enviar Reporte de Servicio por email ─────────────────────────
 app.post('/api/reportes-servicio/:id/email', auth, empresaActiva, licencia, async (req,res)=>{
   try{
@@ -3800,11 +3799,9 @@ app.post('/api/reportes-servicio/:id/email', auth, empresaActiva, licencia, asyn
     const fromEmail = await getFromEmail(req.user?.schema);
     const empCfg = (await Q('SELECT nombre,telefono,email FROM empresa_config LIMIT 1',[],req.user?.schema))[0]||{};
     const nomEmp = empCfg.nombre||VEF_NOMBRE;
-    const msgHtml = (mensaje||`Estimado/a ${r.cliente_nombre||'Cliente'},\n\nAdjunto encontrará el Reporte de Servicio correspondiente a los trabajos realizados.\n\nQuedamos a sus órdenes para cualquier comentario o aclaración.\n\nSaludos cordiales,`)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/\n/g,'<br>');
-    const htmlBody = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"></head>
+    const msgHtml = (mensaje||`Estimado/a ${r.cliente_nombre||'Cliente'},\n\nAdjunto encontrará el Reporte de Servicio.\n\nSaludos cordiales,`)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    const htmlBody = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif">
 <div style="max-width:620px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
   <div style="background:#0D2B55;padding:28px 32px">
@@ -3822,29 +3819,27 @@ app.post('/api/reportes-servicio/:id/email', auth, empresaActiva, licencia, asyn
       <strong>📋 Reporte:</strong> ${r.numero_reporte||'—'}<br>
       <strong>📌 Título:</strong> ${r.titulo||'—'}<br>
       ${r.cliente_nombre?`<strong>👤 Cliente:</strong> ${r.cliente_nombre}<br>`:''}
-      ${r.proyecto_nombre?`<strong>📁 Proyecto:</strong> ${r.proyecto_nombre}<br>`:''}
-      <strong>📅 Fecha:</strong> ${r.fecha_reporte||new Date().toISOString().slice(0,10)}<br>
+      <strong>📅 Fecha:</strong> ${r.fecha_reporte||''}<br>
       <strong>👷 Técnico:</strong> ${r.tecnico||'—'}
     </p>
   </div>
   <div style="background:#0D2B55;padding:16px 32px;text-align:center">
-    <p style="color:#A8C5F0;margin:0;font-size:12px">
-      ${nomEmp}${empCfg.telefono?` · 📞 ${empCfg.telefono}`:''}${(empCfg.email||fromEmail)?` · ✉️ ${empCfg.email||fromEmail}`:''}
-    </p>
-    <p style="color:#64748b;margin:4px 0 0;font-size:11px">Este correo fue generado automáticamente por el sistema ERP</p>
+    <p style="color:#A8C5F0;margin:0;font-size:12px">${nomEmp}</p>
+    <p style="color:#64748b;margin:4px 0 0;font-size:11px">Generado automáticamente por VEF ERP</p>
   </div>
-</div>
-</body></html>`;
+</div></body></html>`;
     await dynMailer.sendMail({
       from:`"${nomEmp}" <${fromEmail}>`,
       to, cc:cc||undefined,
       subject:asunto||`Reporte de Servicio ${r.numero_reporte} — ${nomEmp}`,
-      html: htmlBody,
+      html:htmlBody,
       attachments:[{filename:`RS-${r.numero_reporte||r.id}.pdf`,content:buf}]
     });
-    res.json({ok:true, msg:`Correo enviado a ${to}`});
+    res.json({ok:true,msg:`Correo enviado a ${to}`});
   }catch(e){ console.error('RS email:',e.message); res.status(500).json({error:e.message}); }
 });
+
+
 
 // ================================================================
 // LOGO
@@ -4545,8 +4540,8 @@ app.get('/api/reportes/sat/resumen', auth, async (req,res)=>{
 // ── PDF Reporte de Servicio ──────────────────────────────────────
 async function buildPDFReporteServicio(r, emp={}) {
   return new Promise((resolve,reject)=>{
-    const doc = new PDFKit({margin:50, size:'A4',
-      info:{Title:'Reporte de Servicio '+r.numero_reporte, Author:emp.nombre||VEF_NOMBRE}});
+    const doc = new PDFKit({margin:50, size:'A4', bufferPages:true,
+      info:{Title:'Reporte de Servicio '+(r.numero_reporte||''), Author:emp.nombre||VEF_NOMBRE}});
     const ch=[]; doc.on('data',c=>ch.push(c)); doc.on('end',()=>resolve(Buffer.concat(ch))); doc.on('error',reject);
     const M=50, W=495, AZUL='#0D2B55', AZUL_MED='#1A4A8A', GRIS='#f8fafc', TEXTO='#1e293b';
     const _lp = getLogoPath();
@@ -4693,12 +4688,12 @@ async function buildPDFReporteServicio(r, emp={}) {
 
     // ── PIE EN CADA PÁGINA ───────────────────────────────────
     const pages = doc.bufferedPageRange();
-    for(let i=0; i<doc._pageBuffer.length; i++){
+    for(let i = pages.start; i < pages.start + pages.count; i++){
       doc.switchToPage(i);
       const py = doc.page.height - 40;
       doc.rect(M, py-8, W, 28).fill(AZUL);
       doc.fillColor('#fff').fontSize(8).font('Helvetica-Bold')
-         .text(`${empNom}  |  ${r.numero_reporte||''}  |  Pág. ${i+1}`, M, py, {width:W, align:'center'});
+         .text(`${empNom}  |  ${r.numero_reporte||''}  |  Pág. ${i - pages.start + 1} / ${pages.count}`, M, py, {width:W, align:'center'});
     }
 
     doc.end();
