@@ -50,7 +50,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;overflow-x:hidden;backgroun
 
 /* ─ Brand ─ */
 .brand{position:relative;z-index:2}
-.logo-row{display:flex;align-items:center;gap:18px;margin-bottom:50px}
+.logo-row{display:flex;align-items:center;gap:16px;margin-bottom:56px}
 .logo-wrap{
   width:56px;height:56px;border-radius:16px;
   background:linear-gradient(135deg,rgba(244,167,38,.25),rgba(244,167,38,.08));
@@ -62,7 +62,14 @@ html,body{height:100%;font-family:'Inter',sans-serif;overflow-x:hidden;backgroun
 /* Logo hero - larger prominent version */
 .logo-hero-wrap{
   flex-shrink:0;
+  width:72px;height:72px;
+  border-radius:20px;
+  overflow:hidden;
+  background:linear-gradient(135deg,rgba(244,167,38,.18),rgba(244,167,38,.05));
+  border:1px solid rgba(244,167,38,.25);
   display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(10px);
+  box-shadow:0 4px 24px rgba(244,167,38,.12)
 }
 .brand-name{
   font-family:'Bricolage Grotesque',sans-serif;
@@ -381,34 +388,12 @@ html,body{height:100%;font-family:'Inter',sans-serif;overflow-x:hidden;backgroun
   <div class="brand">
     <div class="logo-row">
       <!-- Logo VEF prominente -->
-      <div class="logo-hero-wrap" id="logoWrap">
-        <img id="logoImg"
-          src="/imagen/VEF.png"
-          alt="VEF ERP"
-          style="width:90px;height:90px;object-fit:contain;display:block;filter:drop-shadow(0 2px 12px rgba(244,167,38,.18))"
-          onerror="vefLogoFallback(this)">
+      <div class="logo-hero-wrap">
+        <img src="/logo.png" alt="VEF ERP Logo"
+          style="width:72px;height:72px;object-fit:contain;display:block"
+          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
+        <div id="logo-fallback" style="display:none;width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,rgba(244,167,38,.3),rgba(244,167,38,.08));border:1px solid rgba(244,167,38,.4);align-items:center;justify-content:center;font-size:2rem">⚡</div>
       </div>
-      <script>
-      // Intenta múltiples rutas para el logo
-      var _logoTried = 0;
-      var _logoPaths = ['/imagen/VEF.png','/images/VEF.png','/logo.png','/logo.jpg','/img/VEF.png'];
-      function vefLogoFallback(img){
-        _logoTried++;
-        if(_logoTried < _logoPaths.length){
-          img.src = _logoPaths[_logoTried];
-        } else {
-          // Ninguna ruta funcionó — mostrar inicial dorada sin rayo
-          var wrap = document.getElementById('logoWrap');
-          if(wrap){
-            wrap.innerHTML = '<div style="width:72px;height:72px;border-radius:16px;'
-              + 'background:linear-gradient(135deg,rgba(244,167,38,.3),rgba(244,167,38,.06));'
-              + 'border:2px solid rgba(244,167,38,.4);display:flex;align-items:center;'
-              + 'justify-content:center;font-family:Syne,sans-serif;font-size:1.6rem;'
-              + 'font-weight:900;color:#F4A726;letter-spacing:-1px">VEF</div>';
-          }
-        }
-      }
-      </script>
       <div>
         <div class="brand-name">VEF <em>ERP</em></div>
         <div class="brand-tagline">Sistema Industrial · México</div>

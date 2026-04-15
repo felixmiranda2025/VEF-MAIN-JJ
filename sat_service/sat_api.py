@@ -88,16 +88,13 @@ def get_signer(data: dict) -> Signer:
 
 
 def parse_cfdi_xml(xml_str, filename=''):
-    """Parsea CFDI 4.0/3.3 extrayendo todos los campos incluyendo conceptos, forma/método pago, claves."""
     try:
         from lxml import etree
-        NS4 = 'http://www.sat.gob.mx/cfd/4'
-        NS3 = 'http://www.sat.gob.mx/cfd/3'
-        TFD = 'http://www.sat.gob.mx/TimbreFiscalDigital'
+        NS4='http://www.sat.gob.mx/cfd/4'; NS3='http://www.sat.gob.mx/cfd/3'
+        TFD='http://www.sat.gob.mx/TimbreFiscalDigital'
         raw  = xml_str.encode('utf-8') if isinstance(xml_str, str) else xml_str
-        if raw.startswith(b'\xef\xbb\xbf'): raw = raw[3:]
         root = etree.fromstring(raw)
-        def g(el, *attrs):
+        def g(el,*attrs):
             if el is None: return ''
             for a in attrs:
                 v = el.get(a)
@@ -105,77 +102,28 @@ def parse_cfdi_xml(xml_str, filename=''):
             return ''
         em  = root.find(f'.//{{{NS4}}}Emisor')   or root.find(f'.//{{{NS3}}}Emisor')
         rec = root.find(f'.//{{{NS4}}}Receptor')  or root.find(f'.//{{{NS3}}}Receptor')
-        tf  = root.find(f'.//{{{TFD}}}TimbreFiscalDigital') or root.find('.//TimbreFiscalDigital')
+        tf  = root.find(f'.//{{{TFD}}}TimbreFiscalDigital')
         imp = root.find(f'.//{{{NS4}}}Impuestos') or root.find(f'.//{{{NS3}}}Impuestos')
-
         iva = isr = '0'
         if imp is not None:
             tr = imp.find(f'.//{{{NS4}}}Traslado')  or imp.find('.//Traslado')
             rt = imp.find(f'.//{{{NS4}}}Retencion') or imp.find('.//Retencion')
             if tr is not None: iva = g(tr,'Importe','importe') or '0'
             if rt is not None: isr = g(rt,'Importe','importe') or '0'
-
-        # Extraer todos los conceptos con sus claves
-        conceptos = []
-        for ns in [NS4, NS3, '']:
-            tag = f'{{{ns}}}Concepto' if ns else 'Concepto'
-            items = root.findall(f'.//{tag}')
-            if items:
-                for c in items:
-                    c_iva = '0'
-                    c_imp = c.find(f'.//{{{NS4}}}Traslado') or c.find('.//Traslado')
-                    if c_imp is not None: c_iva = g(c_imp,'Importe','importe') or '0'
-                    conceptos.append({
-                        'descripcion':     g(c,'Descripcion','descripcion'),
-                        'cantidad':        g(c,'Cantidad','cantidad'),
-                        'unidad':          g(c,'Unidad','unidad'),
-                        'clave_unidad':    g(c,'ClaveUnidad','claveUnidad'),
-                        'clave_prod_serv': g(c,'ClaveProdServ','claveProdServ'),
-                        'valor_unitario':  g(c,'ValorUnitario','valorUnitario'),
-                        'importe':         g(c,'Importe','importe'),
-                        'descuento':       g(c,'Descuento','descuento') or '0',
-                        'objeto_imp':      g(c,'ObjetoImp','objetoImp'),
-                        'iva_concepto':    c_iva,
-                    })
-                break
-
-        xml_out = xml_str if isinstance(xml_str, str) else xml_str.decode('utf-8','replace')
         return {
-            'archivo':          filename,
-            'uuid':             g(tf,'UUID','Uuid') if tf is not None else '',
-            'fecha':            g(root,'Fecha','fecha'),
-            'fecha_timbrado':   g(tf,'FechaTimbrado') if tf is not None else '',
-            'tipo':             g(root,'TipoDeComprobante','tipoDeComprobante'),
-            'serie':            g(root,'Serie','serie'),
-            'folio':            g(root,'Folio','folio'),
-            'subtotal':         g(root,'SubTotal','subTotal'),
-            'descuento':        g(root,'Descuento','descuento') or '0',
-            'iva':              iva,
-            'isr_ret':          isr,
-            'total':            g(root,'Total','total'),
-            'moneda':           g(root,'Moneda','moneda') or 'MXN',
-            'tipo_cambio':      g(root,'TipoCambio','tipoCambio') or '1',
-            'forma_pago':       g(root,'FormaPago','formaPago'),
-            'metodo_pago':      g(root,'MetodoPago','metodoPago'),
-            'uso_cfdi':         g(rec,'UsoCFDI','usoCFDI') if rec is not None else '',
-            'lugar_expedicion': g(root,'LugarExpedicion','lugarExpedicion'),
-            'exportacion':      g(root,'Exportacion','exportacion'),
-            'emisor_rfc':       g(em,'Rfc','rfc')           if em  is not None else '',
-            'emisor_nombre':    g(em,'Nombre','nombre')     if em  is not None else '',
-            'emisor_regimen':   g(em,'RegimenFiscal')       if em  is not None else '',
-            'receptor_rfc':     g(rec,'Rfc','rfc')          if rec is not None else '',
-            'receptor_nombre':  g(rec,'Nombre','nombre')    if rec is not None else '',
-            'receptor_regimen': g(rec,'RegimenFiscalReceptor') if rec is not None else '',
-            'receptor_cp':      g(rec,'DomicilioFiscalReceptor') if rec is not None else '',
-            'pac_rfc':          g(tf,'RfcProvCertif')       if tf is not None else '',
-            'no_certificado':   g(root,'NoCertificado','noCertificado'),
-            'no_cert_sat':      g(tf,'NoCertificadoSAT')   if tf is not None else '',
-            'conceptos':        conceptos,
-            'num_conceptos':    len(conceptos),
-            'xml':              xml_out,
+            'archivo': filename, 'uuid': g(tf,'UUID','Uuid') if tf is not None else '',
+            'fecha': g(root,'Fecha','fecha'), 'tipo': g(root,'TipoDeComprobante','tipoDeComprobante'),
+            'subtotal': g(root,'SubTotal','subTotal'), 'iva': iva, 'isr_ret': isr,
+            'total': g(root,'Total','total'), 'moneda': g(root,'Moneda','moneda') or 'MXN',
+            'emisor_rfc': g(em,'Rfc','rfc') if em is not None else '',
+            'emisor_nombre': g(em,'Nombre','nombre') if em is not None else '',
+            'receptor_rfc': g(rec,'Rfc','rfc') if rec is not None else '',
+            'receptor_nombre': g(rec,'Nombre','nombre') if rec is not None else '',
+            'uso_cfdi': g(rec,'UsoCFDI','usoCFDI') if rec is not None else '',
+            'xml': xml_str if isinstance(xml_str, str) else xml_str.decode('utf-8','replace'),
         }
     except Exception as e:
-        logger.exception('Error al parsear CFDI')
+        logger.exception('Error parseando CFDI')
         return {'archivo': filename, 'uuid': '', 'error': str(e),
                 'xml': xml_str if isinstance(xml_str, str) else ''}
 
@@ -243,7 +191,7 @@ async def solicitar(request):
             _orig = _T.METADATA._value_
             try:
                 _T.METADATA._value_ = 'METADATA'
-                return sat.recover_comprobante_received_request(
+                return sat.recover_comprobante_request(
                     fecha_inicial      = fi,
                     fecha_final        = ff,
                     rfc_receptor       = signer.rfc,
@@ -257,58 +205,62 @@ async def solicitar(request):
         id_sol = r.get('IdSolicitud','')
         cod = r.get('CodEstatus','')
         msg = r.get('Mensaje','')
-        logger.info(f'Solicitud: fi={fi} ff={ff} tipo={tipo} rfc={signer.rfc}')
-        logger.info(f'Respuesta completa: {r}')
-        logger.info(f'Solicitud: {id_sol} | {cod} | {msg}')
+        logger.info(f'Solicitud RECIBIDOS: {id_sol} | {cod} | msg={msg} | rfc={signer.rfc} fi={fi} ff={ff}')
+        if cod != '5000':
+            logger.error(f'SAT rechazo: {cod} - {msg}')
         return json_resp({'ok': cod=='5000',
             'solicitud': {'IdSolicitud': id_sol, 'CodEstatus': cod, 'Mensaje': msg}})
     except Exception as e:
         import traceback as _tb
         _err_detail = _tb.format_exc()
+        # Capturar respuesta HTTP del SAT si es ResponseError
+        _sat_body = ''
+        try:
+            if hasattr(e, 'args') and e.args and hasattr(e.args[0], 'text'):
+                _sat_body = e.args[0].text
+                logger.error(f'SAT HTTP response body: {_sat_body}')
+        except: pass
         logger.error('Error /solicitar completo:\n' + _err_detail)
-        return json_resp({'ok': False, 'error': str(e), 'detalle': _err_detail}, 500)
+        return json_resp({'ok': False, 'error': str(e), 'sat_response': _sat_body, 'detalle': _err_detail}, 500)
 
 async def solicitar_emitidos(request):
-    """Solicita descarga masiva de CFDIs EMITIDOS por el RFC de la FIEL."""
+    """Solicita descarga masiva EMITIDOS."""
     try:
         d    = await request.json()
         loop = asyncio.get_event_loop()
         signer = get_signer(d)
-        sat    = SAT(signer=signer)
-        fi   = datetime.strptime(d['fecha_inicio'],'%Y-%m-%d').replace(hour=0,  minute=0,  second=0)
-        ff   = datetime.strptime(d['fecha_fin'],   '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+        sat = SAT(signer=signer)
+        fi = datetime.strptime(d['fecha_inicio'],'%Y-%m-%d').replace(hour=0,  minute=0,  second=0)
+        ff = datetime.strptime(d['fecha_fin'],   '%Y-%m-%d').replace(hour=23, minute=59, second=59)
         tipo = d.get('tipo','CFDI')
         tipo_sol_str = 'CFDI' if tipo == 'CFDI' else 'METADATA'
-        # Para emitidos EstadoComprobante puede ser Todos
-        estado_comp = None  # sin filtro de estado para emitidos
 
-        def _solicitar_emi():
-            from satcfdi.pacs.sat import TipoDescargaMasivaTerceros as _T
+        def _sol_emi():
+            from satcfdi.pacs.sat import TipoDescargaMasivaTerceros as _T, EstadoComprobante as _EC
             _orig = _T.METADATA._value_
             try:
                 _T.METADATA._value_ = 'METADATA'
-                return sat.recover_comprobante_emitted_request(
+                return sat.recover_comprobante_request(
                     fecha_inicial      = fi,
                     fecha_final        = ff,
                     rfc_emisor         = signer.rfc,
                     tipo_solicitud     = _T.METADATA if tipo != 'CFDI' else _T.CFDI,
-                    estado_comprobante = estado_comp,
+                    estado_comprobante = _EC.VIGENTE if tipo == 'CFDI' else None,
                 )
             finally:
                 _T.METADATA._value_ = _orig
 
-        r = await loop.run_in_executor(None, _solicitar_emi)
+        r = await loop.run_in_executor(None, _sol_emi)
         id_sol = r.get('IdSolicitud','')
         cod    = r.get('CodEstatus','')
         msg    = r.get('Mensaje','')
-        logger.info(f'Solicitud EMITIDOS: {id_sol} | {cod} | {msg}')
+        logger.info(f'Solicitud EMITIDOS: {id_sol} | {cod} | rfc={signer.rfc}')
         return json_resp({'ok': cod=='5000',
             'solicitud': {'IdSolicitud': id_sol, 'CodEstatus': cod, 'Mensaje': msg}})
     except Exception as e:
         import traceback as _tb
         logger.error('Error /solicitar-emitidos:\n' + _tb.format_exc())
-        return json_resp({'ok': False, 'error': str(e), 'detalle': _tb.format_exc()}, 500)
-
+        return json_resp({'ok': False, 'error': str(e)}, 500)
 
 async def verificar(request):
     try:
@@ -331,88 +283,18 @@ async def verificar(request):
         logger.exception('Error /verificar')
         return json_resp({'ok': False, 'error': str(e)}, 500)
 
-def parse_cfdi_metadata_xml(xml_str: str) -> list:
-    """Parsea un archivo XML de metadata que contiene múltiples CFDIs."""
-    registros = []
-    try:
-        from lxml import etree
-        raw = xml_str.encode('utf-8') if isinstance(xml_str, str) else xml_str
-        if raw.startswith(b'\xef\xbb\xbf'): raw = raw[3:]
-        root = etree.fromstring(raw)
-        # El SAT usa varios namespaces posibles
-        ns_map = {
-            'cfdi': 'http://www.sat.gob.mx/cfd/4',
-            'cfdi3': 'http://www.sat.gob.mx/cfd/3',
-        }
-        # Buscar todos los nodos Comprobante
-        comprobantes = (
-            root.findall('.//cfdi:Comprobante', ns_map) or
-            root.findall('.//cfdi3:Comprobante', ns_map) or
-            root.findall('.//{http://www.sat.gob.mx/cfd/4}Comprobante') or
-            root.findall('.//{http://www.sat.gob.mx/cfd/3}Comprobante') or
-            ([root] if root.get('Version') else [])
-        )
-        for comp in comprobantes:
-            # Timbre fiscal
-            tfd_ns = 'http://www.sat.gob.mx/TimbreFiscalDigital'
-            tf = comp.find(f'.//{{{tfd_ns}}}TimbreFiscalDigital') or comp.find('.//TimbreFiscalDigital')
-            uuid = tf.get('UUID','') if tf is not None else ''
-            if not uuid:
-                continue
-            # Emisor y receptor
-            em  = comp.find('.//{http://www.sat.gob.mx/cfd/4}Emisor') or comp.find('.//{http://www.sat.gob.mx/cfd/3}Emisor') or comp.find('.//Emisor')
-            rec = comp.find('.//{http://www.sat.gob.mx/cfd/4}Receptor') or comp.find('.//{http://www.sat.gob.mx/cfd/3}Receptor') or comp.find('.//Receptor')
-            efecto = comp.get('TipoDeComprobante','')
-            est_raw = comp.get('Estatus','1')
-            estatus = {'1':'Vigente','2':'Cancelado'}.get(est_raw, 'Vigente')
-            registros.append({
-                'uuid':            uuid,
-                'rfc_emisor':      em.get('Rfc','')  if em  is not None else '',
-                'nombre_emisor':   em.get('Nombre','') if em  is not None else '',
-                'rfc_receptor':    rec.get('Rfc','') if rec is not None else '',
-                'nombre_receptor': rec.get('Nombre','') if rec is not None else '',
-                'rfc_pac':         tf.get('RfcProvCertif','') if tf is not None else '',
-                'fecha_emision':   comp.get('Fecha',''),
-                'fecha_certificacion': tf.get('FechaTimbrado','') if tf is not None else '',
-                'monto':           comp.get('Total','0'),
-                'subtotal':        comp.get('SubTotal','0'),
-                'total':           comp.get('Total','0'),
-                'moneda':          comp.get('Moneda','MXN'),
-                'forma_pago':      comp.get('FormaPago',''),
-                'metodo_pago':     comp.get('MetodoPago',''),
-                'uso_cfdi':        rec.get('UsoCFDI','') if rec is not None else '',
-                'lugar_expedicion':comp.get('LugarExpedicion',''),
-                'serie':           comp.get('Serie',''),
-                'folio':           comp.get('Folio',''),
-                'version':         comp.get('Version',''),
-                'efecto':          efecto,
-                'tipo':            efecto,
-                'estatus':         estatus,
-                'fecha_cancelacion': '',
-                'xml_content':     xml_str if isinstance(xml_str,str) else xml_str.decode('utf-8','replace'),
-                'raw':             {'uuid': uuid},
-            })
-        logger.info(f'XML metadata parseado: {len(registros)} CFDIs')
-    except Exception as e:
-        logger.exception(f'Error parseando XML metadata: {e}')
-    return registros
-
-
 def parse_metadata_zip(paq_bytes: bytes) -> list:
     """
     Parsea un ZIP de METADATA del SAT.
-    Soporta:
-    - TXT delimitado por | o ~ (formato clásico)
-    - XML con múltiples CFDIs (formato nuevo SAT v1.5)
-    - ZIP con XMLs individuales por CFDI
+    El SAT envía un .txt delimitado por | con encoding Windows-1252.
     """
     registros = []
     try:
         with zipfile.ZipFile(io.BytesIO(paq_bytes), 'r') as zf:
             for name in zf.namelist():
                 raw_bytes = zf.read(name)
-                # Decodificar
-                for enc in ('utf-8-sig', 'utf-8', 'windows-1252', 'latin-1'):
+                # SAT usa Windows-1252 (latin-1) para los metadatos
+                for enc in ('windows-1252', 'latin-1', 'utf-8-sig', 'utf-8'):
                     try:
                         raw = raw_bytes.decode(enc)
                         break
@@ -421,31 +303,17 @@ def parse_metadata_zip(paq_bytes: bytes) -> list:
                 else:
                     raw = raw_bytes.decode('utf-8', 'replace')
 
-                raw_strip = raw.lstrip('\ufeff').lstrip()
-                logger.info(f'Metadata archivo={name} lineas={len(raw.splitlines())} enc={enc}')
-
-                # ── Detectar si es XML ────────────────────────────
-                if raw_strip.startswith('<?xml') or raw_strip.startswith('<cfdi:') or '<Comprobante' in raw_strip:
-                    logger.info(f'Archivo XML detectado: {name}')
-                    nuevos = parse_cfdi_metadata_xml(raw_strip)
-                    registros.extend(nuevos)
-                    continue
-
-                # ── Formato TXT delimitado ────────────────────────
                 lineas = raw.splitlines()
+                logger.info(f'Metadata archivo={name} lineas={len(lineas)} enc={enc}')
                 if len(lineas) < 2:
                     logger.warning(f'Archivo vacío o sin datos: {name}')
                     continue
 
-                primera = lineas[0].lstrip('\ufeff')
+                # Detectar separador: SAT usa ~ (tilde) en v1.5
+                primera = lineas[0]
                 sep = '~' if '~' in primera else '|'
                 headers = [h.strip() for h in primera.split(sep)]
-                logger.info(f'Headers ({sep}): {headers[:5]}...')
-
-                # Verificar que los headers sean válidos (no XML)
-                if not any(h in headers for h in ['Uuid','UUID','uuid','RfcEmisor','Monto']):
-                    logger.warning(f'Headers no reconocidos en {name}: {headers[:3]}')
-                    continue
+                logger.info(f'Headers ({sep}): {headers}')
 
                 for linea in lineas[1:]:
                     if not linea.strip():
@@ -455,16 +323,14 @@ def parse_metadata_zip(paq_bytes: bytes) -> list:
                         valores.append('')
                     reg = dict(zip(headers, valores))
 
+                    # Mapear campos SAT v1.5
                     efecto  = reg.get('EfectoComprobante', '')
+                    # Estatus: 1=Vigente, 2=Cancelado (SAT v1.5 usa números)
                     est_raw = reg.get('Estatus', '')
                     estatus = {'1':'Vigente','2':'Cancelado'}.get(est_raw, est_raw)
 
-                    uuid = reg.get('Uuid', reg.get('UUID', reg.get('uuid','')))
-                    if not uuid:
-                        continue
-
                     registros.append({
-                        'uuid':               uuid,
+                        'uuid':               reg.get('Uuid',               reg.get('UUID', '')),
                         'rfc_emisor':         reg.get('RfcEmisor',          ''),
                         'nombre_emisor':      reg.get('NombreEmisor',       ''),
                         'rfc_receptor':       reg.get('RfcReceptor',        ''),
@@ -473,24 +339,12 @@ def parse_metadata_zip(paq_bytes: bytes) -> list:
                         'fecha_emision':      reg.get('FechaEmision',       ''),
                         'fecha_certificacion':reg.get('FechaCertificacionSat', ''),
                         'monto':              reg.get('Monto',              '0'),
-                        'subtotal':           reg.get('SubTotal',           reg.get('Monto','0')),
-                        'total':              reg.get('Total',              reg.get('Monto','0')),
-                        'moneda':             reg.get('Moneda',             'MXN'),
-                        'forma_pago':         reg.get('FormaPago',          ''),
-                        'metodo_pago':        reg.get('MetodoPago',         ''),
-                        'uso_cfdi':           reg.get('UsoCFDI',            ''),
-                        'lugar_expedicion':   reg.get('LugarExpedicion',    ''),
-                        'serie':              reg.get('Serie',              ''),
-                        'folio':              reg.get('Folio',              ''),
-                        'version':            reg.get('Version',            ''),
                         'efecto':             efecto,
-                        'tipo':               efecto,
+                        'tipo':               efecto,  # I=Ingreso E=Egreso T=Traslado N=Nomina P=Pago
                         'estatus':            estatus,
                         'fecha_cancelacion':  reg.get('FechaCancelacion',   ''),
                         'raw':                reg,
                     })
-
-        logger.info(f'Total metadata parseada: {len(registros)} registros')
     except Exception as e:
         logger.exception('Error parseando metadata ZIP')
     return registros
@@ -940,93 +794,6 @@ async def generar_xml(request):
         return json_resp({'ok': False, 'error': str(e)}, 500)
 
 
-async def descargar_uuid(request):
-    """
-    Descarga el XML de un CFDI específico por UUID.
-    Flujo automático: solicitar -> verificar (polling) -> descargar.
-    Puede tardar de segundos a minutos según el SAT.
-    """
-    try:
-        d      = await request.json()
-        loop   = asyncio.get_event_loop()
-        signer = get_signer(d)
-        sat    = SAT(signer=signer)
-        uuid   = d.get('uuid','').strip()
-
-        if not uuid:
-            return json_resp({'ok':False,'error':'UUID requerido'},400)
-
-        logger.info(f'Descarga por UUID: {uuid}')
-
-        def _solicitar():
-            # Solo acepta el UUID/folio como parámetro
-            return sat.recover_comprobante_uuid_request(folio=uuid)
-
-        r_sol = await loop.run_in_executor(None, _solicitar)
-        id_sol = r_sol.get('IdSolicitud','')
-        cod    = r_sol.get('CodEstatus','')
-        logger.info(f'UUID solicitud: {id_sol} | {cod}')
-
-        if cod not in ('5000','5004'):  # 5004 = ya existe solicitud
-            return json_resp({'ok':False,
-                'error':f'SAT rechazó la solicitud: {cod} - {r_sol.get("Mensaje","")}'},400)
-
-        # Polling hasta que esté lista (máximo 3 minutos, cada 10s)
-        import time
-        id_paquete = None
-        for intento in range(18):  # 18 * 10s = 3 min
-            await asyncio.sleep(10)
-            def _verificar(sol=id_sol):
-                return sat.recover_comprobante_status(sol)
-            r_ver = await loop.run_in_executor(None, _verificar)
-            estado = r_ver.get('EstadoSolicitud')
-            estado_n = estado.value if hasattr(estado,'value') else int(estado or 0)
-            paquetes = r_ver.get('IdsPaquetes',[]) or []
-            logger.info(f'UUID poll {intento+1}: estado={estado_n} paq={len(paquetes)}')
-
-            if estado_n == 3 and paquetes:  # Terminada
-                id_paquete = paquetes[0]
-                break
-            elif estado_n in (4,5,6):  # Error/Rechazada/Vencida
-                return json_resp({'ok':False,
-                    'error':f'SAT error en verificación: estado={estado_n}'},400)
-
-        if not id_paquete:
-            return json_resp({'ok':False,
-                'error':'El SAT tardó demasiado. Intenta de nuevo en unos minutos.',
-                'id_solicitud': id_sol},202)
-
-        # Descargar el paquete
-        r_dl, paq_b64 = await loop.run_in_executor(None,
-            lambda: sat.recover_comprobante_download(id_paquete=id_paquete))
-
-        if not paq_b64:
-            return json_resp({'ok':False,'error':'No se pudo descargar el paquete'},400)
-
-        paq_bytes = base64.b64decode(paq_b64)
-
-        # Extraer XML del ZIP
-        xml_str = None
-        with zipfile.ZipFile(io.BytesIO(paq_bytes),'r') as zf:
-            for name in zf.namelist():
-                if name.lower().endswith('.xml'):
-                    xml_str = zf.read(name).decode('utf-8','replace')
-                    break
-
-        if not xml_str:
-            return json_resp({'ok':False,'error':'ZIP vacío — sin XML'},400)
-
-        logger.info(f'XML descargado para UUID {uuid}: {len(xml_str)} chars')
-        cfdi_data = parse_cfdi_xml(xml_str)
-
-        return json_resp({'ok':True,'uuid':uuid,'xml':xml_str,'cfdi':cfdi_data})
-
-    except Exception as e:
-        import traceback as _tb
-        logger.error('Error /descargar-uuid:\n'+_tb.format_exc())
-        return json_resp({'ok':False,'error':str(e),'detalle':_tb.format_exc()},500)
-
-
 # ── App aiohttp ──────────────────────────────────────────────────
 app = web.Application()
 
@@ -1034,11 +801,9 @@ app = web.Application()
 app.router.add_get( '/health',       health)
 app.router.add_post('/login',        login)
 app.router.add_post('/verify_token', verify_token)
-app.router.add_post('/solicitar',          solicitar)
-app.router.add_post('/solicitar-emitidos', solicitar_emitidos)
+app.router.add_post('/solicitar',    solicitar)
 app.router.add_post('/verificar',    verificar)
-app.router.add_post('/descargar',         descargar)
-app.router.add_post('/descargar-uuid',    descargar_uuid)
+app.router.add_post('/descargar',    descargar)
 
 # Facturación
 app.router.add_post('/validar-cfdi', validar_cfdi)

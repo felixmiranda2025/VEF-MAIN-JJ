@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Proceso RFQ — VEF ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#0D2B55;--blue:#1A4A8A;--teal:#0891B2;--green:#059669;
+  --amber:#D97706;--purple:#7C3AED;--gray:#64748b;
+  --bg:#F8FAFC;--white:#FFFFFF;--border:#E2E8F0;--text:#1E293B;--text2:#475569;--text3:#94A3B8;
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── HEADER ── */
+.header{background:var(--navy);padding:20px 40px;display:flex;align-items:center;justify-content:space-between}
+.header-left{display:flex;align-items:center;gap:16px}
+.header-logo{width:44px;height:44px;background:rgba(255,255,255,.1);border-radius:11px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.header-logo img{width:40px;height:40px;object-fit:contain}
+.header-title{color:#fff;font-size:1.2rem;font-weight:700}
+.header-sub{color:rgba(255,255,255,.5);font-size:.8rem;margin-top:1px}
+.header-right{display:flex;gap:10px}
+.btn{padding:8px 18px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-outline{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn-outline:hover{background:rgba(255,255,255,.2)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#1e5ba8}
+.btn-print{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.15)}
+.btn-print:hover{background:rgba(255,255,255,.22)}
+
+/* ── LAYOUT ── */
+.container{max-width:960px;margin:0 auto;padding:40px 24px}
+.page-title{font-size:1.5rem;font-weight:700;color:var(--navy);margin-bottom:4px}
+.page-sub{font-size:.9rem;color:var(--text2);margin-bottom:32px}
+
+/* ── FLOW DIAGRAM ── */
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;position:relative}
+
+.step{width:100%;border-radius:12px;border:1px solid var(--border);background:var(--white);overflow:hidden;position:relative}
+.step-header{padding:16px 20px;display:flex;align-items:center;gap:14px}
+.step-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;flex-shrink:0;color:#fff}
+.step-title{font-size:1rem;font-weight:700}
+.step-sub{font-size:.83rem;margin-top:1px}
+.step-body{padding:0 20px 16px 70px;display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:5px 12px;border-radius:6px;font-size:.8rem;font-weight:500}
+
+/* Paso 1 — azul navy */
+.s1 .step-num{background:var(--navy)}
+.s1 .step-title{color:var(--navy)}
+.s1 .step-sub{color:var(--blue)}
+.s1 .tag{background:#EEF3FF;color:#0C447C}
+
+/* Paso 2 — purple */
+.s2 .step-num{background:var(--purple)}
+.s2 .step-title{color:var(--purple)}
+.s2 .step-sub{color:#9333EA}
+.s2 .tag{background:#F5F3FF;color:#4C1D95}
+
+/* Paso 3 — teal */
+.s3 .step-num{background:var(--teal)}
+.s3 .step-title{color:var(--teal)}
+.s3 .step-sub{color:#0E7490}
+.s3 .tag{background:#ECFEFF;color:#164E63}
+
+/* Decision */
+.decision{background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:12px;width:100%;padding:16px 20px;display:flex;align-items:center;gap:14px}
+.decision-icon{width:36px;height:36px;background:#F59E0B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;color:#fff;font-weight:700}
+.decision-title{font-size:.95rem;font-weight:700;color:#92400E}
+.decision-sub{font-size:.8rem;color:#B45309;margin-top:2px}
+.decision-tags{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.dtag-yes{background:#D1FAE5;color:#065F46;padding:4px 12px;border-radius:6px;font-size:.78rem;font-weight:600}
+.dtag-no{background:#FEE2E2;color:#991B1B;padding:4px 12px;border-radius:6px;font-size:.78rem;font-weight:600}
+
+/* Paso 4 — amber */
+.s4 .step-num{background:var(--amber)}
+.s4 .step-title{color:var(--amber)}
+.s4 .step-sub{color:#B45309}
+.s4 .tag{background:#FFFBEB;color:#78350F}
+
+/* Paso 5 — green */
+.s5 .step-num{background:var(--green)}
+.s5 .step-title{color:var(--green)}
+.s5 .step-sub{color:#047857}
+.s5 .tag{background:#ECFDF5;color:#064E3B}
+
+/* ── CONECTOR ── */
+.connector{width:2px;height:28px;background:var(--border);position:relative;display:flex;align-items:flex-end;justify-content:center;margin:0 auto}
+.connector::after{content:'';border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid var(--border);margin-left:-6px}
+
+/* ── CRITERIOS DE EVALUACIÓN ── */
+.eval-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
+.eval-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.eval-pct{font-size:2rem;font-weight:800;line-height:1}
+.eval-lbl{font-size:.8rem;color:var(--text2);margin-top:4px}
+.eval-bar{height:6px;border-radius:3px;margin-top:10px}
+
+/* ── TIPS BOX ── */
+.tips{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--teal);border-radius:8px;padding:16px 20px;margin-top:28px}
+.tips-title{font-size:.85rem;font-weight:700;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.tips-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.tips-list li{font-size:.84rem;color:var(--text2);display:flex;align-items:flex-start;gap:8px}
+.tips-list li::before{content:'→';color:var(--teal);flex-shrink:0;font-weight:600}
+
+/* ── PRINT ── */
+@media print{
+  .header-right,.no-print{display:none!important}
+  body{background:#fff}
+  .step,.decision,.tips,.eval-card{box-shadow:none;border-color:#ddd}
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .container{padding:24px 16px}
+  .header{padding:16px 20px}
+  .eval-grid{grid-template-columns:1fr}
+  .step-body{padding-left:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">
+      <img src="/api/logo" alt="VEF" onerror="this.parentElement.innerHTML='⚡'">
+    </div>
+    <div>
+      <div class="header-title">VEF ERP — Proceso RFQ</div>
+      <div class="header-sub">Request for Quotation · Guía de mejores prácticas</div>
+    </div>
+  </div>
+  <div class="header-right no-print">
+    <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+    <a class="btn btn-outline" href="/app" onclick="window.close()">← Volver al ERP</a>
+    <a class="btn btn-primary" href="/app#rfq">📨 Nueva RFQ</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-title">Diagrama de Flujo — Proceso RFQ Profesional</div>
+  <div class="page-sub">Guía paso a paso para solicitar cotizaciones a proveedores de forma estructurada y competitiva</div>
+
+  <div class="flow">
+
+    <!-- ── PASO 1 ── -->
+    <div class="step s1">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <div>
+          <div class="step-title">Preparación y requisitos</div>
+          <div class="step-sub">El paso más importante — define exactamente qué necesitas antes de contactar proveedores</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <span class="tag">Especificaciones técnicas detalladas</span>
+        <span class="tag">Cantidades y unidades</span>
+        <span class="tag">Estándares de calidad</span>
+        <span class="tag">Presupuesto máximo</span>
+        <span class="tag">Cronograma requerido</span>
+        <span class="tag">Normativas aplicables</span>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- ── PASO 2 ── -->
+    <div class="step s2">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div>
+          <div class="step-title">Preparar el documento RFQ</div>
+          <div class="step-sub">Estructura formal con toda la información que el proveedor necesita para cotizar con precisión</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <span class="tag">Información de la empresa solicitante</span>
+        <span class="tag">Partidas con No. de parte y especif.</span>
+        <span class="tag">Cantidad y fecha de entrega</span>
+        <span class="tag">Lugar de entrega</span>
+        <span class="tag">Condiciones de pago</span>
+        <span class="tag">Criterios de evaluación ponderados</span>
+        <span class="tag">Términos y condiciones</span>
+        <span class="tag">Fecha límite de respuesta</span>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- ── PASO 3 ── -->
+    <div class="step s3">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div>
+          <div class="step-title">Envío y gestión</div>
+          <div class="step-sub">Distribuye a proveedores calificados — todos deben cotizar sobre exactamente la misma base</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <span class="tag">Enviar a 3–5 proveedores calificados</span>
+        <span class="tag">Gestionar preguntas (Q&amp;A igualitario)</span>
+        <span class="tag">Dar tiempo suficiente de respuesta</span>
+        <span class="tag">Confidencialidad entre ofertas</span>
+        <span class="tag">Cerrar en la fecha límite</span>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- ── DECISIÓN ── -->
+    <div class="decision">
+      <div class="decision-icon">?</div>
+      <div style="flex:1">
+        <div class="decision-title">¿Se recibieron respuestas suficientes?</div>
+        <div class="decision-sub">Evalúa si hay al menos 2–3 cotizaciones válidas y comparables para tomar una decisión informada</div>
+        <div class="decision-tags">
+          <span class="dtag-yes">✓ Sí → Continuar a evaluación</span>
+          <span class="dtag-no">✗ No → Reenviar RFQ o ampliar lista de proveedores</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- ── PASO 4 ── -->
+    <div class="step s4">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <div>
+          <div class="step-title">Puntuación y selección</div>
+          <div class="step-sub">Compara respuestas de forma objetiva usando criterios ponderados — no solo el precio</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <span class="tag">Precio unitario y total</span>
+        <span class="tag">Plazo de entrega prometido</span>
+        <span class="tag">Garantía y soporte postventa</span>
+        <span class="tag">Experiencia y referencias</span>
+        <span class="tag">Condiciones de pago ofrecidas</span>
+        <span class="tag">Cumplimiento de especificaciones</span>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- ── PASO 5 ── -->
+    <div class="step s5">
+      <div class="step-header">
+        <div class="step-num">5</div>
+        <div>
+          <div class="step-title">Cierre y contratación</div>
+          <div class="step-sub">Formaliza el acuerdo y mantén buenas relaciones con todos los participantes — podrás necesitarlos</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <span class="tag">Adjudicar al proveedor ganador</span>
+        <span class="tag">Emitir Orden de Compra (OC)</span>
+        <span class="tag">Formalizar contrato o acuerdo</span>
+        <span class="tag">Notificar a no seleccionados</span>
+        <span class="tag">Documentar decisión y criterios</span>
+        <span class="tag">Archivar RFQ completa</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── CRITERIOS DE EVALUACIÓN ── -->
+  <div style="margin-top:32px">
+    <div style="font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:4px">Criterios de evaluación recomendados</div>
+    <div style="font-size:.83rem;color:var(--text2);margin-bottom:16px">Ponderación estándar para proyectos industriales — ajusta según tu necesidad</div>
+    <div class="eval-grid">
+      <div class="eval-card">
+        <div class="eval-pct" style="color:var(--navy)">50%</div>
+        <div class="eval-lbl">Precio total</div>
+        <div class="eval-bar" style="background:#0D2B55"></div>
+        <div style="font-size:.75rem;color:var(--text3);margin-top:8px">Precio unitario, descuentos por volumen, fletes incluidos</div>
+      </div>
+      <div class="eval-card">
+        <div class="eval-pct" style="color:var(--teal)">30%</div>
+        <div class="eval-lbl">Plazo de entrega</div>
+        <div class="eval-bar" style="background:var(--teal)"></div>
+        <div style="font-size:.75rem;color:var(--text3);margin-top:8px">Lead time, cumplimiento histórico, capacidad de respuesta</div>
+      </div>
+      <div class="eval-card">
+        <div class="eval-pct" style="color:var(--green)">20%</div>
+        <div class="eval-lbl">Garantía y servicio</div>
+        <div class="eval-bar" style="background:var(--green)"></div>
+        <div style="font-size:.75rem;color:var(--text3);margin-top:8px">Garantía, soporte técnico, referencias de clientes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TIPS ── -->
+  <div class="tips">
+    <div class="tips-title">💡 Mejores prácticas internacionales (2025)</div>
+    <ul class="tips-list">
+      <li>Sé específico: una RFQ vaga genera cotizaciones imprecisas y retrasos innecesarios</li>
+      <li>Incluye planos CAD, fichas técnicas o muestras físicas cuando sea posible</li>
+      <li>Todos los proveedores deben recibir exactamente la misma información — confidencialidad entre ellas</li>
+      <li>Da tiempo real: al menos 5–10 días hábiles para que el proveedor prepare una cotización de calidad</li>
+      <li>Notifica siempre a los no seleccionados — son relaciones a largo plazo valiosas</li>
+      <li>Documenta toda la trazabilidad: número de RFQs enviadas, respuestas recibidas y criterio de selección final</li>
+    </ul>
+  </div>
+
+  <div style="text-align:center;padding:32px 0 8px;font-size:.78rem;color:var(--text3)">
+    VEF ERP · Sistema de Gestión Industrial · <a href="/app" style="color:var(--blue);text-decoration:none">Volver al sistema</a>
+  </div>
+</div>
+
+</body>
+</html>

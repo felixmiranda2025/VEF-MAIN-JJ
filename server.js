@@ -167,16 +167,25 @@ async function crearSchemaEmpresa(slug, nombreEmpresa) {
       `CREATE TABLE IF NOT EXISTS items_cotizacion (id SERIAL PRIMARY KEY,cotizacion_id INTEGER,descripcion TEXT,cantidad NUMERIC(10,2),precio_unitario NUMERIC(15,2),total NUMERIC(15,2))`,
       `CREATE TABLE IF NOT EXISTS seguimientos (id SERIAL PRIMARY KEY,cotizacion_id INTEGER,fecha TIMESTAMP DEFAULT NOW(),tipo TEXT,notas TEXT,proxima_accion TEXT)`,
       `CREATE TABLE IF NOT EXISTS ordenes_proveedor (id SERIAL PRIMARY KEY,proveedor_id INTEGER,numero_op TEXT,fecha_emision DATE DEFAULT CURRENT_DATE,fecha_entrega DATE,condiciones_pago TEXT,lugar_entrega TEXT,notas TEXT,total NUMERIC(15,2) DEFAULT 0,moneda TEXT DEFAULT 'USD',estatus TEXT DEFAULT 'borrador',factura_pdf BYTEA,factura_nombre TEXT,cotizacion_pdf BYTEA,cotizacion_nombre TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
-      `CREATE TABLE IF NOT EXISTS items_orden_proveedor (id SERIAL PRIMARY KEY,orden_id INTEGER,descripcion TEXT,cantidad NUMERIC(10,2),precio_unitario NUMERIC(15,2),total NUMERIC(15,2))`,
+      `ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`,
+        `ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS proveedor_nombre TEXT`,
+        `CREATE TABLE IF NOT EXISTS items_orden_proveedor (id SERIAL PRIMARY KEY,orden_id INTEGER,descripcion TEXT,cantidad NUMERIC(10,2),precio_unitario NUMERIC(15,2),total NUMERIC(15,2))`,
       `CREATE TABLE IF NOT EXISTS seguimientos_oc (id SERIAL PRIMARY KEY,orden_id INTEGER,fecha TIMESTAMP DEFAULT NOW(),tipo TEXT,notas TEXT,proxima_accion TEXT)`,
       `CREATE TABLE IF NOT EXISTS facturas (id SERIAL PRIMARY KEY,cotizacion_id INTEGER,numero_factura TEXT,cliente_id INTEGER,moneda TEXT DEFAULT 'USD',subtotal NUMERIC(15,2) DEFAULT 0,iva NUMERIC(15,2) DEFAULT 0,total NUMERIC(15,2) DEFAULT 0,fecha_emision DATE DEFAULT CURRENT_DATE,fecha_vencimiento DATE,estatus TEXT DEFAULT 'pendiente',notas TEXT,created_at TIMESTAMP DEFAULT NOW())`,
       `CREATE TABLE IF NOT EXISTS pagos (id SERIAL PRIMARY KEY,factura_id INTEGER,fecha TIMESTAMP DEFAULT NOW(),monto NUMERIC(15,2),metodo TEXT,referencia TEXT,notas TEXT,created_at TIMESTAMP DEFAULT NOW())`,
       `CREATE TABLE IF NOT EXISTS inventario (id SERIAL PRIMARY KEY,codigo TEXT,nombre TEXT NOT NULL,descripcion TEXT,categoria TEXT,unidad TEXT DEFAULT 'pza',cantidad_actual NUMERIC(10,2) DEFAULT 0,cantidad_minima NUMERIC(10,2) DEFAULT 0,precio_costo NUMERIC(15,2) DEFAULT 0,precio_venta NUMERIC(15,2) DEFAULT 0,ubicacion TEXT,proveedor_id INTEGER,foto TEXT,notas TEXT,activo BOOLEAN DEFAULT true,created_at TIMESTAMP DEFAULT NOW())`,
       `CREATE TABLE IF NOT EXISTS movimientos_inventario (id SERIAL PRIMARY KEY,producto_id INTEGER,fecha TIMESTAMP DEFAULT NOW(),tipo TEXT,cantidad NUMERIC(10,2),stock_anterior NUMERIC(10,2) DEFAULT 0,stock_nuevo NUMERIC(10,2) DEFAULT 0,referencia TEXT,notas TEXT,created_by INTEGER)`,
       `CREATE TABLE IF NOT EXISTS tareas (id SERIAL PRIMARY KEY,titulo VARCHAR(300) NOT NULL,descripcion TEXT,proyecto_id INTEGER,asignado_a INTEGER,creado_por INTEGER,prioridad VARCHAR(20) DEFAULT 'normal',estatus VARCHAR(30) DEFAULT 'pendiente',fecha_inicio DATE,fecha_vencimiento DATE,notas TEXT,created_at TIMESTAMP DEFAULT NOW())`,
-      `CREATE TABLE IF NOT EXISTS egresos (id SERIAL PRIMARY KEY,fecha DATE NOT NULL DEFAULT CURRENT_DATE,proveedor_nombre VARCHAR(200),categoria VARCHAR(100),descripcion TEXT,subtotal NUMERIC(15,2) DEFAULT 0,iva NUMERIC(15,2) DEFAULT 0,total NUMERIC(15,2) DEFAULT 0,metodo VARCHAR(50) DEFAULT 'Transferencia',referencia VARCHAR(100),numero_factura VARCHAR(100),factura_pdf BYTEA,factura_nombre TEXT,notas TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS egresos (id SERIAL PRIMARY KEY,fecha DATE NOT NULL DEFAULT CURRENT_DATE,proveedor_id INTEGER,proveedor_nombre VARCHAR(200),categoria VARCHAR(100),descripcion TEXT,subtotal NUMERIC(15,2) DEFAULT 0,iva NUMERIC(15,2) DEFAULT 0,total NUMERIC(15,2) DEFAULT 0,metodo VARCHAR(50) DEFAULT 'Transferencia',referencia VARCHAR(100),numero_factura VARCHAR(100),factura_pdf BYTEA,factura_nombre TEXT,notas TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
       `CREATE TABLE IF NOT EXISTS pdfs_guardados (id SERIAL PRIMARY KEY,tipo VARCHAR(30) NOT NULL,referencia_id INTEGER NOT NULL,numero_doc VARCHAR(100),cliente_proveedor VARCHAR(200),nombre_archivo VARCHAR(200),tamanio_bytes INTEGER,pdf_data BYTEA,generado_por INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
-      `CREATE TABLE IF NOT EXISTS empresa_config (id SERIAL PRIMARY KEY,nombre VARCHAR(200) NOT NULL DEFAULT 'Mi Empresa',razon_social VARCHAR(200),rfc VARCHAR(30),regimen_fiscal VARCHAR(100),contacto VARCHAR(100),telefono VARCHAR(50),email VARCHAR(100),direccion TEXT,ciudad VARCHAR(100),estado VARCHAR(100),cp VARCHAR(10),pais VARCHAR(50) DEFAULT 'México',moneda_default VARCHAR(10) DEFAULT 'USD',iva_default NUMERIC(5,2) DEFAULT 16.00,margen_ganancia NUMERIC(5,2) DEFAULT 0,smtp_host VARCHAR(100),smtp_port INTEGER DEFAULT 465,smtp_user VARCHAR(100),smtp_pass VARCHAR(200),notas_factura TEXT,notas_cotizacion TEXT,logo_data BYTEA,logo_mime VARCHAR(30) DEFAULT 'image/png',updated_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS crm_oportunidades (id SERIAL PRIMARY KEY,cliente_id INTEGER NOT NULL,nombre TEXT NOT NULL,etapa VARCHAR(30) DEFAULT 'prospecto',valor NUMERIC(15,2) DEFAULT 0,moneda VARCHAR(5) DEFAULT 'MXN',probabilidad INTEGER DEFAULT 20,fecha_cierre_est DATE,responsable TEXT,descripcion TEXT,origen VARCHAR(50),perdida_motivo TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW(),updated_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS crm_actividades (id SERIAL PRIMARY KEY,cliente_id INTEGER,oportunidad_id INTEGER,tipo VARCHAR(30) DEFAULT 'nota',titulo TEXT,descripcion TEXT,fecha TIMESTAMP DEFAULT NOW(),proxima_accion TEXT,proxima_fecha DATE,completada BOOLEAN DEFAULT false,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS reportes_servicio (id SERIAL PRIMARY KEY,numero_reporte VARCHAR(50),titulo VARCHAR(300) NOT NULL,cliente_id INTEGER,proyecto_id INTEGER,fecha_reporte DATE DEFAULT CURRENT_DATE,fecha_servicio DATE,tecnico VARCHAR(200),estatus VARCHAR(30) DEFAULT 'borrador',introduccion TEXT,objetivo TEXT,alcance TEXT,descripcion_sistema TEXT,arquitectura TEXT,desarrollo_tecnico TEXT,resultados_pruebas TEXT,problemas_detectados TEXT,soluciones_implementadas TEXT,conclusiones TEXT,recomendaciones TEXT,anexos TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW(),updated_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS sat_solicitudes (id SERIAL PRIMARY KEY,id_solicitud VARCHAR(100) UNIQUE,fecha_inicio DATE,fecha_fin DATE,tipo VARCHAR(20) DEFAULT 'CFDI',estatus VARCHAR(30) DEFAULT 'pendiente',paquetes TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS sat_cfdis (id SERIAL PRIMARY KEY,uuid VARCHAR(100) UNIQUE,fecha_cfdi TIMESTAMP,tipo_comprobante VARCHAR(5),subtotal NUMERIC(15,2) DEFAULT 0,total NUMERIC(15,2) DEFAULT 0,moneda VARCHAR(10) DEFAULT 'MXN',emisor_rfc VARCHAR(20),emisor_nombre VARCHAR(300),receptor_rfc VARCHAR(20),receptor_nombre VARCHAR(300),uso_cfdi VARCHAR(10),forma_pago VARCHAR(5),metodo_pago VARCHAR(5),lugar_expedicion VARCHAR(10),serie VARCHAR(50),folio VARCHAR(50),no_certificado VARCHAR(30),version VARCHAR(5),fecha_timbrado TIMESTAMP,rfc_prov_certif VARCHAR(20),xml_content TEXT,id_paquete VARCHAR(200),estatus_sat VARCHAR(20),monto_sat NUMERIC(15,2),rfc_pac VARCHAR(20),fecha_cancelacion TIMESTAMP,created_at TIMESTAMP DEFAULT NOW(),updated_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS solicitudes_autorizacion (id SERIAL PRIMARY KEY,tipo VARCHAR(30) DEFAULT 'envio_cotizacion',referencia_id INTEGER,referencia_num TEXT,solicitante_id INTEGER,solicitante_nombre TEXT,destinatario_email TEXT,destinatario_cc TEXT,asunto TEXT,mensaje TEXT,estatus VARCHAR(20) DEFAULT 'pendiente',autorizado_por INTEGER,fecha_solicitud TIMESTAMP DEFAULT NOW(),fecha_resolucion TIMESTAMP,notas_autorizador TEXT)`,
+      `CREATE TABLE IF NOT EXISTS evaluaciones_proveedores (id SERIAL PRIMARY KEY,proveedor_id INTEGER NOT NULL,periodo VARCHAR(100),referencia VARCHAR(100),calidad NUMERIC(3,1),precio NUMERIC(3,1),entrega NUMERIC(3,1),servicio NUMERIC(3,1),documentacion NUMERIC(3,1),garantia NUMERIC(3,1),calificacion_total NUMERIC(4,2),recomendacion VARCHAR(30),notas TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE IF NOT EXISTS empresa_config (id SERIAL PRIMARY KEY,nombre VARCHAR(200) NOT NULL DEFAULT 'Mi Empresa',razon_social VARCHAR(200),rfc VARCHAR(30),regimen_fiscal VARCHAR(100),contacto VARCHAR(100),telefono VARCHAR(50),email VARCHAR(100),direccion TEXT,ciudad VARCHAR(100),estado VARCHAR(100),cp VARCHAR(10),pais VARCHAR(50) DEFAULT 'México',moneda_default VARCHAR(10) DEFAULT 'USD',iva_default NUMERIC(5,2) DEFAULT 16.00,margen_ganancia NUMERIC(5,2) DEFAULT 0,smtp_host VARCHAR(100),smtp_port INTEGER DEFAULT 465,smtp_user VARCHAR(100),smtp_pass VARCHAR(200),notas_factura TEXT,notas_cotizacion TEXT,logo_data BYTEA,logo_mime VARCHAR(30) DEFAULT 'image/png',sat_fiel_rfc VARCHAR(20),sat_fiel_configurado BOOLEAN DEFAULT false,deepseek_api_key TEXT,updated_at TIMESTAMP DEFAULT NOW())`,
     ];
     for (const sql of tablas) await client.query(sql);
     await client.query(`INSERT INTO empresa_config (nombre) VALUES ($1)`,[nombreEmpresa||'Mi Empresa']);
@@ -184,6 +193,8 @@ async function crearSchemaEmpresa(slug, nombreEmpresa) {
     return schema;
   } finally { client.release(); }
 }
+// Exponer globalmente para stripe_routes y otros módulos externos
+global.crearSchemaEmpresa = crearSchemaEmpresa;
 
 // Esquema real de la BD (se llena en autoSetup)
 let DB = {};  // DB['tabla'] = ['col1','col2',...]
@@ -718,31 +729,212 @@ async function buildPDFOrden(oc, items, schema=null) {
 }
 
 async function buildPDFFactura(f, items=[], schema=null) {
+  // Load full client data if we only have partial
+  let cli = {};
+  if (f.cliente_id) {
+    try {
+      const pool2 = pool;
+      const sc = schema || global._defaultSchema || 'emp_vef';
+      const cliRows = (await pool2.query(
+        `SET search_path TO "${sc}",public; SELECT * FROM clientes WHERE id=$1`, [f.cliente_id]
+      ).catch(()=>null));
+      // Use simple query approach
+      const c2 = await pool2.connect();
+      try {
+        await c2.query(`SET search_path TO "${sc}",public`);
+        const r = await c2.query('SELECT * FROM clientes WHERE id=$1',[f.cliente_id]);
+        if (r.rows.length) cli = r.rows[0];
+      } finally { c2.release(); }
+    } catch {}
+  }
+  // Merge cli data with f (f may already have some from JOIN)
+  const clienteNombre    = f.cliente_nombre    || cli.nombre            || '—';
+  const clienteRFC       = f.cliente_rfc       || cli.rfc               || '—';
+  const clienteEmail     = f.cliente_email     || cli.email             || '—';
+  const clienteTel       = f.cliente_tel       || cli.telefono          || '—';
+  const clienteRegimen   = f.cliente_regimen   || cli.regimen_fiscal    || '—';
+  const clienteCP        = f.cliente_cp        || cli.cp                || '—';
+  const clienteUsoCFDI   = f.cliente_uso_cfdi  || cli.uso_cfdi         || '—';
+  const clienteTipo      = f.cliente_tipo      || cli.tipo_persona      || 'moral';
+  const clienteDireccion = f.cliente_direccion || cli.direccion         || '';
+  const clienteCiudad    = f.cliente_ciudad    || cli.ciudad            || '';
+
   const emp = await getEmpConfig(schema||f._schema);
+  const MON = (f.moneda||'MXN') === 'USD' ? 'USD' : 'MXN';
+  const SYM = MON === 'USD' ? '$' : 'MX$';
+  const mxn = (n) => `${SYM} ${parseFloat(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+
   return new Promise((res,rej)=>{
-    const doc=new PDFKit({margin:28,size:'A4'});
+    const M=28, W=539, COL2=280;
+    const doc=new PDFKit({margin:M,size:'A4'});
     const ch=[]; doc.on('data',c=>ch.push(c)); doc.on('end',()=>res(Buffer.concat(ch))); doc.on('error',rej);
+
     pdfWatermark(doc, emp);
-    pdfHeader(doc,'FACTURA',[
+
+    // ── HEADER ──────────────────────────────────────────────────
+    pdfHeader(doc, 'SOLICITUD DE FACTURA', [
       `No. ${f.numero_factura||'—'}  |  Fecha: ${fmt(f.fecha_emision)}  |  Estatus: ${(f.estatus||'pendiente').toUpperCase()}`,
     ], emp);
-    pdfSec(doc,'Datos del Cliente');
-    pdfGrid(doc,[
-      ['Cliente:', f.cliente_nombre||'—', 'RFC:', f.cliente_rfc||'—'],
-      ['Email:',   f.cliente_email||'—',  'Tel:', f.cliente_tel||'—'],
-    ]);
-    if (items.length) { pdfSec(doc,'Detalle'); pdfItems(doc,items,f.moneda||'USD'); }
-    const M=28,W=539,SYM=(f.moneda||'USD')==='USD'?'$':'MX$';
-    const sub=parseFloat(f.subtotal||f.monto||f.total||0), iva=parseFloat(f.iva||0);
-    doc.fillColor(C.TEXTO).fontSize(10).font('Helvetica')
-       .text(`Subtotal: ${SYM}${sub.toLocaleString('es-MX',{minimumFractionDigits:2})}`,M,doc.y,{width:W,align:'right'})
-       .text(`IVA: ${SYM}${iva.toLocaleString('es-MX',{minimumFractionDigits:2})}`,M,doc.y,{width:W,align:'right'});
+
+    // ── DATOS DEL CLIENTE / RECEPTOR CFDI ───────────────────────
+    pdfSec(doc, 'Datos del Cliente / Receptor CFDI');
+    const startY = doc.y;
+    const rowH = 20;
+    const drawRow = (label1, val1, label2, val2, y) => {
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(C.TEXTO)
+         .text(label1, M+4, y+4, {width:80});
+      doc.font('Helvetica').fontSize(9).fillColor(C.TEXTO)
+         .text(val1, M+90, y+4, {width:COL2-90-10});
+      if (label2) {
+        doc.font('Helvetica-Bold').fontSize(9).fillColor(C.TEXTO)
+           .text(label2, COL2+4, y+4, {width:80});
+        doc.font('Helvetica').fontSize(9).fillColor(C.TEXTO)
+           .text(val2||'—', COL2+90, y+4, {width:W-COL2-90});
+      }
+    };
+    // Table rows
+    const rows = [
+      ['Nombre Cliente:', clienteNombre,       'RFC:',          clienteRFC],
+      ['Régimen Fiscal:', clienteRegimen,      'Uso CFDI:',     clienteUsoCFDI],
+      ['C.P. Fiscal:',   clienteCP,            'Tipo Persona:', clienteTipo.toUpperCase()],
+      ['Correo Envío:',  clienteEmail,         'Teléfono:',     clienteTel],
+    ];
+    // Draw bordered table
+    const tableW = W;
+    rows.forEach((row, i) => {
+      const y = startY + i * rowH;
+      // Alternating rows
+      if (i % 2 === 0) doc.rect(M, y, tableW, rowH).fill('#EBF3FB').stroke('#C8DEFF');
+      else             doc.rect(M, y, tableW, rowH).fill('#FFFFFF').stroke('#C8DEFF');
+      doc.rect(M, y, tableW, rowH).stroke('#C8DEFF');
+      // Center divider
+      doc.moveTo(COL2, y).lineTo(COL2, y+rowH).strokeColor('#C8DEFF').stroke();
+      drawRow(row[0], row[1], row[2], row[3], y);
+    });
+    // Dirección fiscal row (full width)
+    const dirY = startY + rows.length * rowH;
+    doc.rect(M, dirY, tableW, rowH).fill('#EBF3FB').stroke('#C8DEFF');
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(C.TEXTO).text('Dirección Fiscal:', M+4, dirY+4, {width:90});
+    const dirFull = [clienteDireccion, clienteCiudad].filter(Boolean).join(', ');
+    doc.font('Helvetica').fontSize(9).fillColor(C.TEXTO).text(dirFull||'—', M+100, dirY+4, {width:tableW-100});
+    doc.y = dirY + rowH + 10;
+    doc.moveDown(0.5);
+
+    // ── CONCEPTOS ────────────────────────────────────────────────
+    pdfSec(doc, 'Conceptos');
+    // Header row
+    const hY = doc.y;
+    const cols_w = [28, 95, 220, 50, 80, 66]; // #, CodSAT/Unidad, Desc, Cant, PrecioUnit, Importe
+    let xPos = M;
+    const headers = ['#','Código SAT / Unidad','Descripción del Concepto','Cant.','Precio Unit.','Importe'];
+    doc.rect(M, hY, W, 18).fill(C.AZUL).stroke(C.AZUL);
+    headers.forEach((h, i) => {
+      const align = i >= 3 ? 'right' : (i===0 ? 'center' : 'left');
+      doc.font('Helvetica-Bold').fontSize(8).fillColor('#FFFFFF')
+         .text(h, xPos+2, hY+4, {width:cols_w[i]-4, align});
+      xPos += cols_w[i];
+    });
+    doc.y = hY + 20;
+
+    // Item rows
+    (items.length ? items : [{
+      descripcion: f.notas || 'Servicio', cantidad:1,
+      precio_unitario: f.subtotal||f.total||0,
+      total: f.subtotal||f.total||0,
+      clave_prod_serv: '', clave_unidad: 'H87',
+    }]).forEach((it, idx) => {
+      const iy = doc.y;
+      const bg = idx%2===0 ? '#F5F9FF' : '#FFFFFF';
+      doc.rect(M, iy, W, 30).fill(bg).stroke('#C8DEFF');
+      xPos = M;
+      // #
+      doc.font('Helvetica-Bold').fontSize(8).fillColor(C.TEXTO)
+         .text(String(idx+1), xPos+2, iy+5, {width:cols_w[0]-4, align:'center'});
+      xPos += cols_w[0];
+      // Código SAT / Unidad
+      const codSAT = it.clave_prod_serv || '';
+      const unidad = it.clave_unidad || it.unidad || 'H87';
+      doc.font('Helvetica').fontSize(8).fillColor(C.TEXTO)
+         .text(codSAT, xPos+2, iy+5, {width:cols_w[1]-4});
+      doc.font('Helvetica').fontSize(8).fillColor('#666666')
+         .text('Unidad: '+unidad, xPos+2, iy+16, {width:cols_w[1]-4});
+      xPos += cols_w[1];
+      // Descripción
+      doc.font('Helvetica').fontSize(9).fillColor(C.TEXTO)
+         .text(it.descripcion||'—', xPos+2, iy+5, {width:cols_w[2]-4});
+      xPos += cols_w[2];
+      // Cantidad
+      doc.font('Helvetica').fontSize(9).fillColor(C.TEXTO)
+         .text(String(parseFloat(it.cantidad||1)), xPos+2, iy+5, {width:cols_w[3]-4, align:'right'});
+      xPos += cols_w[3];
+      // Precio unit
+      doc.font('Helvetica').fontSize(9).fillColor(C.TEXTO)
+         .text(mxn(it.precio_unitario||0).replace(/MX\$/,'$'), xPos+2, iy+5, {width:cols_w[4]-4, align:'right'});
+      xPos += cols_w[4];
+      // Importe
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(C.AZUL)
+         .text(mxn(it.total||0).replace(/MX\$/,'$'), xPos+2, iy+5, {width:cols_w[5]-4, align:'right'});
+      doc.y = iy + 32;
+    });
+    doc.moveDown(0.5);
+
+    // ── TOTALES ──────────────────────────────────────────────────
+    pdfSec(doc, 'Totales');
+    const sub  = parseFloat(f.subtotal||f.monto||f.total||0);
+    const iva  = parseFloat(f.iva||0);
+    const risr = parseFloat(f.retencion_isr||0);
+    const riva = parseFloat(f.retencion_iva||0);
+    const tot  = parseFloat(f.total||f.monto||0);
+
+    const totRows = [
+      ['Subtotal antes de impuestos', mxn(sub),  '#FFFFFF', C.TEXTO, false],
+      ['IVA 16%',                     mxn(iva),  '#FFFFFF', C.TEXTO, false],
+    ];
+    if (risr > 0) totRows.push(['ISR Retenido 1.25%', '-'+mxn(risr), '#FFFFFF', '#D97706', false]);
+    if (riva > 0) totRows.push(['Retención IVA',       '-'+mxn(riva), '#FFFFFF', '#7C3AED', false]);
+    totRows.push(['TOTAL', mxn(tot), C.AZUL, '#FFFFFF', true]);
+
+    const tW = 250, tX = M + W - tW;
+    totRows.forEach(([label, val, bg, txtColor, bold]) => {
+      const ty = doc.y;
+      doc.rect(tX, ty, tW, 18).fill(bg).stroke('#C8DEFF');
+      doc.font(bold?'Helvetica-Bold':'Helvetica').fontSize(9).fillColor(txtColor)
+         .text(label, tX+6, ty+4, {width:130});
+      doc.font(bold?'Helvetica-Bold':'Helvetica').fontSize(9).fillColor(txtColor)
+         .text(val, tX+6, ty+4, {width:tW-12, align:'right'});
+      doc.y = ty + 20;
+    });
+    doc.moveDown(0.8);
+
+    // ── DATOS DE PAGO ────────────────────────────────────────────
+    pdfSec(doc, 'Datos de Pago');
+    const notasRaw = f.notas||'';
+    // Parse method/forma from notas field or from dedicated fields
+    const metodoPago = f.metodo_pago || (notasRaw.includes('PPD') ? 'PPD — Pago en Parcialidades o Diferido' : notasRaw.includes('PUE') ? 'PUE — Pago en Una Sola Exhibición' : 'PPD — Pago en Parcialidades o Diferido');
+    const formaPago  = f.forma_pago  || (notasRaw.includes('03') || notasRaw.includes('Transferencia') ? '03 — Transferencia electrónica' : '03 — Transferencia electrónica');
+
+    const pagoData = [
+      ['Método de Pago:', metodoPago, 'Forma de Pago:', formaPago],
+      ['Moneda:',        MON,          'Vencimiento:',  fmt(f.fecha_vencimiento)],
+    ];
+    const pY0 = doc.y;
+    pagoData.forEach((row, i) => {
+      const y = pY0 + i * rowH;
+      const bg2 = i % 2 === 0 ? '#F5F9FF' : '#FFFFFF';
+      doc.rect(M, y, W, rowH).fill(bg2).stroke('#C8DEFF');
+      doc.moveTo(COL2, y).lineTo(COL2, y+rowH).strokeColor('#C8DEFF').stroke();
+      drawRow(row[0], row[1], row[2], row[3], y);
+    });
+    doc.y = pY0 + pagoData.length * rowH + 8;
     doc.moveDown(0.3);
-    pdfTotal(doc,'TOTAL FACTURA', f.total||f.monto, f.moneda||'USD');
-    if (f.fecha_vencimiento) doc.fillColor(C.AZUL).fontSize(9).font('Helvetica-Bold')
-       .text(`Vencimiento: ${fmt(f.fecha_vencimiento)}`,M,doc.y,{width:W});
-    if (f.notas) { doc.moveDown(0.3); doc.fillColor(C.TEXTO).fontSize(9).font('Helvetica').text(f.notas,M,doc.y,{width:W}); }
-    pdfPie(doc,emp); doc.end();
+
+    // Nota al pie sobre constancia
+    doc.font('Helvetica').fontSize(8).fillColor('#888888')
+       .text('Para la correcta emisión de factura es preferible entregar la constancia de situación fiscal de nuevos clientes.',
+             M, doc.y, {width:W, align:'center'});
+
+    pdfPie(doc,emp);
+    doc.end();
   });
 }
 
@@ -857,7 +1049,7 @@ app.get('/api/fix-schemas', async (req,res)=>{
       const schema = 'emp_'+emp.slug.replace(/[^a-z0-9]/g,'_');
       const client = await pool.connect();
       try {
-        await client.query(`SET search_path TO ${schema},public`);
+        await client.query(`SET search_path TO "${schema}", public`);
         // Verificar si existe empresa_config
         const cfgCheck = await client.query(`SELECT COUNT(*) cnt FROM empresa_config`);
         if(!cfgCheck.rows[0]?.cnt) { log.push(`${schema}: sin empresa_config`); continue; }
@@ -974,6 +1166,46 @@ app.get('/api/fix', async (req,res)=>{
         `CREATE TABLE IF NOT EXISTS cotizaciones (id SERIAL PRIMARY KEY,proyecto_id INTEGER,numero_cotizacion TEXT UNIQUE,fecha_emision DATE DEFAULT CURRENT_DATE,validez_hasta DATE,alcance_tecnico TEXT,notas_importantes TEXT,comentarios_generales TEXT,servicio_postventa TEXT,condiciones_entrega TEXT,condiciones_pago TEXT,garantia TEXT,responsabilidad TEXT,validez TEXT,fuerza_mayor TEXT,ley_aplicable TEXT,total NUMERIC(15,2) DEFAULT 0,moneda TEXT DEFAULT 'USD',estatus TEXT DEFAULT 'borrador',created_by INTEGER,created_at TIMESTAMP DEFAULT NOW(),updated_at TIMESTAMP DEFAULT NOW())`,
         `CREATE TABLE IF NOT EXISTS items_cotizacion (id SERIAL PRIMARY KEY,cotizacion_id INTEGER,descripcion TEXT,cantidad NUMERIC(10,2),precio_unitario NUMERIC(15,2),total NUMERIC(15,2))`,
         `CREATE TABLE IF NOT EXISTS seguimientos (id SERIAL PRIMARY KEY,cotizacion_id INTEGER,fecha TIMESTAMP DEFAULT NOW(),tipo TEXT,notas TEXT,proxima_accion TEXT)`,
+        `CREATE TABLE IF NOT EXISTS crm_oportunidades (
+          id SERIAL PRIMARY KEY,
+          cliente_id INTEGER NOT NULL,
+          nombre TEXT NOT NULL,
+          etapa VARCHAR(30) DEFAULT 'prospecto',
+          valor NUMERIC(15,2) DEFAULT 0,
+          moneda VARCHAR(5) DEFAULT 'MXN',
+          probabilidad INTEGER DEFAULT 20,
+          fecha_cierre_est DATE,
+          responsable TEXT,
+          descripcion TEXT,
+          origen VARCHAR(50),
+          perdida_motivo TEXT,
+          created_by INTEGER,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )`,
+        `CREATE TABLE IF NOT EXISTS crm_actividades (
+          id SERIAL PRIMARY KEY,
+          cliente_id INTEGER,
+          oportunidad_id INTEGER,
+          tipo VARCHAR(30) DEFAULT 'nota',
+          titulo TEXT,
+          descripcion TEXT,
+          fecha TIMESTAMP DEFAULT NOW(),
+          proxima_accion TEXT,
+          proxima_fecha DATE,
+          completada BOOLEAN DEFAULT false,
+          created_by INTEGER,
+          created_at TIMESTAMP DEFAULT NOW()
+        )`,
+        `ALTER TABLE clientes ADD COLUMN IF NOT EXISTS industria VARCHAR(100)`,
+        `ALTER TABLE clientes ADD COLUMN IF NOT EXISTS sitio_web VARCHAR(200)`,
+        `ALTER TABLE clientes ADD COLUMN IF NOT EXISTS linkedin VARCHAR(200)`,
+        `ALTER TABLE clientes ADD COLUMN IF NOT EXISTS notas_crm TEXT`,
+        `ALTER TABLE clientes ADD COLUMN IF NOT EXISTS etiquetas TEXT`,
+        `ALTER TABLE clientes ADD COLUMN IF NOT EXISTS ultima_actividad TIMESTAMP`,
+        `ALTER TABLE clientes ADD COLUMN IF NOT EXISTS valor_total_historico NUMERIC(15,2) DEFAULT 0`,
+        `ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`,
+        `ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS proveedor_nombre TEXT`,
         `CREATE TABLE IF NOT EXISTS facturas (id SERIAL PRIMARY KEY,cotizacion_id INTEGER,numero_factura TEXT,cliente_id INTEGER,moneda TEXT DEFAULT 'USD',subtotal NUMERIC(15,2) DEFAULT 0,iva NUMERIC(15,2) DEFAULT 0,total NUMERIC(15,2) DEFAULT 0,monto NUMERIC(15,2) DEFAULT 0,fecha_emision DATE DEFAULT CURRENT_DATE,fecha_vencimiento DATE,estatus TEXT DEFAULT 'pendiente',estatus_pago TEXT DEFAULT 'pendiente',notas TEXT,created_at TIMESTAMP DEFAULT NOW())`,
         `CREATE TABLE IF NOT EXISTS pagos (id SERIAL PRIMARY KEY,factura_id INTEGER,fecha DATE DEFAULT CURRENT_DATE,monto NUMERIC(15,2),metodo TEXT,referencia TEXT,notas TEXT,created_at TIMESTAMP DEFAULT NOW())`,
         `CREATE TABLE IF NOT EXISTS ordenes_proveedor (id SERIAL PRIMARY KEY,proveedor_id INTEGER,numero_op TEXT UNIQUE,fecha_emision DATE DEFAULT CURRENT_DATE,fecha_entrega DATE,condiciones_pago TEXT,lugar_entrega TEXT,notas TEXT,subtotal NUMERIC(15,2) DEFAULT 0,iva NUMERIC(15,2) DEFAULT 0,total NUMERIC(15,2) DEFAULT 0,moneda TEXT DEFAULT 'USD',estatus TEXT DEFAULT 'borrador',cotizacion_ref_pdf TEXT,factura_pdf BYTEA,factura_nombre TEXT,factura_fecha TIMESTAMP,cotizacion_pdf BYTEA,cotizacion_nombre TEXT,created_by INTEGER,created_at TIMESTAMP DEFAULT NOW())`,
@@ -1020,10 +1252,6 @@ app.get('/api/fix', async (req,res)=>{
   }
 });
 
-// ================================================================
-// AUTO SETUP — se adapta al esquema REAL de la BD
-// ================================================================
-// AUTO SETUP — se adapta al esquema REAL de la BD
 // ================================================================
 // AUTO SETUP — se adapta al esquema REAL de la BD
 // ================================================================
@@ -1222,7 +1450,18 @@ async function autoSetup() {
           factura_pdf BYTEA, factura_nombre TEXT,
           notas TEXT, created_by INTEGER,
           created_at TIMESTAMP DEFAULT NOW())`,
-        // PDFs
+        // RFQ — Solicitudes de cotización
+      `CREATE TABLE IF NOT EXISTS rfq (
+        id SERIAL PRIMARY KEY, numero_rfq VARCHAR(50),
+        descripcion TEXT NOT NULL, proyecto_nombre VARCHAR(200),
+        prioridad VARCHAR(20) DEFAULT 'media', fecha_limite DATE,
+        presupuesto_max NUMERIC(15,2), moneda VARCHAR(10) DEFAULT 'MXN',
+        condiciones_pago TEXT, lugar_entrega TEXT, criterios_eval TEXT,
+        notas TEXT, terminos TEXT, estatus VARCHAR(30) DEFAULT 'borrador',
+        proveedor_ids JSONB DEFAULT '[]', items JSONB DEFAULT '[]',
+        created_by INTEGER, created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW())`,
+      // PDFs
         `CREATE TABLE IF NOT EXISTS pdfs_guardados (
           id SERIAL PRIMARY KEY, tipo VARCHAR(30),
           referencia_id INTEGER, numero_doc VARCHAR(100),
@@ -1276,6 +1515,10 @@ async function autoSetup() {
         "ALTER TABLE facturas ADD COLUMN IF NOT EXISTS iva NUMERIC(15,2) DEFAULT 0",
         "ALTER TABLE facturas ADD COLUMN IF NOT EXISTS monto NUMERIC(15,2) DEFAULT 0",
         "ALTER TABLE facturas ADD COLUMN IF NOT EXISTS fecha_vencimiento DATE",
+      "ALTER TABLE facturas ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(5) DEFAULT 'PPD'",
+      "ALTER TABLE facturas ADD COLUMN IF NOT EXISTS forma_pago VARCHAR(5) DEFAULT '03'",
+      "ALTER TABLE facturas ADD COLUMN IF NOT EXISTS retencion_isr NUMERIC(15,2) DEFAULT 0",
+      "ALTER TABLE facturas ADD COLUMN IF NOT EXISTS retencion_iva NUMERIC(15,2) DEFAULT 0",
         "ALTER TABLE facturas ADD COLUMN IF NOT EXISTS estatus_pago TEXT DEFAULT 'pendiente'",
         "ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS subtotal NUMERIC(15,2) DEFAULT 0",
         "ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS iva NUMERIC(15,2) DEFAULT 0",
@@ -1327,6 +1570,14 @@ async function autoSetup() {
         "ALTER TABLE egresos ADD COLUMN IF NOT EXISTS proveedor_id INTEGER",
         "ALTER TABLE egresos ADD COLUMN IF NOT EXISTS factura_pdf BYTEA",
         "ALTER TABLE egresos ADD COLUMN IF NOT EXISTS factura_nombre TEXT",
+        // SAT timbrado — columnas necesarias para CFDI 4.0
+        "ALTER TABLE items_cotizacion ADD COLUMN IF NOT EXISTS clave_prod_serv VARCHAR(20)",
+        "ALTER TABLE items_cotizacion ADD COLUMN IF NOT EXISTS clave_unidad VARCHAR(10)",
+        "ALTER TABLE items_cotizacion ADD COLUMN IF NOT EXISTS objeto_imp VARCHAR(5) DEFAULT '02'",
+        "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS uso_cfdi VARCHAR(10) DEFAULT 'G03'",
+        "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS cp VARCHAR(10)",
+        // RFQ table
+        `CREATE TABLE IF NOT EXISTS rfq (id SERIAL PRIMARY KEY,numero_rfq VARCHAR(50),descripcion TEXT NOT NULL,proyecto_nombre VARCHAR(200),prioridad VARCHAR(20) DEFAULT 'media',fecha_limite DATE,presupuesto_max NUMERIC(15,2),moneda VARCHAR(10) DEFAULT 'MXN',condiciones_pago TEXT,lugar_entrega TEXT,criterios_eval TEXT,notas TEXT,terminos TEXT,estatus VARCHAR(30) DEFAULT 'borrador',proveedor_ids JSONB DEFAULT '[]',items JSONB DEFAULT '[]',created_by INTEGER,created_at TIMESTAMP DEFAULT NOW(),updated_at TIMESTAMP DEFAULT NOW())`,
       ];
       for(const sql of invAlters){
         try{ await sc.query(sql); } catch(e){ /* columna ya existe */ }
@@ -1444,6 +1695,13 @@ async function autoSetup() {
       `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS version VARCHAR(5)`,
       `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS fecha_timbrado TIMESTAMP`,
       `ALTER TABLE sat_cfdis ADD COLUMN IF NOT EXISTS rfc_prov_certif VARCHAR(20)`,
+      // SAT timbrado — columnas CFDI 4.0 en items_cotizacion y clientes
+      `ALTER TABLE items_cotizacion ADD COLUMN IF NOT EXISTS clave_prod_serv VARCHAR(20)`,
+      `ALTER TABLE items_cotizacion ADD COLUMN IF NOT EXISTS clave_unidad VARCHAR(10)`,
+      `ALTER TABLE items_cotizacion ADD COLUMN IF NOT EXISTS objeto_imp VARCHAR(5) DEFAULT '02'`,
+      `ALTER TABLE clientes ADD COLUMN IF NOT EXISTS uso_cfdi VARCHAR(10) DEFAULT 'G03'`,
+      // RFQ
+      `CREATE TABLE IF NOT EXISTS rfq (id SERIAL PRIMARY KEY,numero_rfq VARCHAR(50),descripcion TEXT NOT NULL,proyecto_nombre VARCHAR(200),prioridad VARCHAR(20) DEFAULT 'media',fecha_limite DATE,presupuesto_max NUMERIC(15,2),moneda VARCHAR(10) DEFAULT 'MXN',condiciones_pago TEXT,lugar_entrega TEXT,criterios_eval TEXT,notas TEXT,terminos TEXT,estatus VARCHAR(30) DEFAULT 'borrador',proveedor_ids JSONB DEFAULT '[]',items JSONB DEFAULT '[]',created_by INTEGER,created_at TIMESTAMP DEFAULT NOW(),updated_at TIMESTAMP DEFAULT NOW())`,
       // Solicitudes de autorización para envío de cotizaciones
       `CREATE TABLE IF NOT EXISTS solicitudes_autorizacion (
         id SERIAL PRIMARY KEY,
@@ -1715,7 +1973,7 @@ app.post('/api/empresas', auth, async (req,res)=>{
     const schema = await crearSchemaEmpresa(cleanSlug, nombre);
     // Dar acceso admin al creador
     await pool.query(`INSERT INTO usuario_empresa (usuario_id,empresa_id,rol) VALUES ($1,$2,'admin') ON CONFLICT DO NOTHING`,[req.user.id,emp.rows[0].id]);
-    res.status(201).json({...emp[0], schema});
+    res.status(201).json({...emp.rows[0], schema});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
@@ -1733,7 +1991,7 @@ app.put('/api/empresas/:id', auth, async (req,res)=>{
     const r = await pool.query(
       `UPDATE empresas SET nombre=COALESCE($1,nombre),activa=COALESCE($2,activa)${extraSQL} WHERE id=$3 RETURNING *`,
       [nombre,activa,req.params.id]);
-    res.json(r[0]);
+    res.json(r.rows[0]);
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
@@ -2028,7 +2286,8 @@ app.get('/api/dashboard/metrics', auth, licencia, async (req,res)=>{
       egr_oc:     parseFloat(statsRow?.egr_oc||0),
       oc_pendientes:parseInt(statsRow?.oc_pend||0),
       oc_mes:     parseFloat(statsRow?.oc_mes||0),
-      iva_mes:0, isr_mes:0,
+      iva_mes: await client.query(`SELECT COALESCE(SUM(iva),0) v FROM facturas WHERE EXTRACT(MONTH FROM fecha_emision)=${M} AND EXTRACT(YEAR FROM fecha_emision)=${Y}`).then(r=>parseFloat(r.rows[0]?.v||0)).catch(()=>0),
+      isr_mes: await client.query(`SELECT COALESCE(SUM(retencion_isr),0) v FROM facturas WHERE EXTRACT(MONTH FROM fecha_emision)=${M} AND EXTRACT(YEAR FROM fecha_emision)=${Y}`).then(r=>parseFloat(r.rows[0]?.v||0)).catch(()=>0),
       empresa: emp,
       cot_recientes: cots5,
       fac_vencer:    facs5,
@@ -2391,6 +2650,121 @@ app.get('/api/reportes/facturas-por-vencer', auth, async (req,res)=>{
 // ================================================================
 // CLIENTES
 // ================================================================
+// ═══════════════════════════════════════════════════════════════
+// CRM — Oportunidades y Actividades
+// ═══════════════════════════════════════════════════════════════
+
+app.get('/api/crm/oportunidades', auth, licencia, async (req,res)=>{
+  try{
+    const rows = await QR(req,`
+      SELECT o.*, cl.nombre cliente_nombre, cl.tipo_persona, cl.email cliente_email
+      FROM crm_oportunidades o
+      LEFT JOIN clientes cl ON cl.id=o.cliente_id
+      ORDER BY o.updated_at DESC`);
+    res.json(rows);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+app.post('/api/crm/oportunidades', auth, empresaActiva, licencia, async (req,res)=>{
+  try{
+    const {cliente_id,nombre,etapa,valor,moneda,probabilidad,fecha_cierre_est,
+           responsable,descripcion,origen}=req.body;
+    if(!cliente_id||!nombre) return res.status(400).json({error:'cliente_id y nombre requeridos'});
+    const rows=await QR(req,`INSERT INTO crm_oportunidades
+      (cliente_id,nombre,etapa,valor,moneda,probabilidad,fecha_cierre_est,
+       responsable,descripcion,origen,created_by)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [cliente_id,nombre,etapa||'prospecto',parseFloat(valor)||0,moneda||'MXN',
+       parseInt(probabilidad)||20,fecha_cierre_est||null,
+       responsable||null,descripcion||null,origen||null,req.user?.id]);
+    res.status(201).json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+app.put('/api/crm/oportunidades/:id', auth, empresaActiva, licencia, async (req,res)=>{
+  try{
+    const b=req.body;
+    const sets=[];const vals=[];let i=1;
+    const add=(k,v)=>{if(v!==undefined){sets.push(`${k}=$${i++}`);vals.push(v);}};
+    add('nombre',          b.nombre);
+    add('etapa',           b.etapa);
+    add('valor',           b.valor!==undefined?parseFloat(b.valor)||0:undefined);
+    add('moneda',          b.moneda);
+    add('probabilidad',    b.probabilidad!==undefined?parseInt(b.probabilidad)||0:undefined);
+    add('fecha_cierre_est',b.fecha_cierre_est||null);
+    add('responsable',     b.responsable!==undefined?b.responsable:undefined);
+    add('descripcion',     b.descripcion!==undefined?b.descripcion||null:undefined);
+    add('origen',          b.origen!==undefined?b.origen||null:undefined);
+    add('perdida_motivo',  b.perdida_motivo!==undefined?b.perdida_motivo||null:undefined);
+    if(!sets.length) return res.status(400).json({error:'Nada que actualizar'});
+    vals.push(req.params.id);
+    const rows=await QR(req,`UPDATE crm_oportunidades SET ${sets.join(',')} WHERE id=$${i} RETURNING *`,vals);
+    res.json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.delete('/api/crm/oportunidades/:id', auth, empresaActiva, async (req,res)=>{
+  try{
+    await QR(req,'DELETE FROM crm_actividades WHERE oportunidad_id=$1',[req.params.id]);
+    await QR(req,'DELETE FROM crm_oportunidades WHERE id=$1',[req.params.id]);
+    res.json({ok:true});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+app.get('/api/crm/actividades', auth, licencia, async (req,res)=>{
+  try{
+    const where = req.query.cliente_id ? 'WHERE a.cliente_id=$1' : '';
+    const vals  = req.query.cliente_id ? [req.query.cliente_id] : [];
+    const rows  = await QR(req,`
+      SELECT a.*, cl.nombre cliente_nombre, o.nombre oportunidad_nombre
+      FROM crm_actividades a
+      LEFT JOIN clientes cl ON cl.id=a.cliente_id
+      LEFT JOIN crm_oportunidades o ON o.id=a.oportunidad_id
+      ${where} ORDER BY a.fecha DESC LIMIT 100`,vals);
+    res.json(rows);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+app.post('/api/crm/actividades', auth, empresaActiva, licencia, async (req,res)=>{
+  try{
+    const {cliente_id,oportunidad_id,tipo,titulo,descripcion,
+           proxima_accion,proxima_fecha,fecha}=req.body;
+    const rows=await QR(req,`INSERT INTO crm_actividades
+      (cliente_id,oportunidad_id,tipo,titulo,descripcion,proxima_accion,proxima_fecha,fecha,created_by)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [cliente_id||null,oportunidad_id||null,tipo||'nota',titulo||null,
+       descripcion||null,proxima_accion||null,proxima_fecha||null,
+       fecha||new Date().toISOString(),req.user?.id]);
+    // Update cliente ultima_actividad
+    if(cliente_id){
+      await QR(req,'UPDATE clientes SET ultima_actividad=NOW() WHERE id=$1',[cliente_id]).catch(()=>{});
+    }
+    res.status(201).json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+app.put('/api/crm/actividades/:id', auth, async (req,res)=>{
+  try{
+    const {completada}=req.body;
+    const rows=await QR(req,'UPDATE crm_actividades SET completada=$1 WHERE id=$2 RETURNING *',
+      [completada,req.params.id]);
+    res.json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+app.get('/api/crm/dashboard', auth, licencia, async (req,res)=>{
+  try{
+    const ops = await QR(req,`SELECT etapa, COUNT(*) cnt, SUM(valor) valor
+      FROM crm_oportunidades GROUP BY etapa`);
+    const acts = await QR(req,`SELECT COUNT(*) cnt FROM crm_actividades
+      WHERE completada=false AND proxima_fecha <= CURRENT_DATE + 7`);
+    const topClis = await QR(req,`SELECT cl.nombre, COUNT(o.id) oportunidades, SUM(o.valor) valor
+      FROM crm_oportunidades o JOIN clientes cl ON cl.id=o.cliente_id
+      WHERE o.etapa NOT IN ('perdida')
+      GROUP BY cl.id,cl.nombre ORDER BY valor DESC NULLS LAST LIMIT 5`);
+    res.json({pipeline:ops, actividades_pendientes:parseInt(acts[0]?.cnt||0), top_clientes:topClis});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
 app.get('/api/clientes', auth, licencia, async (req,res)=>{
   const w=has('clientes','activo')?'WHERE activo=true':'';
   res.json(await QR(req,`SELECT * FROM clientes ${w} ORDER BY nombre`));
@@ -2416,16 +2790,22 @@ app.post('/api/clientes', auth, empresaActiva, licencia, async (req,res)=>{
 });
 app.put('/api/clientes/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
-    const {nombre,contacto,direccion,telefono,email,rfc,regimen_fiscal,cp,ciudad,tipo_persona}=req.body;
-    const sets=[]; const vals=[];let i=1;
-    const add=(c,v)=>{sets.push(`${c}=$${i++}`);vals.push(v);};
-    add('nombre',nombre);add('contacto',contacto);add('direccion',direccion);
-    add('telefono',telefono);add('email',email);
-    if(has('clientes','rfc')) add('rfc',rfc?.toUpperCase()||null);
-    if(has('clientes','regimen_fiscal')) add('regimen_fiscal',regimen_fiscal||null);
-    if(has('clientes','cp')) add('cp',cp||null);
-    if(has('clientes','ciudad')) add('ciudad',ciudad||null);
-    if(has('clientes','tipo_persona')) add('tipo_persona',tipo_persona||'moral');
+    const b=req.body;
+    const sets=[]; const vals=[]; let i=1;
+    const add=(c,v)=>{if(v!==undefined){sets.push(`${c}=$${i++}`);vals.push(v);}};
+    add('nombre',           b.nombre);
+    add('contacto',         b.contacto!==undefined?b.contacto:undefined);
+    add('direccion',        b.direccion!==undefined?b.direccion:undefined);
+    add('telefono',         b.telefono!==undefined?b.telefono:undefined);
+    add('email',            b.email!==undefined?b.email:undefined);
+    if(has('clientes','rfc'))            add('rfc', b.rfc?.toUpperCase()||null);
+    if(has('clientes','regimen_fiscal')) add('regimen_fiscal', b.regimen_fiscal||null);
+    if(has('clientes','cp'))             add('cp', b.cp||null);
+    if(has('clientes','ciudad'))         add('ciudad', b.ciudad||null);
+    if(has('clientes','tipo_persona'))   add('tipo_persona', b.tipo_persona||'moral');
+    if(has('clientes','uso_cfdi'))       { if(b.uso_cfdi!==undefined) add('uso_cfdi', b.uso_cfdi); }
+    if(has('clientes','limite_credito')) { if(b.limite_credito!==undefined) add('limite_credito', parseFloat(b.limite_credito)||0); }
+    if(!sets.length) return res.status(400).json({error:'Nada que actualizar'});
     vals.push(req.params.id);
     const rows=await QR(req,`UPDATE clientes SET ${sets.join(',')} WHERE id=$${i} RETURNING *`,vals);
     res.json(rows[0]);
@@ -2618,6 +2998,55 @@ app.get('/api/clientes/:id/pdf', auth, licencia, async (req,res)=>{
 // ================================================================
 // PROVEEDORES
 // ================================================================
+// ── Evaluación de Proveedores ─────────────────────────────────────
+app.post('/api/proveedores/:id/evaluacion', auth, empresaActiva, async (req,res)=>{
+  try{
+    // Ensure table exists
+    await QR(req,`CREATE TABLE IF NOT EXISTS evaluaciones_proveedores (
+      id SERIAL PRIMARY KEY, proveedor_id INTEGER NOT NULL,
+      periodo VARCHAR(100), referencia VARCHAR(100),
+      calidad NUMERIC(3,1), precio NUMERIC(3,1), entrega NUMERIC(3,1),
+      servicio NUMERIC(3,1), documentacion NUMERIC(3,1), garantia NUMERIC(3,1),
+      calificacion_total NUMERIC(4,2), recomendacion VARCHAR(30),
+      notas TEXT, created_by INTEGER, created_at TIMESTAMP DEFAULT NOW()
+    )`).catch(()=>{});
+
+    const {periodo,referencia,notas,recomendacion,calidad,precio,entrega,
+           servicio,documentacion,garantia,calificacion_total}=req.body;
+    await QR(req,`INSERT INTO evaluaciones_proveedores
+      (proveedor_id,periodo,referencia,calidad,precio,entrega,servicio,documentacion,garantia,calificacion_total,recomendacion,notas,created_by)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+      [req.params.id,periodo||null,referencia||null,
+       parseFloat(calidad)||0,parseFloat(precio)||0,parseFloat(entrega)||0,
+       parseFloat(servicio)||0,parseFloat(documentacion)||0,parseFloat(garantia)||0,
+       parseFloat(calificacion_total)||0,recomendacion||'mantener',notas||null,req.user?.id]);
+
+    // Update promedio in proveedores
+    const rows = await QR(req,`SELECT AVG(calificacion_total) prom, COUNT(*) cnt
+      FROM evaluaciones_proveedores WHERE proveedor_id=$1`,[req.params.id]);
+    const prom = parseFloat(rows[0]?.prom||0);
+    const cnt  = parseInt(rows[0]?.cnt||0);
+    await QR(req,`UPDATE proveedores SET calificacion_promedio=$1 WHERE id=$2`,
+      [Math.round(prom*10)/10, req.params.id]).catch(()=>{});
+    // Try with num_evaluaciones column
+    await QR(req,`ALTER TABLE proveedores ADD COLUMN IF NOT EXISTS calificacion_promedio NUMERIC(3,1)`).catch(()=>{});
+    await QR(req,`ALTER TABLE proveedores ADD COLUMN IF NOT EXISTS num_evaluaciones INTEGER DEFAULT 0`).catch(()=>{});
+    await QR(req,`UPDATE proveedores SET calificacion_promedio=$1, num_evaluaciones=$2 WHERE id=$3`,
+      [Math.round(prom*10)/10, cnt, req.params.id]).catch(()=>{});
+
+    res.json({ok:true,calificacion_total:Math.round(prom*10)/10});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+app.get('/api/proveedores/:id/evaluaciones', auth, async (req,res)=>{
+  try{
+    const rows = await QR(req,
+      'SELECT * FROM evaluaciones_proveedores WHERE proveedor_id=$1 ORDER BY created_at DESC',
+      [req.params.id]);
+    res.json(rows);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
 app.get('/api/proveedores', auth, licencia, async (req,res)=>{
   const w=has('proveedores','activo')?'WHERE activo=true':'';
   res.json(await QR(req,`SELECT * FROM proveedores ${w} ORDER BY nombre`));
@@ -2637,14 +3066,21 @@ app.post('/api/proveedores', auth, empresaActiva, licencia, async (req,res)=>{
 });
 app.put('/api/proveedores/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
-    const {nombre,contacto,direccion,telefono,email,rfc,condiciones_pago,tipo_persona}=req.body;
+    const b=req.body;
     const sets=[];const vals=[];let i=1;
-    const add=(c,v)=>{sets.push(`${c}=$${i++}`);vals.push(v);};
-    add('nombre',nombre);add('contacto',contacto);add('direccion',direccion);
-    add('telefono',telefono);add('email',email);
-    if(has('proveedores','rfc')) add('rfc',rfc?.toUpperCase()||null);
-    if(has('proveedores','condiciones_pago')) add('condiciones_pago',condiciones_pago||null);
-    if(has('proveedores','tipo_persona')) add('tipo_persona',tipo_persona||'moral');
+    const add=(c,v)=>{if(v!==undefined){sets.push(`${c}=$${i++}`);vals.push(v);}};
+    add('nombre',    b.nombre);
+    if(b.contacto!==undefined)  add('contacto',   b.contacto);
+    if(b.direccion!==undefined) add('direccion',  b.direccion);
+    if(b.telefono!==undefined)  add('telefono',   b.telefono);
+    if(b.email!==undefined)     add('email',      b.email);
+    if(has('proveedores','rfc'))              { if(b.rfc!==undefined) add('rfc', b.rfc?.toUpperCase()||null); }
+    if(has('proveedores','condiciones_pago')) { if(b.condiciones_pago!==undefined) add('condiciones_pago', b.condiciones_pago||null); }
+    if(has('proveedores','tipo_persona'))     { if(b.tipo_persona!==undefined) add('tipo_persona', b.tipo_persona||'moral'); }
+    if(has('proveedores','notas'))            { if(b.notas!==undefined) add('notas', b.notas||null); }
+    if(has('proveedores','banco'))            { if(b.banco!==undefined) add('banco', b.banco||null); }
+    if(has('proveedores','cuenta_bancaria'))  { if(b.cuenta_bancaria!==undefined) add('cuenta_bancaria', b.cuenta_bancaria||null); }
+    if(!sets.length) return res.status(400).json({error:'Nada que actualizar'});
     vals.push(req.params.id);
     const rows=await QR(req,`UPDATE proveedores SET ${sets.join(',')} WHERE id=$${i} RETURNING *`,vals);
     res.json(rows[0]);
@@ -2748,10 +3184,17 @@ app.get('/api/proveedores/:id/pdf', auth, licencia, async (req,res)=>{
 // PROYECTOS
 // ================================================================
 app.get('/api/proyectos', auth, licencia, async (req,res)=>{
-  const respCol=has('proyectos','responsable')?"p.responsable,":"";
+  const respCol  = has('proyectos','responsable') ? 'p.responsable,' : '';
+  const fechaCol = has('proyectos','fecha')        ? 'p.fecha,'        : "COALESCE(p.fecha_creacion,p.created_at) fecha,";
+  const extraCols = [
+    has('proyectos','fecha_fin')    ? 'p.fecha_fin,'    : '',
+    has('proyectos','avance')       ? 'p.avance,'       : '',
+    has('proyectos','presupuesto')  ? 'p.presupuesto,'  : '',
+    has('proyectos','descripcion')  ? 'p.descripcion,'  : '',
+  ].join('');
   res.json(await QR(req,`
-    SELECT p.id,p.nombre,p.cliente_id,${respCol}p.estatus,
-           COALESCE(p.fecha_creacion,p.created_at) fecha,
+    SELECT p.id, p.nombre, p.cliente_id, ${respCol} p.estatus,
+           ${fechaCol} ${extraCols}
            c.nombre cliente_nombre
     FROM proyectos p LEFT JOIN clientes c ON c.id=p.cliente_id
     ORDER BY p.id DESC`));
@@ -2769,11 +3212,20 @@ app.post('/api/proyectos', auth, empresaActiva, licencia, async (req,res)=>{
 });
 app.put('/api/proyectos/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
-    const {nombre,cliente_id,responsable,estatus}=req.body;
+    const b=req.body;
     const sets=[];const vals=[];let i=1;
-    const add=(c,v)=>{sets.push(`${c}=$${i++}`);vals.push(v);};
-    add('nombre',nombre);add('cliente_id',cliente_id);add('estatus',estatus);
-    if(has('proyectos','responsable')) add('responsable',responsable);
+    const add=(c,v)=>{if(v!==undefined){sets.push(`${c}=$${i++}`);vals.push(v);}};
+    add('nombre',      b.nombre);
+    add('estatus',     b.estatus);
+    add('cliente_id',  b.cliente_id!==undefined ? (parseInt(b.cliente_id)||null) : undefined);
+    if(has('proyectos','responsable'))  add('responsable',  b.responsable!==undefined?b.responsable:undefined);
+    if(has('proyectos','fecha'))        add('fecha',         b.fecha||null);
+    if(has('proyectos','fecha_fin'))    add('fecha_fin',     b.fecha_fin||null);
+    if(has('proyectos','avance'))       add('avance',        b.avance!==undefined?parseInt(b.avance)||0:undefined);
+    if(has('proyectos','presupuesto'))  add('presupuesto',   b.presupuesto!==undefined?parseFloat(b.presupuesto)||null:undefined);
+    if(has('proyectos','descripcion'))  add('descripcion',   b.descripcion!==undefined?b.descripcion:undefined);
+    if(has('proyectos','updated_at'))   { sets.push(`updated_at=NOW()`); }
+    if(!sets.length) return res.status(400).json({error:'Nada que actualizar'});
     vals.push(req.params.id);
     const rows=await QR(req,`UPDATE proyectos SET ${sets.join(',')} WHERE id=$${i} RETURNING *`,vals);
     res.json(rows[0]);
@@ -2820,7 +3272,7 @@ app.post('/api/cotizaciones', auth, empresaActiva, licencia, async (req,res)=>{
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
-    await client.query(`SET search_path TO ${schema},public`);
+    await client.query(`SET search_path TO "${schema}", public`);
     await client.query('BEGIN');
     const {proyecto_id,moneda,items=[],folio,alcance_tecnico,notas_importantes,
            comentarios_generales,servicio_postventa,condiciones_entrega,condiciones_pago,
@@ -2847,9 +3299,16 @@ app.post('/api/cotizaciones', auth, empresaActiva, licencia, async (req,res)=>{
     const ph=vals.map((_,i)=>`$${i+1}`).join(',');
     const {rows:[cot]}=await client.query(`INSERT INTO cotizaciones (${cols.join(',')}) VALUES (${ph}) RETURNING *`,vals);
     for(const it of items){
-      await client.query(
-        'INSERT INTO items_cotizacion (cotizacion_id,descripcion,cantidad,precio_unitario,total) VALUES ($1,$2,$3,$4,$5)',
-        [cot.id,it.descripcion,it.cantidad,it.precio_unitario,(parseFloat(it.cantidad)||0)*(parseFloat(it.precio_unitario)||0)]);
+      if(has('items_cotizacion','clave_prod_serv')){
+        await client.query(
+          'INSERT INTO items_cotizacion (cotizacion_id,descripcion,clave_prod_serv,clave_unidad,objeto_imp,cantidad,precio_unitario,total) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+          [cot.id, it.descripcion, it.clave_prod_serv||null, it.clave_unidad||'H87', it.objeto_imp||'02',
+           it.cantidad, it.precio_unitario, (parseFloat(it.cantidad)||0)*(parseFloat(it.precio_unitario)||0)]);
+      } else {
+        await client.query(
+          'INSERT INTO items_cotizacion (cotizacion_id,descripcion,cantidad,precio_unitario,total) VALUES ($1,$2,$3,$4,$5)',
+          [cot.id, it.descripcion, it.cantidad, it.precio_unitario, (parseFloat(it.cantidad)||0)*(parseFloat(it.precio_unitario)||0)]);
+      }
     }
     await client.query('COMMIT');
     res.status(201).json(cot);
@@ -2861,7 +3320,7 @@ app.put('/api/cotizaciones/:id', auth, empresaActiva, licencia, async (req,res)=
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
-    await client.query(`SET search_path TO ${schema},public`);
+    await client.query(`SET search_path TO "${schema}", public`);
     await client.query('BEGIN');
     const {estatus,moneda,items,alcance_tecnico,notas_importantes,comentarios_generales,
            servicio_postventa,condiciones_entrega,condiciones_pago,garantia,
@@ -2882,9 +3341,19 @@ app.put('/api/cotizaciones/:id', auth, empresaActiva, licencia, async (req,res)=
     if(sets.length){ vals.push(req.params.id); await client.query(`UPDATE cotizaciones SET ${sets.join(',')} WHERE id=$${i}`,vals); }
     if(items){
       await client.query('DELETE FROM items_cotizacion WHERE cotizacion_id=$1',[req.params.id]);
-      for(const it of items) await client.query(
-        'INSERT INTO items_cotizacion (cotizacion_id,descripcion,cantidad,precio_unitario,total) VALUES ($1,$2,$3,$4,$5)',
-        [req.params.id,it.descripcion,it.cantidad,it.precio_unitario,(parseFloat(it.cantidad)||0)*(parseFloat(it.precio_unitario)||0)]);
+      for(const it of items){
+        const tot=(parseFloat(it.cantidad)||0)*(parseFloat(it.precio_unitario)||0);
+        if(has('items_cotizacion','clave_prod_serv')){
+          await client.query(
+            'INSERT INTO items_cotizacion (cotizacion_id,descripcion,clave_prod_serv,clave_unidad,objeto_imp,cantidad,precio_unitario,total) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+            [req.params.id, it.descripcion, it.clave_prod_serv||null, it.clave_unidad||'H87', it.objeto_imp||'02',
+             it.cantidad, it.precio_unitario, tot]);
+        } else {
+          await client.query(
+            'INSERT INTO items_cotizacion (cotizacion_id,descripcion,cantidad,precio_unitario,total) VALUES ($1,$2,$3,$4,$5)',
+            [req.params.id, it.descripcion, it.cantidad, it.precio_unitario, tot]);
+        }
+      }
     }
     await client.query('COMMIT');
     res.json((await QR(req,'SELECT * FROM cotizaciones WHERE id=$1',[req.params.id]))[0]);
@@ -3069,7 +3538,7 @@ app.post('/api/ordenes-proveedor', auth, empresaActiva, licencia, async (req,res
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
-    await client.query(`SET search_path TO ${schema},public`);
+    await client.query(`SET search_path TO "${schema}", public`);
     await client.query('BEGIN');
     const {proveedor_id,moneda,items=[],condiciones_pago,fecha_entrega,lugar_entrega,notas,folio,iva:ivaBody,subtotal:subBody}=req.body;
     const yr=new Date().getFullYear();
@@ -3095,7 +3564,7 @@ app.put('/api/ordenes-proveedor/:id', auth, empresaActiva, licencia, async (req,
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
-    await client.query(`SET search_path TO ${schema},public`);
+    await client.query(`SET search_path TO "${schema}", public`);
     await client.query('BEGIN');
     const {estatus,notas,proveedor_id,moneda,fecha_entrega,lugar_entrega,condiciones_pago,total,items,
            iva:ivaUpd,subtotal:subUpd}=req.body;
@@ -3125,10 +3594,204 @@ app.put('/api/ordenes-proveedor/:id', auth, empresaActiva, licencia, async (req,
       await client.query('UPDATE ordenes_proveedor SET total=$1 WHERE id=$2',[newTotal,req.params.id]);
     }
     await client.query('COMMIT');
-    const [updated]=await QR(req,'SELECT * FROM ordenes_proveedor WHERE id=$1',[req.params.id]);
+    // Get updated OC with proveedor_nombre via JOIN
+    const updArr=await QR(req,`SELECT op.*, p.nombre proveedor_nombre FROM ordenes_proveedor op LEFT JOIN proveedores p ON p.id=op.proveedor_id WHERE op.id=$1`,[req.params.id]);
+    const [updated]=updArr;
+
+    // ── AUTO-DESCUENTO TESORERÍA al marcar como pagada ────────────────────────
+    // Ensure column exists (runs fast if already exists)
+    await Q(`ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`, [], schema).catch(()=>{});
+    if (estatus === 'pagada' && updated) {
+      try {
+        // Verificar si ya existe un movimiento ligado a esta OC
+        const movExiste = await Q(`
+          SELECT id FROM movimientos_bancarios
+          WHERE orden_compra_id=$1 LIMIT 1`, [req.params.id], schema);
+
+        if (!movExiste.length) {
+          // Buscar la primera cuenta activa para el egreso
+          const cuentas = await Q(
+            `SELECT id, saldo_actual, moneda FROM cuentas_bancarias WHERE activo=true ORDER BY id LIMIT 1`,
+            [], schema).catch(() => []);
+
+          const monto = parseFloat(updated.total || 0);
+          const concepto = `Pago OC ${updated.numero_op||'#'+req.params.id} — ${updated.proveedor_nombre||'Proveedor'}`;
+
+          if (cuentas.length && monto > 0) {
+            const cuenta = cuentas[0];
+            const nuevoSaldo = parseFloat(cuenta.saldo_actual || 0) - monto;
+
+            // Crear egreso en tesorería
+            await Q(`ALTER TABLE movimientos_bancarios ADD COLUMN IF NOT EXISTS orden_compra_id INTEGER`, [], schema).catch(() => {});
+            await Q(`
+              INSERT INTO movimientos_bancarios
+                (cuenta_id, tipo_operacion, fecha, concepto, monto, moneda,
+                 categoria, beneficiario, saldo_posterior, orden_compra_id, created_by)
+              VALUES ($1,'egreso',CURRENT_DATE,$2,$3,$4,'Pago Proveedor',$5,$6,$7,$8)`,
+              [cuenta.id, concepto, monto, updated.moneda || cuenta.moneda || 'MXN',
+               updated.proveedor_nombre || null, nuevoSaldo,
+               req.params.id, req.user?.id], schema).catch(() => {});
+
+            // Actualizar saldo de la cuenta
+            await Q(
+              `UPDATE cuentas_bancarias SET saldo_actual=$1 WHERE id=$2`,
+              [nuevoSaldo, cuenta.id], schema).catch(() => {});
+
+            console.log(`💳 OC ${updated.numero_op} pagada → tesorería descontado ${monto} de cuenta ${cuenta.id}`);
+          } else if (monto > 0) {
+            // Sin cuenta bancaria: registrar solo como egreso directo
+            await Q(`
+              INSERT INTO egresos
+                (fecha, proveedor_nombre, categoria, descripcion,
+                 total, metodo, referencia, created_by)
+              VALUES (CURRENT_DATE,$1,'Pago Proveedor',$2,$3,'Transferencia',$4,$5)`,
+              [updated.proveedor_nombre || 'Proveedor', concepto,
+               monto, updated.numero_op || null, req.user?.id], schema).catch(() => {});
+            console.log(`📋 OC ${updated.numero_op} pagada → egreso directo registrado (sin cuenta bancaria)`);
+          }
+        }
+      } catch(tesoErr) {
+        console.warn('Auto-tesorería OC:', tesoErr.message);
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
     res.json(updated);
   }catch(e){await client.query('ROLLBACK');res.status(500).json({error:e.message});}
   finally{client.release();}
+});
+
+// ── Pago explícito de OC con selección de cuenta bancaria ────────────────────
+app.post('/api/ordenes-proveedor/:id/pagar', auth, empresaActiva, licencia, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query('BEGIN');
+
+    const { cuenta_id, monto_pagado, metodo, referencia, notas, fecha } = req.body;
+
+    // Ensure ordenes_proveedor has updated_at column (migration safety)
+    await client.query(`ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`).catch(()=>{});
+    await client.query(`ALTER TABLE ordenes_proveedor ADD COLUMN IF NOT EXISTS proveedor_nombre TEXT`).catch(()=>{});
+
+    // Get OC details
+    const ocR = await client.query(
+      `SELECT op.*, p.nombre proveedor_nombre
+       FROM ordenes_proveedor op LEFT JOIN proveedores p ON p.id=op.proveedor_id
+       WHERE op.id=$1`, [req.params.id]);
+    if (!ocR.rows.length) return res.status(404).json({ error: 'OC no encontrada' });
+    const oc = ocR.rows[0];
+
+    const monto = parseFloat(monto_pagado || oc.total || 0);
+    if (!monto || monto <= 0) return res.status(400).json({ error: 'Monto inválido' });
+
+    // Mark OC as paid
+    await client.query(
+      `UPDATE ordenes_proveedor SET estatus='pagada' WHERE id=$1`,
+      [req.params.id]);
+
+    // Ensure tesoreria tables exist
+    await client.query(`CREATE TABLE IF NOT EXISTS cuentas_bancarias(
+      id SERIAL PRIMARY KEY, nombre TEXT NOT NULL, banco VARCHAR(100),
+      tipo VARCHAR(30) DEFAULT 'cheques', numero_cuenta VARCHAR(50), clabe VARCHAR(20),
+      moneda VARCHAR(5) DEFAULT 'MXN', saldo_actual NUMERIC(15,2) DEFAULT 0,
+      saldo_minimo NUMERIC(15,2) DEFAULT 0, titular TEXT,
+      activo BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`).catch(()=>{});
+    await client.query(`CREATE TABLE IF NOT EXISTS movimientos_bancarios(
+      id SERIAL PRIMARY KEY, cuenta_id INTEGER NOT NULL, cuenta_destino_id INTEGER,
+      tipo_operacion VARCHAR(20) NOT NULL, fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+      concepto TEXT NOT NULL, monto NUMERIC(15,2) NOT NULL, moneda VARCHAR(5) DEFAULT 'MXN',
+      categoria VARCHAR(100), beneficiario TEXT, referencia VARCHAR(100),
+      saldo_posterior NUMERIC(15,2), conciliado BOOLEAN DEFAULT false,
+      orden_compra_id INTEGER, notas TEXT,
+      created_by INTEGER, created_at TIMESTAMP DEFAULT NOW())`).catch(()=>{});
+    await client.query(`ALTER TABLE movimientos_bancarios ADD COLUMN IF NOT EXISTS orden_compra_id INTEGER`).catch(()=>{});
+
+    let nuevoSaldo = null;
+    let cuentaUsada = null;
+
+    if (cuenta_id) {
+      // Use specified account
+      const ctaR = await client.query(
+        'SELECT * FROM cuentas_bancarias WHERE id=$1', [cuenta_id]);
+      if (!ctaR.rows.length) return res.status(404).json({ error: 'Cuenta bancaria no encontrada' });
+      const cta = ctaR.rows[0];
+
+      if (parseFloat(cta.saldo_actual) < monto) {
+        return res.status(400).json({
+          error: `Saldo insuficiente. Disponible: $${parseFloat(cta.saldo_actual).toLocaleString('es-MX',{minimumFractionDigits:2})}`,
+          saldo_disponible: parseFloat(cta.saldo_actual)
+        });
+      }
+
+      nuevoSaldo = parseFloat(cta.saldo_actual) - monto;
+      cuentaUsada = cta;
+
+      // Update account balance
+      await client.query(
+        'UPDATE cuentas_bancarias SET saldo_actual=$1 WHERE id=$2',
+        [nuevoSaldo, cuenta_id]);
+    }
+
+    const concepto = `Pago OC ${oc.numero_op||'#'+req.params.id} — ${oc.proveedor_nombre||'Proveedor'}`;
+    const fechaPago = fecha || new Date().toISOString().slice(0,10);
+
+    // Register bank movement
+    if (cuenta_id) {
+      await client.query(`
+        INSERT INTO movimientos_bancarios
+          (cuenta_id, tipo_operacion, fecha, concepto, monto, moneda,
+           categoria, beneficiario, saldo_posterior, orden_compra_id, referencia, notas, created_by)
+        VALUES ($1,'egreso',$2,$3,$4,$5,'Pago Proveedor',$6,$7,$8,$9,$10,$11)`,
+        [cuenta_id, fechaPago, concepto, monto, oc.moneda || 'MXN',
+         oc.proveedor_nombre || null, nuevoSaldo, req.params.id,
+         referencia || null, notas || null, req.user?.id]);
+    }
+
+    // Always register in egresos for financial tracking
+    await client.query(`
+      INSERT INTO egresos
+        (fecha, proveedor_nombre, categoria, descripcion,
+         subtotal, iva, total, metodo, referencia, numero_factura, notas, created_by)
+      VALUES ($1,$2,'Pago Proveedor',$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      [fechaPago, oc.proveedor_nombre || 'Proveedor', concepto,
+       parseFloat(oc.subtotal || oc.total || 0),
+       parseFloat(oc.iva || 0), monto,
+       metodo || 'Transferencia', referencia || null,
+       oc.numero_op || null, notas || null, req.user?.id]).catch(() => {});
+
+    // Register in contabilidad if cat_cuentas exist
+    await client.query(`
+      INSERT INTO polizas (fecha, tipo_pol, concepto, created_by)
+      VALUES ($1,'E',$2,$3)`, [fechaPago, concepto, req.user?.id])
+      .then(async (r) => {
+        const polId = r.rows?.[0]?.id;
+        if (!polId) return;
+        await client.query(
+          `INSERT INTO polizas_detalle (poliza_id,num_cta,concepto,debe,haber) VALUES ($1,'201',$2,$3,0)`,
+          [polId, concepto, monto]);
+        await client.query(
+          `INSERT INTO polizas_detalle (poliza_id,num_cta,concepto,debe,haber) VALUES ($1,'102',$2,0,$3)`,
+          [polId, concepto, monto]);
+      }).catch(() => {});
+
+    await client.query('COMMIT');
+
+    res.json({
+      ok: true,
+      mensaje: cuenta_id
+        ? `OC pagada. ${monto.toLocaleString('es-MX',{minimumFractionDigits:2})} ${oc.moneda||'MXN'} descontados de ${cuentaUsada?.nombre}.`
+        : `OC marcada como pagada. Egreso registrado en contabilidad.`,
+      saldo_nuevo: nuevoSaldo,
+      cuenta: cuentaUsada?.nombre || null,
+      monto_pagado: monto,
+    });
+  } catch(e) {
+    await client.query('ROLLBACK');
+    console.error('OC pagar:', e.message);
+    res.status(500).json({ error: e.message });
+  } finally { client.release(); }
 });
 
 app.delete('/api/ordenes-proveedor/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
@@ -3305,12 +3968,28 @@ app.post('/api/facturas', auth, empresaActiva, licencia, async (req,res)=>{
 
 app.put('/api/facturas/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
-    const {estatus,notas,fecha_vencimiento}=req.body;
+    const b=req.body;
     const sets=[];const vals=[];let i=1;
-    if(has('facturas','estatus')){sets.push(`estatus=$${i++}`);vals.push(estatus);}
-    if(has('facturas','estatus_pago')){sets.push(`estatus_pago=$${i++}`);vals.push(estatus);}
-    if(notas!==undefined&&has('facturas','notas')){sets.push(`notas=$${i++}`);vals.push(notas);}
-    if(fecha_vencimiento!==undefined&&has('facturas','fecha_vencimiento')){sets.push(`fecha_vencimiento=$${i++}`);vals.push(fecha_vencimiento||null);}
+    const add=(col,val)=>{if(val!==undefined&&has('facturas',col)){sets.push(`${col}=$${i++}`);vals.push(val);}};
+    // Estatus (both columns for compat)
+    if(b.estatus!==undefined){
+      if(has('facturas','estatus')){sets.push(`estatus=$${i++}`);vals.push(b.estatus);}
+      if(has('facturas','estatus_pago')){sets.push(`estatus_pago=$${i++}`);vals.push(b.estatus);}
+    }
+    add('notas',           b.notas!==undefined ? b.notas : undefined);
+    add('numero_factura',  b.numero_factura||undefined);
+    add('cliente_id',      b.cliente_id!==undefined ? (parseInt(b.cliente_id)||null) : undefined);
+    add('moneda',          b.moneda||undefined);
+    add('subtotal',        b.subtotal!==undefined ? parseFloat(b.subtotal)||0 : undefined);
+    add('iva',             b.iva!==undefined ? parseFloat(b.iva)||0 : undefined);
+    add('retencion_isr',   b.retencion_isr!==undefined ? parseFloat(b.retencion_isr)||0 : undefined);
+    add('retencion_iva',   b.retencion_iva!==undefined ? parseFloat(b.retencion_iva)||0 : undefined);
+    add('total',           b.total!==undefined ? parseFloat(b.total)||0 : undefined);
+    add('monto',           b.total!==undefined ? parseFloat(b.total)||0 : undefined);
+    add('fecha_emision',   b.fecha_emision||undefined);
+    add('fecha_vencimiento', b.fecha_vencimiento!==undefined ? b.fecha_vencimiento||null : undefined);
+    add('metodo_pago',     b.metodo_pago!==undefined ? b.metodo_pago||null : undefined);
+    add('forma_pago',      b.forma_pago!==undefined ? b.forma_pago||null : undefined);
     if(!sets.length) return res.status(400).json({error:'Nada que actualizar'});
     vals.push(req.params.id);
     const rows=await QR(req,`UPDATE facturas SET ${sets.join(',')} WHERE id=$${i} RETURNING *`,vals);
@@ -3322,7 +4001,7 @@ app.post('/api/facturas/:id/pago', auth, async (req,res)=>{
   const client=await pool.connect();
   try {
     const schema=req.user?.schema||global._defaultSchema||'emp_vef';
-    await client.query(`SET search_path TO ${schema},public`);
+    await client.query(`SET search_path TO "${schema}", public`);
     await client.query('BEGIN');
     const {monto,metodo,referencia,notas,fecha}=req.body;
     // Insert with fecha if column exists
@@ -3361,8 +4040,17 @@ app.delete('/api/facturas/:id', auth, empresaActiva, licencia, adminOnly, async 
 app.get('/api/facturas/:id/pdf', auth, licencia, async (req,res)=>{
   try {
     const [f]=await QR(req,`
-      SELECT f.*,cl.nombre cliente_nombre,cl.rfc cliente_rfc,
-             cl.email cliente_email,cl.telefono cliente_tel
+      SELECT f.*,
+             cl.nombre          cliente_nombre,
+             cl.rfc             cliente_rfc,
+             cl.email           cliente_email,
+             cl.telefono        cliente_tel,
+             cl.regimen_fiscal  cliente_regimen,
+             cl.cp              cliente_cp,
+             cl.uso_cfdi        cliente_uso_cfdi,
+             cl.tipo_persona    cliente_tipo,
+             cl.direccion       cliente_direccion,
+             cl.ciudad          cliente_ciudad
       FROM facturas f LEFT JOIN clientes cl ON cl.id=f.cliente_id
       WHERE f.id=$1`,[req.params.id]);
     if(!f) return res.status(404).json({error:'No encontrada'});
@@ -3489,7 +4177,7 @@ app.post('/api/inventario/:id/movimiento', auth, soloLecturaInventario, async (r
   const client=await pool.connect();
   try {
     const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
-    await client.query(`SET search_path TO ${schema},public`);
+    await client.query(`SET search_path TO "${schema}", public`);
     await client.query('BEGIN');
     const {tipo,cantidad,notas,referencia}=req.body;
     const cant=parseFloat(cantidad)||0;
@@ -3904,8 +4592,34 @@ app.post('/api/logo/upload', auth, adminOnly, async (req,res)=>{
 // ================================================================
 // EGRESOS — CRUD completo
 // ================================================================
+// Cache de schemas donde ya se corrieron las migraciones de egresos
+const _egMigDone = new Set();
+async function ensureEgresosCols(schema) {
+  if (_egMigDone.has(schema)) return;
+  const sqls = [
+    'ALTER TABLE egresos ADD COLUMN IF NOT EXISTS proveedor_id INTEGER',
+    'ALTER TABLE egresos ADD COLUMN IF NOT EXISTS factura_pdf BYTEA',
+    'ALTER TABLE egresos ADD COLUMN IF NOT EXISTS factura_nombre TEXT',
+    'ALTER TABLE egresos ADD COLUMN IF NOT EXISTS created_by INTEGER',
+  ];
+  for (const sql of sqls) {
+    try {
+      const client = await pool.connect();
+      try {
+        await client.query(`SET search_path TO "${schema}", public`);
+        await client.query(sql);
+      } finally { client.release(); }
+    } catch(e) { /* columna ya existe */ }
+  }
+  _egMigDone.add(schema);
+  console.log('✅ egresos columnas verificadas para schema:', schema);
+}
+
 app.get('/api/egresos', auth, licencia, async (req,res)=>{
   try {
+    const schema = req.user?.schema || req.user?.schema_name || global._defaultSchema;
+    await ensureEgresosCols(schema);
+
     const {mes, anio, categoria} = req.query;
     let where = 'WHERE 1=1';
     const vals = [];
@@ -3920,7 +4634,10 @@ app.get('/api/egresos', auth, licencia, async (req,res)=>{
       ${where}
       ORDER BY e.fecha DESC, e.created_at DESC`, vals);
     res.json(rows);
-  }catch(e){ res.status(500).json({error:e.message}); }
+  }catch(e){ 
+    console.error('GET egresos:', e.message);
+    res.status(500).json({error:e.message}); 
+  }
 });
 
 app.get('/api/egresos/categorias', auth, async (req,res)=>{
@@ -3933,6 +4650,10 @@ app.post('/api/egresos', auth, empresaActiva, licencia, async (req,res)=>{
     const {fecha,proveedor_id,proveedor_nombre,categoria,descripcion,
            subtotal,iva,total,metodo,referencia,numero_factura,notas} = req.body;
     if(!fecha) return res.status(400).json({error:'Fecha requerida'});
+
+    const schema = req.user?.schema || req.user?.schema_name || global._defaultSchema;
+    await ensureEgresosCols(schema);
+
     const rows = await QR(req,`
       INSERT INTO egresos (fecha,proveedor_id,proveedor_nombre,categoria,descripcion,
         subtotal,iva,total,metodo,referencia,numero_factura,notas,created_by)
@@ -3949,11 +4670,21 @@ app.post('/api/egresos', auth, empresaActiva, licencia, async (req,res)=>{
 
 app.put('/api/egresos/:id', auth, empresaActiva, licencia, async (req,res)=>{
   try {
+    const b = req.body;
     const {fecha,proveedor_id,proveedor_nombre,categoria,descripcion,
-           subtotal,iva,total,metodo,referencia,numero_factura,notas} = req.body;
+           subtotal,iva,total,metodo,referencia,numero_factura,notas} = b;
+
+    const schema = req.user?.schema || req.user?.schema_name || global._defaultSchema;
+    await ensureEgresosCols(schema);
+
     const rows = await QR(req,`
-      UPDATE egresos SET fecha=$1,proveedor_id=$2,proveedor_nombre=$3,categoria=$4,
-        descripcion=$5,subtotal=$6,iva=$7,total=$8,metodo=$9,referencia=$10,
+      UPDATE egresos SET
+        fecha=COALESCE($1,fecha),
+        proveedor_id=$2,proveedor_nombre=$3,
+        categoria=COALESCE($4,categoria),
+        descripcion=COALESCE($5,descripcion),
+        subtotal=COALESCE($6,subtotal),iva=COALESCE($7,iva),total=COALESCE($8,total),
+        metodo=COALESCE($9,metodo),referencia=$10,
         numero_factura=$11,notas=$12 WHERE id=$13 RETURNING *`,
       [fecha, proveedor_id||null, proveedor_nombre||null, categoria||null, descripcion||null,
        parseFloat(subtotal)||0, parseFloat(iva)||0, parseFloat(total)||0,
@@ -4030,7 +4761,7 @@ app.put('/api/contabilidad/cuentas/:id', auth, async (req,res)=>{
       `UPDATE cat_cuentas SET num_cta=$1,desc_cta=$2,cod_agrup=$3,nivel=$4,
        naturaleza=$5,tipo_cta=$6,sub_cta_de=$7 WHERE id=$8 RETURNING *`,
       [num_cta,desc_cta,cod_agrup||null,nivel||1,naturaleza||'D',tipo_cta||'M',sub_cta_de||null,req.params.id]);
-    res.json(r[0]);
+    res.json(r.rows[0]);
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
@@ -4394,12 +5125,14 @@ app.put('/api/tareas/:id', auth, empresaActiva, licencia, async (req,res)=>{
            fecha_inicio,fecha_vencimiento,notas} = req.body;
     const fechaComp = estatus==='completada' ? 'NOW()' : 'NULL';
     const rows = await QR(req,`
-      UPDATE tareas SET titulo=$1,descripcion=$2,proyecto_id=$3,asignado_a=$4,
-        prioridad=$5,estatus=$6,fecha_inicio=$7,fecha_vencimiento=$8,notas=$9,
+      UPDATE tareas SET
+        titulo=COALESCE($1,titulo),descripcion=$2,proyecto_id=$3,asignado_a=$4,
+        prioridad=COALESCE($5,prioridad),estatus=COALESCE($6,estatus),
+        fecha_inicio=$7,fecha_vencimiento=$8,notas=$9,
         fecha_completada=${fechaComp},updated_at=NOW()
       WHERE id=$10 RETURNING *`,
-      [titulo,descripcion||null,proyecto_id||null,asignado_a||null,
-       prioridad||'normal',estatus||'pendiente',
+      [titulo||null,descripcion||null,proyecto_id||null,asignado_a||null,
+       prioridad||null,estatus||null,
        fecha_inicio||null,fecha_vencimiento||null,notas||null,req.params.id]);
     res.json(rows[0]||{});
   } catch(e){ res.status(500).json({error:e.message}); }
@@ -4820,6 +5553,30 @@ app.get('/logo.jpg', (req,res)=>{
   res.sendFile(lp);
 });
 
+// ── Rutas alternativas del logo — /imagen/VEF.png, /images/, /img/ ──
+// Cualquier variante de ruta para el logo sirve el mismo archivo
+['VEF.png','VEF.jpg','logo.png','logo.jpg','vef.png','vef.jpg'].forEach(name=>{
+  ['/imagen/','/images/','/img/','/assets/'].forEach(prefix=>{
+    app.get(prefix+name, (req,res)=>{
+      // 1. Intentar desde carpeta imagen/ en raíz del proyecto
+      const imgDir = path.join(__dirname,'imagen');
+      const fromDir = path.join(imgDir, req.path.split('/').pop());
+      if(require('fs').existsSync(fromDir)) return res.sendFile(fromDir);
+      // 2. Fallback: usar el logo detectado automáticamente
+      const lp = getLogoPath();
+      if(lp) return res.sendFile(lp);
+      // 3. Sin logo — devolver 404 limpio (no activa el fallback ⚡ del HTML)
+      res.status(404).json({error:'Logo no encontrado. Coloca tu imagen en /imagen/VEF.png o en la raíz como logo.png'});
+    });
+  });
+});
+
+// Servir carpeta imagen/ como estática (para /imagen/VEF.png directo)
+const _imgFolder = path.join(__dirname,'imagen');
+if(require('fs').existsSync(_imgFolder)){
+  app.use('/imagen', require('express').static(_imgFolder));
+}
+
 // Servir pag.html desde raíz del proyecto
 app.get('/presentacion', (req,res)=>{
   const p = path.join(__dirname,'pag.html');
@@ -4927,14 +5684,25 @@ app.post('/api/sat/timbrar', auth, empresaActiva, licencia, async (req, res) => 
     // Intentar desde items_cotizacion o cotizaciones si existe
     let conceptos = [];
     if (fac.cotizacion_id) {
+      // Primero intentar con columnas SAT; si no existen, query básica
       const icRows = await Q(`
         SELECT descripcion, cantidad, precio_unitario,
                COALESCE(clave_prod_serv,'84111506') clave_prod_serv,
                COALESCE(clave_unidad,'E48') clave_unidad,
                COALESCE(objeto_imp,'02') objeto_imp
         FROM items_cotizacion WHERE cotizacion_id = $1
-      `, [fac.cotizacion_id], schema).catch(()=>({rows:[]}));
-      conceptos = icRows.rows;
+      `, [fac.cotizacion_id], schema).catch(() =>
+        Q('SELECT descripcion,cantidad,precio_unitario FROM items_cotizacion WHERE cotizacion_id=$1',
+          [fac.cotizacion_id], schema).catch(()=>[])
+      );
+      conceptos = Array.isArray(icRows) ? icRows : (icRows.rows || []);
+      // Asegurar defaults para columnas SAT faltantes
+      conceptos = conceptos.map(c => ({
+        ...c,
+        clave_prod_serv: c.clave_prod_serv || '84111506',
+        clave_unidad:    c.clave_unidad    || 'E48',
+        objeto_imp:      c.objeto_imp      || '02',
+      }));
     }
     // Si no hay conceptos de cotización, usar datos de la factura directa
     if (!conceptos.length) {
@@ -5150,6 +5918,258 @@ app.post('/api/sat/validar-lote', auth, empresaActiva, licencia, async (req, res
 app.get('/admin', (req,res)=>{
   res.setHeader('Cache-Control','no-cache,no-store,must-revalidate');
   res.sendFile(path.join(__dirname,'frontend','admin.html'));
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// TESORERÍA — Cuentas bancarias, movimientos, conciliación
+// ═══════════════════════════════════════════════════════════════
+
+// Routes to serve new HTML pages
+app.get('/tesoreria', (req,res)=>res.sendFile(path.join(__dirname,'frontend','tesoreria.html')));
+app.get('/nomina',    (req,res)=>res.sendFile(path.join(__dirname,'frontend','nomina.html')));
+
+// Create tables
+async function ensureTesNomTables(schema){
+  const Q2=(sql)=>pool.query(`SET search_path TO ${schema},public;${sql}`).catch(()=>{});
+  await Q2(`CREATE TABLE IF NOT EXISTS cuentas_bancarias(
+    id SERIAL PRIMARY KEY, nombre TEXT NOT NULL, banco VARCHAR(100),
+    tipo VARCHAR(30) DEFAULT 'cheques', numero_cuenta VARCHAR(50), clabe VARCHAR(20),
+    moneda VARCHAR(5) DEFAULT 'MXN', saldo_actual NUMERIC(15,2) DEFAULT 0,
+    saldo_minimo NUMERIC(15,2) DEFAULT 0, saldo_maximo NUMERIC(15,2),
+    titular TEXT, rfc_titular VARCHAR(20), notas TEXT, activo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW())`);
+  await Q2(`CREATE TABLE IF NOT EXISTS movimientos_bancarios(
+    id SERIAL PRIMARY KEY, cuenta_id INTEGER NOT NULL, cuenta_destino_id INTEGER,
+    tipo_operacion VARCHAR(20) NOT NULL, fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    concepto TEXT NOT NULL, monto NUMERIC(15,2) NOT NULL, moneda VARCHAR(5) DEFAULT 'MXN',
+    categoria VARCHAR(100), beneficiario TEXT, referencia VARCHAR(100),
+    numero_cheque VARCHAR(50), saldo_posterior NUMERIC(15,2),
+    conciliado BOOLEAN DEFAULT false, notas TEXT,
+    created_by INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
+  await Q2(`CREATE TABLE IF NOT EXISTS empleados(
+    id SERIAL PRIMARY KEY, nombre TEXT NOT NULL, rfc VARCHAR(14), curp VARCHAR(18),
+    fecha_nacimiento DATE, telefono VARCHAR(20), email TEXT, direccion TEXT,
+    puesto TEXT, departamento VARCHAR(100), tipo_contrato VARCHAR(50),
+    fecha_ingreso DATE, fecha_baja DATE, periodicidad_pago VARCHAR(20) DEFAULT 'Quincenal',
+    jornada VARCHAR(20) DEFAULT 'completa', salario_diario NUMERIC(10,2) DEFAULT 0,
+    salario_bruto NUMERIC(12,2) DEFAULT 0, salario_base_cotizacion NUMERIC(10,2),
+    dias_vacaciones INTEGER DEFAULT 6, prima_vacacional INTEGER DEFAULT 25,
+    numero_imss VARCHAR(20), numero_infonavit VARCHAR(20),
+    banco_clabe VARCHAR(20), banco VARCHAR(100), notas TEXT,
+    activo BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`);
+  await Q2(`CREATE TABLE IF NOT EXISTS pagos_nomina(
+    id SERIAL PRIMARY KEY, empleado_id INTEGER NOT NULL, fecha DATE NOT NULL,
+    monto NUMERIC(12,2) NOT NULL, tipo VARCHAR(50) DEFAULT 'nomina',
+    periodo VARCHAR(50), metodo VARCHAR(50) DEFAULT 'Transferencia',
+    referencia VARCHAR(100), notas TEXT,
+    created_by INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
+}
+
+// ── Cuentas Bancarias ──────────────────────────────────────────
+app.get('/api/tesoreria/cuentas', auth, licencia, async (req,res)=>{
+  try{
+    const schema=req.user?.schema||global._defaultSchema||'emp_vef';
+    await ensureTesNomTables(schema);
+    const rows=await QR(req,'SELECT * FROM cuentas_bancarias WHERE activo=true ORDER BY nombre');
+    res.json(rows);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.post('/api/tesoreria/cuentas', auth, empresaActiva, async (req,res)=>{
+  try{
+    const schema=req.user?.schema||global._defaultSchema||'emp_vef';
+    await ensureTesNomTables(schema);
+    const {nombre,banco,tipo,numero_cuenta,clabe,moneda,saldo_actual,saldo_minimo,titular,rfc_titular,notas}=req.body;
+    if(!nombre)return res.status(400).json({error:'Nombre requerido'});
+    const rows=await QR(req,`INSERT INTO cuentas_bancarias(nombre,banco,tipo,numero_cuenta,clabe,moneda,saldo_actual,saldo_minimo,titular,rfc_titular,notas)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [nombre,banco||null,tipo||'cheques',numero_cuenta||null,clabe||null,moneda||'MXN',parseFloat(saldo_actual)||0,parseFloat(saldo_minimo)||0,titular||null,rfc_titular||null,notas||null]);
+    res.status(201).json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.put('/api/tesoreria/cuentas/:id', auth, empresaActiva, async (req,res)=>{
+  try{
+    const {nombre,banco,tipo,numero_cuenta,clabe,moneda,saldo_actual,saldo_minimo,titular,rfc_titular,notas}=req.body;
+    const rows=await QR(req,`UPDATE cuentas_bancarias SET nombre=$1,banco=$2,tipo=$3,numero_cuenta=$4,clabe=$5,moneda=$6,saldo_actual=$7,saldo_minimo=$8,titular=$9,rfc_titular=$10,notas=$11 WHERE id=$12 RETURNING *`,
+      [nombre,banco,tipo,numero_cuenta||null,clabe||null,moneda||'MXN',parseFloat(saldo_actual)||0,parseFloat(saldo_minimo)||0,titular||null,rfc_titular||null,notas||null,req.params.id]);
+    res.json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.post('/api/tesoreria/cuentas/:id/ajuste', auth, empresaActiva, async (req,res)=>{
+  try{
+    const {saldo_nuevo,notas}=req.body;
+    const [c]=await QR(req,'SELECT saldo_actual,moneda FROM cuentas_bancarias WHERE id=$1',[req.params.id]);
+    if(!c)return res.status(404).json({error:'Cuenta no encontrada'});
+    const diff=parseFloat(saldo_nuevo)-parseFloat(c.saldo_actual||0);
+    await QR(req,'UPDATE cuentas_bancarias SET saldo_actual=$1 WHERE id=$2',[parseFloat(saldo_nuevo),req.params.id]);
+    // Record adjustment movement
+    await QR(req,`INSERT INTO movimientos_bancarios(cuenta_id,tipo_operacion,concepto,monto,moneda,categoria,conciliado,notas,created_by)
+      VALUES($1,$2,'Ajuste de conciliación',$3,$4,'Ajuste',true,$5,$6)`,
+      [req.params.id,diff>=0?'ingreso':'egreso',Math.abs(diff),c.moneda||'MXN',notas||null,req.user?.id]);
+    res.json({ok:true,saldo_nuevo:parseFloat(saldo_nuevo)});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// ── Movimientos Bancarios ──────────────────────────────────────
+app.get('/api/tesoreria/movimientos', auth, licencia, async (req,res)=>{
+  try{
+    const schema=req.user?.schema||global._defaultSchema||'emp_vef';
+    await ensureTesNomTables(schema);
+    const where=req.query.cuenta_id?'WHERE m.cuenta_id=$1':'';
+    const vals=req.query.cuenta_id?[req.query.cuenta_id]:[];
+    const rows=await QR(req,`SELECT m.*,cb.nombre cuenta_nombre,cb.moneda
+      FROM movimientos_bancarios m LEFT JOIN cuentas_bancarias cb ON cb.id=m.cuenta_id
+      ${where} ORDER BY m.fecha DESC,m.id DESC LIMIT 500`,vals);
+    res.json(rows);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.post('/api/tesoreria/movimientos', auth, empresaActiva, async (req,res)=>{
+  try{
+    const schema=req.user?.schema||global._defaultSchema||'emp_vef';
+    await ensureTesNomTables(schema);
+    const {cuenta_id,tipo_operacion,fecha,concepto,monto,categoria,beneficiario,referencia,numero_cheque,cuenta_destino_id,notas}=req.body;
+    if(!cuenta_id||!concepto||!monto)return res.status(400).json({error:'Campos requeridos faltantes'});
+    const [ct]=await QR(req,'SELECT saldo_actual,moneda FROM cuentas_bancarias WHERE id=$1',[cuenta_id]);
+    if(!ct)return res.status(404).json({error:'Cuenta no encontrada'});
+    const montoNum=parseFloat(monto);
+    const nuevoSaldo=tipo_operacion==='ingreso'?parseFloat(ct.saldo_actual)+montoNum:parseFloat(ct.saldo_actual)-montoNum;
+    // Update saldo
+    await QR(req,'UPDATE cuentas_bancarias SET saldo_actual=$1 WHERE id=$2',[nuevoSaldo,cuenta_id]);
+    if(tipo_operacion==='transferencia'&&cuenta_destino_id){
+      const [cd]=await QR(req,'SELECT saldo_actual FROM cuentas_bancarias WHERE id=$1',[cuenta_destino_id]);
+      if(cd)await QR(req,'UPDATE cuentas_bancarias SET saldo_actual=$1 WHERE id=$2',[parseFloat(cd.saldo_actual)+montoNum,cuenta_destino_id]);
+    }
+    // Ensure orden_compra_id column exists
+    await QR(req,'ALTER TABLE movimientos_bancarios ADD COLUMN IF NOT EXISTS orden_compra_id INTEGER').catch(()=>{});
+    const {orden_compra_id} = req.body;
+    const rows=await QR(req,`INSERT INTO movimientos_bancarios(cuenta_id,cuenta_destino_id,tipo_operacion,fecha,concepto,monto,moneda,categoria,beneficiario,referencia,numero_cheque,saldo_posterior,notas,orden_compra_id,created_by)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
+      [cuenta_id,cuenta_destino_id||null,tipo_operacion,fecha||new Date().toISOString().slice(0,10),concepto,montoNum,ct.moneda||'MXN',categoria||null,beneficiario||null,referencia||null,numero_cheque||null,nuevoSaldo,notas||null,orden_compra_id||null,req.user?.id]);
+    // If linked to OC, optionally mark OC as paid
+    if(orden_compra_id && tipo_operacion==='egreso'){
+      await QR(req,`UPDATE ordenes_proveedor SET estatus='pagada' WHERE id=$1 AND estatus IN ('aprobada','recibida')`,[orden_compra_id]).catch(()=>{});
+    }
+    res.status(201).json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.put('/api/tesoreria/movimientos/:id/conciliar', auth, async (req,res)=>{
+  try{
+    const rows=await QR(req,'UPDATE movimientos_bancarios SET conciliado=$1 WHERE id=$2 RETURNING *',[req.body.conciliado,req.params.id]);
+    res.json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// ── DELETE movimiento bancario — revierte saldo de cuenta ──────────
+app.delete('/api/tesoreria/movimientos/:id', auth, empresaActiva, async (req,res)=>{
+  const client = await pool.connect();
+  try{
+    const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query('BEGIN');
+    // Get movement to know account and amount
+    const {rows:[mov]} = await client.query(
+      'SELECT * FROM movimientos_bancarios WHERE id=$1', [req.params.id]);
+    if(!mov) return res.status(404).json({error:'Movimiento no encontrado'});
+    // Permitir eliminar cualquier movimiento (conciliado o no)
+    // La advertencia se muestra en el frontend antes de confirmar
+    // Reverse the balance: if it was egreso → add back; if ingreso → subtract
+    const monto = parseFloat(mov.monto||0);
+    const ajuste = mov.tipo_operacion === 'ingreso' ? -monto : monto;
+    await client.query(
+      'UPDATE cuentas_bancarias SET saldo_actual = saldo_actual + $1 WHERE id=$2',
+      [ajuste, mov.cuenta_id]);
+    // Also reverse destination account for transfers
+    if(mov.tipo_operacion === 'transferencia' && mov.cuenta_destino_id){
+      await client.query(
+        'UPDATE cuentas_bancarias SET saldo_actual = saldo_actual - $1 WHERE id=$2',
+        [monto, mov.cuenta_destino_id]);
+    }
+    await client.query('DELETE FROM movimientos_bancarios WHERE id=$1', [req.params.id]);
+    await client.query('COMMIT');
+    res.json({ok:true, mensaje:'Movimiento eliminado y saldo revertido'});
+  }catch(e){
+    await client.query('ROLLBACK');
+    res.status(500).json({error:e.message});
+  }finally{client.release();}
+});
+app.get('/api/tesoreria/flujo', auth, licencia, async (req,res)=>{
+  try{
+    const M=new Date().getMonth()+1,Y=new Date().getFullYear();
+    const rows=await QR(req,`SELECT EXTRACT(MONTH FROM fecha) mes,EXTRACT(YEAR FROM fecha) anio,
+      tipo_operacion,SUM(monto) total FROM movimientos_bancarios
+      WHERE fecha >= (CURRENT_DATE - INTERVAL '6 months')
+      GROUP BY mes,anio,tipo_operacion ORDER BY anio,mes`);
+    res.json(rows);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// ═══════════════════════════════════════════════════════════════
+// NÓMINA / RRHH — Empleados, cálculos, historial
+// ═══════════════════════════════════════════════════════════════
+app.get('/api/nomina/empleados', auth, licencia, async (req,res)=>{
+  try{
+    const schema=req.user?.schema||global._defaultSchema||'emp_vef';
+    await ensureTesNomTables(schema);
+    const rows=await QR(req,'SELECT * FROM empleados ORDER BY nombre');
+    res.json(rows);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.post('/api/nomina/empleados', auth, empresaActiva, async (req,res)=>{
+  try{
+    const schema=req.user?.schema||global._defaultSchema||'emp_vef';
+    await ensureTesNomTables(schema);
+    const b=req.body;
+    if(!b.nombre||!b.puesto)return res.status(400).json({error:'Nombre y puesto requeridos'});
+    const cols=['nombre','puesto','departamento','tipo_contrato','fecha_ingreso','periodicidad_pago','jornada','salario_diario','salario_bruto','salario_base_cotizacion','dias_vacaciones','prima_vacacional','rfc','curp','fecha_nacimiento','telefono','email','direccion','numero_imss','numero_infonavit','banco_clabe','banco','notas'];
+    const vals=cols.map(c=>{
+      if(['salario_diario','salario_bruto','salario_base_cotizacion'].includes(c))return parseFloat(b[c])||0;
+      if(['dias_vacaciones','prima_vacacional'].includes(c))return parseInt(b[c])||6;
+      return b[c]||null;
+    });
+    const ph=cols.map((_,i)=>`$${i+1}`).join(',');
+    const rows=await QR(req,`INSERT INTO empleados(${cols.join(',')}) VALUES(${ph}) RETURNING *`,vals);
+    res.status(201).json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.put('/api/nomina/empleados/:id', auth, empresaActiva, async (req,res)=>{
+  try{
+    const b=req.body;
+    const sets=[];const vals=[];let i=1;
+    const add=(c,v)=>{if(v!==undefined){sets.push(`${c}=$${i++}`);vals.push(v);}};
+    ['nombre','puesto','departamento','tipo_contrato','fecha_ingreso','periodicidad_pago','jornada','rfc','curp','fecha_nacimiento','telefono','email','direccion','numero_imss','numero_infonavit','banco_clabe','banco','notas'].forEach(c=>add(c,b[c]||null));
+    ['salario_diario','salario_bruto','salario_base_cotizacion'].forEach(c=>add(c,parseFloat(b[c])||0));
+    ['dias_vacaciones','prima_vacacional'].forEach(c=>add(c,parseInt(b[c])||6));
+    if(b.activo!==undefined)add('activo',b.activo);
+    if(b.activo===false)add('fecha_baja',new Date().toISOString().slice(0,10));
+    vals.push(req.params.id);
+    const rows=await QR(req,`UPDATE empleados SET ${sets.join(',')} WHERE id=$${i} RETURNING *`,vals);
+    res.json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.get('/api/nomina/pagos', auth, licencia, async (req,res)=>{
+  try{
+    const schema=req.user?.schema||global._defaultSchema||'emp_vef';
+    await ensureTesNomTables(schema);
+    const rows=await QR(req,`SELECT p.*,e.nombre empleado_nombre FROM pagos_nomina p
+      LEFT JOIN empleados e ON e.id=p.empleado_id ORDER BY p.fecha DESC LIMIT 200`);
+    res.json(rows);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+app.post('/api/nomina/pagos', auth, empresaActiva, async (req,res)=>{
+  try{
+    const schema=req.user?.schema||global._defaultSchema||'emp_vef';
+    await ensureTesNomTables(schema);
+    const {empleado_id,monto,fecha,tipo,periodo,metodo,referencia,notas}=req.body;
+    if(!empleado_id||!monto)return res.status(400).json({error:'empleado_id y monto requeridos'});
+    const rows=await QR(req,`INSERT INTO pagos_nomina(empleado_id,fecha,monto,tipo,periodo,metodo,referencia,notas,created_by)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [empleado_id,fecha||new Date().toISOString().slice(0,10),parseFloat(monto),tipo||'nomina',periodo||null,metodo||'Transferencia',referencia||null,notas||null,req.user?.id]);
+    res.status(201).json(rows[0]);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+app.get('/proveedores', (req,res)=>{
+  res.sendFile(path.join(__dirname,'frontend','proveedores.html'));
 });
 
 app.get('/app', (req,res)=>{
@@ -6159,14 +7179,1711 @@ checkSatHealth(function(running) {
     startSatService();
   }
 });
+// ================================================================
+// RFQ — Solicitudes de Cotización a Proveedores
+// ================================================================
+// Asegurar tabla rfq en autoSetup (se agrega como migración)
+async function ensureRfqTable(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS rfq (
+      id SERIAL PRIMARY KEY,
+      numero_rfq VARCHAR(50),
+      descripcion TEXT NOT NULL,
+      proyecto_nombre VARCHAR(200),
+      prioridad VARCHAR(20) DEFAULT 'media',
+      fecha_limite DATE,
+      presupuesto_max NUMERIC(15,2),
+      moneda VARCHAR(10) DEFAULT 'MXN',
+      condiciones_pago TEXT,
+      lugar_entrega TEXT,
+      criterios_eval TEXT,
+      notas TEXT,
+      terminos TEXT,
+      estatus VARCHAR(30) DEFAULT 'borrador',
+      proveedor_ids JSONB DEFAULT '[]',
+      items JSONB DEFAULT '[]',
+      created_by INTEGER,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )`);
+  } finally { client.release(); }
+}
+
+app.get('/api/rfq', auth, licencia, async (req, res) => {
+  try {
+    await ensureRfqTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT r.*, u.nombre creador_nombre
+      FROM rfq r
+      LEFT JOIN public.usuarios u ON u.id = r.created_by
+      ORDER BY r.created_at DESC`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/rfq/:id', auth, licencia, async (req, res) => {
+  try {
+    await ensureRfqTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, 'SELECT * FROM rfq WHERE id=$1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'RFQ no encontrada' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/rfq', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
+    await ensureRfqTable(schema);
+    const {
+      descripcion, proyecto_nombre, prioridad, fecha_limite,
+      presupuesto_max, moneda, condiciones_pago, lugar_entrega,
+      criterios_eval, notas, terminos, proveedor_ids, items, estatus
+    } = req.body;
+    if (!descripcion) return res.status(400).json({ error: 'Descripción requerida' });
+
+    const yr  = new Date().getFullYear();
+    const cnt = await QR(req, "SELECT COUNT(*) c FROM rfq WHERE fecha_limite::text LIKE $1 OR created_at::text LIKE $1", [`${yr}%`]);
+    const num = `RFQ-${yr}-${String(parseInt(cnt[0]?.c || 0) + 1).padStart(3, '0')}`;
+
+    const rows = await QR(req, `
+      INSERT INTO rfq (numero_rfq,descripcion,proyecto_nombre,prioridad,fecha_limite,
+        presupuesto_max,moneda,condiciones_pago,lugar_entrega,criterios_eval,notas,
+        terminos,proveedor_ids,items,estatus,created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
+      [num, descripcion, proyecto_nombre||null, prioridad||'media', fecha_limite||null,
+       parseFloat(presupuesto_max)||null, moneda||'MXN', condiciones_pago||null,
+       lugar_entrega||null, criterios_eval||null, notas||null, terminos||null,
+       JSON.stringify(proveedor_ids||[]), JSON.stringify(items||[]),
+       estatus||'borrador', req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { console.error('RFQ POST:', e.message); res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/rfq/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureRfqTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const {
+      descripcion, proyecto_nombre, prioridad, fecha_limite, presupuesto_max,
+      moneda, condiciones_pago, lugar_entrega, criterios_eval, notas,
+      terminos, proveedor_ids, items, estatus
+    } = req.body;
+    const rows = await QR(req, `
+      UPDATE rfq SET
+        descripcion=$1, proyecto_nombre=$2, prioridad=$3, fecha_limite=$4,
+        presupuesto_max=$5, moneda=$6, condiciones_pago=$7, lugar_entrega=$8,
+        criterios_eval=$9, notas=$10, terminos=$11,
+        proveedor_ids=$12, items=$13, estatus=$14, updated_at=NOW()
+      WHERE id=$15 RETURNING *`,
+      [descripcion, proyecto_nombre||null, prioridad||'media', fecha_limite||null,
+       parseFloat(presupuesto_max)||null, moneda||'MXN', condiciones_pago||null,
+       lugar_entrega||null, criterios_eval||null, notas||null, terminos||null,
+       JSON.stringify(proveedor_ids||[]), JSON.stringify(items||[]),
+       estatus||'borrador', req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrada' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Cambiar solo el estatus (ej. borrador → enviada)
+app.put('/api/rfq/:id/estatus', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureRfqTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { estatus } = req.body;
+    if (!estatus) return res.status(400).json({ error: 'estatus requerido' });
+    const rows = await QR(req,
+      'UPDATE rfq SET estatus=$1, updated_at=NOW() WHERE id=$2 RETURNING *',
+      [estatus, req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrada' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/rfq/:id', auth, empresaActiva, licencia, adminOnly, async (req, res) => {
+  try {
+    await QR(req, 'DELETE FROM rfq WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+
+// ================================================================
+// PRODUCCIÓN / MRP
+// ================================================================
+async function ensureProduccionTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS produccion_ordenes (
+      id SERIAL PRIMARY KEY,
+      numero_op VARCHAR(50),
+      producto_id INTEGER,
+      producto_nombre TEXT,
+      unidad VARCHAR(20) DEFAULT 'pza',
+      cantidad_planificada NUMERIC(10,2) DEFAULT 0,
+      cantidad_producida NUMERIC(10,2) DEFAULT 0,
+      prioridad VARCHAR(20) DEFAULT 'normal',
+      responsable TEXT,
+      fecha_inicio DATE,
+      fecha_fin_plan DATE,
+      fecha_inicio_real DATE,
+      fecha_fin_real DATE,
+      bom JSONB DEFAULT '[]',
+      notas TEXT,
+      estatus VARCHAR(30) DEFAULT 'borrador',
+      created_by INTEGER,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )`);
+  } finally { client.release(); }
+}
+
+app.post('/api/produccion/init', auth, async (req, res) => {
+  try {
+    await ensureProduccionTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json({ ok: true });
+  } catch(e) { res.json({ ok: false }); }
+});
+
+app.get('/api/produccion/ordenes', auth, licencia, async (req, res) => {
+  try {
+    await ensureProduccionTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT po.*, i.nombre producto_nombre, i.unidad
+      FROM produccion_ordenes po
+      LEFT JOIN inventario i ON i.id = po.producto_id
+      ORDER BY po.created_at DESC`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/produccion/ordenes/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, `
+      SELECT po.*, i.nombre producto_nombre, i.unidad
+      FROM produccion_ordenes po LEFT JOIN inventario i ON i.id=po.producto_id
+      WHERE po.id=$1`, [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrada' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/produccion/ordenes', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureProduccionTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { producto_id, cantidad_planificada, prioridad, responsable,
+            fecha_inicio, fecha_fin_plan, notas, estatus } = req.body;
+    if (!producto_id) return res.status(400).json({ error: 'producto_id requerido' });
+    const yr = new Date().getFullYear();
+    const cnt = (await QR(req, "SELECT COUNT(*) c FROM produccion_ordenes"))[0]?.c || 0;
+    const num = `OP-${yr}-${String(parseInt(cnt)+1).padStart(3,'0')}`;
+    // Auto-populate nombre from inventario
+    const prod = await QR(req, 'SELECT nombre, unidad FROM inventario WHERE id=$1', [producto_id]);
+    const rows = await QR(req, `
+      INSERT INTO produccion_ordenes (numero_op, producto_id, producto_nombre, unidad,
+        cantidad_planificada, prioridad, responsable, fecha_inicio, fecha_fin_plan, notas, estatus, created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+      [num, producto_id, prod[0]?.nombre||null, prod[0]?.unidad||'pza',
+       parseFloat(cantidad_planificada)||1, prioridad||'normal', responsable||null,
+       fecha_inicio||null, fecha_fin_plan||null, notas||null, estatus||'planificada', req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/produccion/ordenes/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const sets = []; const vals = []; let i = 1;
+    const add = (k,v) => { sets.push(`${k}=$${i++}`); vals.push(v); };
+    const b = req.body;
+    if(b.estatus !== undefined) add('estatus', b.estatus);
+    if(b.cantidad_producida !== undefined) add('cantidad_producida', parseFloat(b.cantidad_producida)||0);
+    if(b.fecha_inicio_real !== undefined) add('fecha_inicio_real', b.fecha_inicio_real);
+    if(b.fecha_fin_real !== undefined) add('fecha_fin_real', b.fecha_fin_real);
+    if(b.notas !== undefined) add('notas', b.notas);
+    sets.push(`updated_at=NOW()`);
+    vals.push(req.params.id);
+    await QR(req, `UPDATE produccion_ordenes SET ${sets.join(',')} WHERE id=$${i}`, vals);
+    const rows = await QR(req, 'SELECT * FROM produccion_ordenes WHERE id=$1', [req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/produccion/ordenes/:id/registrar', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const { cantidad } = req.body;
+    const rows = await QR(req,
+      'UPDATE produccion_ordenes SET cantidad_producida=COALESCE(cantidad_producida,0)+$1, updated_at=NOW() WHERE id=$2 RETURNING *',
+      [parseFloat(cantidad)||0, req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/produccion/mrp', auth, licencia, async (req, res) => {
+  try {
+    const dias = parseInt(req.query.dias) || 30;
+    const fechaLimite = new Date(); fechaLimite.setDate(fechaLimite.getDate() + dias);
+    const ordenes = await QR(req, `
+      SELECT po.*, i.nombre producto_nombre
+      FROM produccion_ordenes po LEFT JOIN inventario i ON i.id=po.producto_id
+      WHERE po.estatus IN ('planificada','en_proceso')
+        AND (po.fecha_fin_plan IS NULL OR po.fecha_fin_plan <= $1)`,
+      [fechaLimite.toISOString().slice(0,10)]);
+    // Simplified MRP: check inventory vs requirements from BOM
+    const faltantes = [];
+    for (const op of ordenes) {
+      let bom = [];
+      try { bom = Array.isArray(op.bom) ? op.bom : JSON.parse(op.bom||'[]'); } catch {}
+      for (const mat of bom) {
+        const requerido = (parseFloat(mat.cantidad)||0) * (parseFloat(op.cantidad_planificada)||0);
+        const inv = await QR(req,
+          "SELECT COALESCE(cantidad_actual, stock_actual, 0) qty, nombre, unidad FROM inventario WHERE id=$1",
+          [mat.producto_id]).catch(()=>[]);
+        const disponible = parseFloat(inv[0]?.qty || 0);
+        if (disponible < requerido) {
+          faltantes.push({
+            nombre: mat.nombre || inv[0]?.nombre || 'Material '+mat.producto_id,
+            unidad: inv[0]?.unidad || mat.unidad || 'pza',
+            requerido: requerido.toFixed(2),
+            disponible: disponible.toFixed(2),
+            faltante: (requerido - disponible).toFixed(2),
+          });
+        }
+      }
+    }
+    res.json({ ordenes_analizadas: ordenes.length, faltantes });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ================================================================
+// MANTENIMIENTO
+// ================================================================
+async function ensureMantenimientoTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS mant_activos (
+      id SERIAL PRIMARY KEY, nombre TEXT NOT NULL, tipo VARCHAR(100),
+      ubicacion TEXT, modelo TEXT, serie TEXT, marca TEXT,
+      fecha_adquisicion DATE, proxima_revision DATE,
+      activo BOOLEAN DEFAULT true, notas TEXT,
+      created_at TIMESTAMP DEFAULT NOW())`);
+    await client.query(`CREATE TABLE IF NOT EXISTS mant_ordenes (
+      id SERIAL PRIMARY KEY, numero_ot VARCHAR(50),
+      activo_id INTEGER, tipo VARCHAR(30) DEFAULT 'correctivo',
+      prioridad VARCHAR(20) DEFAULT 'media',
+      descripcion TEXT, tecnico TEXT,
+      fecha_plan DATE, fecha_inicio_real DATE, fecha_cierre DATE,
+      tiempo_estimado_hrs NUMERIC(6,2), tiempo_real_hrs NUMERIC(6,2),
+      resumen_trabajo TEXT,
+      estatus VARCHAR(30) DEFAULT 'abierta',
+      created_by INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.post('/api/mantenimiento/init', auth, async (req, res) => {
+  try { await ensureMantenimientoTables(req.user?.schema || global._defaultSchema || 'emp_vef'); res.json({ ok: true }); }
+  catch(e) { res.json({ ok: false }); }
+});
+
+app.get('/api/mantenimiento/activos', auth, licencia, async (req, res) => {
+  try {
+    await ensureMantenimientoTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json(await QR(req, 'SELECT * FROM mant_activos ORDER BY nombre'));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/mantenimiento/activos', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureMantenimientoTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { nombre, tipo, ubicacion, modelo, serie, marca, notas } = req.body;
+    if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
+    const rows = await QR(req,
+      'INSERT INTO mant_activos (nombre,tipo,ubicacion,modelo,serie,marca,notas) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [nombre, tipo||null, ubicacion||null, modelo||null, serie||null, marca||null, notas||null]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/mantenimiento/ordenes', auth, licencia, async (req, res) => {
+  try {
+    await ensureMantenimientoTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json(await QR(req, `
+      SELECT mo.*, a.nombre activo_nombre
+      FROM mant_ordenes mo LEFT JOIN mant_activos a ON a.id=mo.activo_id
+      ORDER BY mo.created_at DESC`));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/mantenimiento/ordenes/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, `
+      SELECT mo.*, a.nombre activo_nombre
+      FROM mant_ordenes mo LEFT JOIN mant_activos a ON a.id=mo.activo_id
+      WHERE mo.id=$1`, [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrada' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/mantenimiento/ordenes', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureMantenimientoTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { activo_id, tipo, prioridad, descripcion, tecnico, fecha_plan, tiempo_estimado_hrs, estatus } = req.body;
+    const cnt = (await QR(req, 'SELECT COUNT(*) c FROM mant_ordenes'))[0]?.c || 0;
+    const num = `OT-${new Date().getFullYear()}-${String(parseInt(cnt)+1).padStart(3,'0')}`;
+    const rows = await QR(req,
+      `INSERT INTO mant_ordenes (numero_ot,activo_id,tipo,prioridad,descripcion,tecnico,fecha_plan,tiempo_estimado_hrs,estatus,created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [num, activo_id||null, tipo||'correctivo', prioridad||'media', descripcion||null,
+       tecnico||null, fecha_plan||null, tiempo_estimado_hrs||null, estatus||'abierta', req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/mantenimiento/ordenes/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const b = req.body; const sets = []; const vals = []; let i = 1;
+    const add = (k,v) => { sets.push(`${k}=$${i++}`); vals.push(v); };
+    if(b.estatus           !== undefined) add('estatus',            b.estatus);
+    if(b.fecha_inicio_real !== undefined) add('fecha_inicio_real',  b.fecha_inicio_real);
+    if(b.fecha_cierre      !== undefined) add('fecha_cierre',       b.fecha_cierre);
+    if(b.resumen_trabajo   !== undefined) add('resumen_trabajo',    b.resumen_trabajo);
+    if(b.tiempo_real_hrs   !== undefined) add('tiempo_real_hrs',    parseFloat(b.tiempo_real_hrs)||null);
+    vals.push(req.params.id);
+    await QR(req, `UPDATE mant_ordenes SET ${sets.join(',')} WHERE id=$${i}`, vals);
+    const rows = await QR(req, 'SELECT * FROM mant_ordenes WHERE id=$1', [req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ================================================================
+// SERVICIO TÉCNICO — Tickets
+// ================================================================
+async function ensureServicioTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS serv_tickets (
+      id SERIAL PRIMARY KEY, titulo TEXT NOT NULL,
+      cliente_id INTEGER, prioridad VARCHAR(20) DEFAULT 'medio',
+      tecnico TEXT, sla_horas INTEGER,
+      descripcion TEXT, resolucion TEXT,
+      estatus VARCHAR(30) DEFAULT 'nuevo',
+      notas JSONB DEFAULT '[]',
+      created_by INTEGER, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.post('/api/servicio/init', auth, async (req, res) => {
+  try { await ensureServicioTables(req.user?.schema || global._defaultSchema || 'emp_vef'); res.json({ ok: true }); }
+  catch(e) { res.json({ ok: false }); }
+});
+
+app.get('/api/servicio/tickets', auth, licencia, async (req, res) => {
+  try {
+    await ensureServicioTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json(await QR(req, `
+      SELECT st.*, cl.nombre cliente_nombre
+      FROM serv_tickets st LEFT JOIN clientes cl ON cl.id=st.cliente_id
+      ORDER BY CASE prioridad WHEN 'critico' THEN 1 WHEN 'alto' THEN 2 WHEN 'medio' THEN 3 ELSE 4 END,
+               st.created_at DESC`));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/servicio/tickets/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, `
+      SELECT st.*, cl.nombre cliente_nombre
+      FROM serv_tickets st LEFT JOIN clientes cl ON cl.id=st.cliente_id
+      WHERE st.id=$1`, [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    const t = rows[0];
+    let notas = []; try { notas = Array.isArray(t.notas) ? t.notas : JSON.parse(t.notas||'[]'); } catch {}
+    res.json({ ...t, notas });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/servicio/tickets', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureServicioTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { titulo, cliente_id, prioridad, tecnico, sla_horas, descripcion, estatus } = req.body;
+    if (!titulo) return res.status(400).json({ error: 'título requerido' });
+    const rows = await QR(req,
+      `INSERT INTO serv_tickets (titulo,cliente_id,prioridad,tecnico,sla_horas,descripcion,estatus,created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      [titulo, cliente_id||null, prioridad||'medio', tecnico||null,
+       sla_horas||null, descripcion||null, estatus||'nuevo', req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/servicio/tickets/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const b = req.body; const sets = []; const vals = []; let i = 1;
+    const add = (k,v) => { sets.push(`${k}=$${i++}`); vals.push(v); };
+    if(b.estatus    !== undefined) add('estatus',    b.estatus);
+    if(b.tecnico    !== undefined) add('tecnico',    b.tecnico);
+    if(b.resolucion !== undefined) add('resolucion', b.resolucion);
+    sets.push(`updated_at=NOW()`);
+    vals.push(req.params.id);
+    await QR(req, `UPDATE serv_tickets SET ${sets.join(',')} WHERE id=$${i}`, vals);
+    const rows = await QR(req, 'SELECT * FROM serv_tickets WHERE id=$1', [req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/servicio/tickets/:id/nota', auth, async (req, res) => {
+  try {
+    const { nota } = req.body;
+    if (!nota) return res.status(400).json({ error: 'nota requerida' });
+    const rows = await QR(req, 'SELECT notas FROM serv_tickets WHERE id=$1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    let notas = []; try { notas = Array.isArray(rows[0].notas) ? rows[0].notas : JSON.parse(rows[0].notas||'[]'); } catch {}
+    notas.push({ nota, autor: req.user.nombre||req.user.username, fecha: new Date().toISOString() });
+    await QR(req, 'UPDATE serv_tickets SET notas=$1, updated_at=NOW() WHERE id=$2',
+      [JSON.stringify(notas), req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ================================================================
+// CATÁLOGOS / ATRIBUTOS PERSONALIZADOS
+// ================================================================
+async function ensureCatalogosTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS cat_catalogos (
+      id SERIAL PRIMARY KEY, nombre TEXT NOT NULL,
+      tipo VARCHAR(30) DEFAULT 'lista',
+      items JSONB DEFAULT '[]',
+      created_at TIMESTAMP DEFAULT NOW())`);
+    await client.query(`CREATE TABLE IF NOT EXISTS cat_atributos (
+      id SERIAL PRIMARY KEY, nombre TEXT NOT NULL,
+      entidad VARCHAR(50) NOT NULL, tipo VARCHAR(30) DEFAULT 'texto',
+      opciones TEXT, default_val TEXT, descripcion TEXT,
+      requerido BOOLEAN DEFAULT false, orden INTEGER DEFAULT 0,
+      activo BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.post('/api/catalogos/init', auth, async (req, res) => {
+  try { await ensureCatalogosTables(req.user?.schema || global._defaultSchema || 'emp_vef'); res.json({ ok: true }); }
+  catch(e) { res.json({ ok: false }); }
+});
+
+app.get('/api/catalogos', auth, licencia, async (req, res) => {
+  try {
+    await ensureCatalogosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT id, nombre, tipo,
+        jsonb_array_length(COALESCE(items,'[]'::jsonb)) items_count
+      FROM cat_catalogos ORDER BY nombre`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/catalogos/atributos', auth, licencia, async (req, res) => {
+  try {
+    await ensureCatalogosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json(await QR(req, 'SELECT * FROM cat_atributos WHERE activo=true ORDER BY entidad, orden, nombre'));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/catalogos/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, 'SELECT * FROM cat_catalogos WHERE id=$1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    const cat = rows[0];
+    let items = []; try { items = Array.isArray(cat.items) ? cat.items : JSON.parse(cat.items||'[]'); } catch {}
+    res.json({ ...cat, items });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/catalogos', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureCatalogosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { nombre, tipo, items } = req.body;
+    if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
+    const itemsArr = (items||[]).map(v => ({ valor: typeof v === 'string' ? v : v.valor || v }));
+    const rows = await QR(req,
+      'INSERT INTO cat_catalogos (nombre, tipo, items) VALUES ($1,$2,$3) RETURNING *',
+      [nombre, tipo||'lista', JSON.stringify(itemsArr)]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/catalogos/:id/items', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const { valor } = req.body;
+    const rows = await QR(req, 'SELECT items FROM cat_catalogos WHERE id=$1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    let items = []; try { items = Array.isArray(rows[0].items) ? rows[0].items : JSON.parse(rows[0].items||'[]'); } catch {}
+    items.push({ valor });
+    await QR(req, 'UPDATE cat_catalogos SET items=$1 WHERE id=$2', [JSON.stringify(items), req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/catalogos/:id/items/:valor', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, 'SELECT items FROM cat_catalogos WHERE id=$1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    let items = []; try { items = Array.isArray(rows[0].items) ? rows[0].items : JSON.parse(rows[0].items||'[]'); } catch {}
+    items = items.filter(it => (it.valor||it) !== decodeURIComponent(req.params.valor));
+    await QR(req, 'UPDATE cat_catalogos SET items=$1 WHERE id=$2', [JSON.stringify(items), req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/catalogos/atributos', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureCatalogosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { nombre, entidad, tipo, opciones, default_val, descripcion, requerido } = req.body;
+    if (!nombre || !entidad) return res.status(400).json({ error: 'nombre y entidad requeridos' });
+    const rows = await QR(req,
+      `INSERT INTO cat_atributos (nombre,entidad,tipo,opciones,default_val,descripcion,requerido)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [nombre, entidad, tipo||'texto', opciones||null, default_val||null, descripcion||null, requerido||false]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/catalogos/atributos/:id', auth, empresaActiva, licencia, adminOnly, async (req, res) => {
+  try {
+    await QR(req, 'UPDATE cat_atributos SET activo=false WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+
+
+// ================================================================
+// RFQ DE PROYECTOS
+// ================================================================
+async function ensureRFQTable(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS proyectos_rfq (
+      id SERIAL PRIMARY KEY,
+      numero_rfq VARCHAR(50) UNIQUE,
+      proyecto_id INTEGER,
+      titulo TEXT NOT NULL,
+      descripcion TEXT,
+      partidas JSONB DEFAULT '[]',
+      proveedores JSONB DEFAULT '[]',
+      presupuesto_max NUMERIC(15,2),
+      fecha_limite DATE,
+      fecha_envio DATE,
+      fecha_adjudicacion DATE,
+      tiempo_entrega VARCHAR(50),
+      condiciones_pago VARCHAR(50),
+      lugar_entrega TEXT,
+      criterio_evaluacion VARCHAR(50),
+      notas_adicionales TEXT,
+      proveedor_adjudicado TEXT,
+      monto_adjudicado NUMERIC(15,2),
+      notas_adjudicacion TEXT,
+      estatus VARCHAR(30) DEFAULT 'borrador',
+      created_by INTEGER,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.get('/api/proyectos/rfq', auth, licencia, async (req, res) => {
+  try {
+    await ensureRFQTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT r.*, p.nombre proyecto_nombre
+      FROM proyectos_rfq r
+      LEFT JOIN proyectos p ON p.id = r.proyecto_id
+      ORDER BY r.created_at DESC`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/proyectos/rfq/:id', auth, licencia, async (req, res) => {
+  try {
+    await ensureRFQTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT r.*, p.nombre proyecto_nombre
+      FROM proyectos_rfq r
+      LEFT JOIN proyectos p ON p.id = r.proyecto_id
+      WHERE r.id = $1`, [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'RFQ no encontrado' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/proyectos/rfq', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureRFQTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const {
+      titulo, proyecto_id, descripcion, partidas, proveedores,
+      presupuesto_max, fecha_limite, fecha_envio, tiempo_entrega,
+      condiciones_pago, lugar_entrega, criterio_evaluacion,
+      notas_adicionales, estatus
+    } = req.body;
+    if (!titulo) return res.status(400).json({ error: 'título requerido' });
+    // Generate RFQ number
+    const yr  = new Date().getFullYear();
+    const cnt = (await QR(req, 'SELECT COUNT(*) c FROM proyectos_rfq'))[0]?.c || 0;
+    const num = `RFQ-${yr}-${String(parseInt(cnt)+1).padStart(3,'0')}`;
+    const rows = await QR(req, `
+      INSERT INTO proyectos_rfq
+        (numero_rfq, proyecto_id, titulo, descripcion, partidas, proveedores,
+         presupuesto_max, fecha_limite, fecha_envio, tiempo_entrega,
+         condiciones_pago, lugar_entrega, criterio_evaluacion,
+         notas_adicionales, estatus, created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
+      [num, proyecto_id||null, titulo,
+       descripcion||null,
+       typeof partidas==='string' ? partidas : JSON.stringify(partidas||[]),
+       typeof proveedores==='string' ? proveedores : JSON.stringify(proveedores||[]),
+       parseFloat(presupuesto_max)||null, fecha_limite||null,
+       estatus==='enviado' ? (fecha_envio||new Date().toISOString().slice(0,10)) : null,
+       tiempo_entrega||null, condiciones_pago||null,
+       lugar_entrega||null, criterio_evaluacion||null,
+       notas_adicionales||null, estatus||'borrador', req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/proyectos/rfq/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureRFQTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const b = req.body;
+    const sets = []; const vals = []; let i = 1;
+    const add = (k, v) => { sets.push(`${k}=$${i++}`); vals.push(v); };
+    if (b.estatus             !== undefined) add('estatus',             b.estatus);
+    if (b.proveedores         !== undefined) add('proveedores',         typeof b.proveedores==='string'?b.proveedores:JSON.stringify(b.proveedores));
+    if (b.partidas            !== undefined) add('partidas',            typeof b.partidas==='string'?b.partidas:JSON.stringify(b.partidas));
+    if (b.fecha_envio         !== undefined) add('fecha_envio',         b.fecha_envio);
+    if (b.fecha_adjudicacion  !== undefined) add('fecha_adjudicacion',  b.fecha_adjudicacion);
+    if (b.proveedor_adjudicado!== undefined) add('proveedor_adjudicado',b.proveedor_adjudicado);
+    if (b.monto_adjudicado    !== undefined) add('monto_adjudicado',    parseFloat(b.monto_adjudicado)||null);
+    if (b.notas_adjudicacion  !== undefined) add('notas_adjudicacion',  b.notas_adjudicacion);
+    sets.push(`updated_at=NOW()`);
+    vals.push(req.params.id);
+    await QR(req, `UPDATE proyectos_rfq SET ${sets.join(',')} WHERE id=$${i}`, vals);
+    const rows = await QR(req, `
+      SELECT r.*, p.nombre proyecto_nombre FROM proyectos_rfq r
+      LEFT JOIN proyectos p ON p.id=r.proyecto_id WHERE r.id=$1`, [req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/proyectos/rfq/:id', auth, empresaActiva, licencia, adminOnly, async (req, res) => {
+  try {
+    await QR(req, 'DELETE FROM proyectos_rfq WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Endpoint to get RFQ count per project (used in proyectos list)
+app.get('/api/proyectos/:id/rfq-count', auth, licencia, async (req, res) => {
+  try {
+    await ensureRFQTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req,
+      'SELECT COUNT(*) c FROM proyectos_rfq WHERE proyecto_id=$1', [req.params.id]);
+    res.json({ count: parseInt(rows[0]?.c||0) });
+  } catch(e) { res.json({ count: 0 }); }
+});
+
+
+// ================================================================
+// RFP DE PROYECTOS — Request For Proposal
+// ================================================================
+async function ensureRFPTable(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS proyectos_rfp (
+      id SERIAL PRIMARY KEY,
+      numero_rfp VARCHAR(50) UNIQUE,
+      proyecto_id INTEGER,
+      titulo TEXT NOT NULL,
+      descripcion TEXT, alcance TEXT,
+      entregables JSONB DEFAULT '[]',
+      hitos TEXT,
+      criterios JSONB DEFAULT '[]',
+      propuestas JSONB DEFAULT '[]',
+      requisitos_propuesta JSONB DEFAULT '[]',
+      presupuesto_max NUMERIC(15,2),
+      fecha_limite DATE,
+      fecha_inicio_estimada DATE,
+      duracion VARCHAR(30),
+      metodologia VARCHAR(30),
+      modalidad VARCHAR(20),
+      condiciones TEXT,
+      proveedor_ganador TEXT,
+      monto_adjudicado NUMERIC(15,2),
+      justificacion_adjudicacion TEXT,
+      fecha_adjudicacion DATE,
+      estatus VARCHAR(30) DEFAULT 'borrador',
+      created_by INTEGER,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.get('/api/proyectos/rfp', auth, licencia, async (req, res) => {
+  try {
+    await ensureRFPTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT r.*, p.nombre proyecto_nombre
+      FROM proyectos_rfp r
+      LEFT JOIN proyectos p ON p.id = r.proyecto_id
+      ORDER BY r.created_at DESC`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/proyectos/rfp/:id', auth, licencia, async (req, res) => {
+  try {
+    await ensureRFPTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT r.*, p.nombre proyecto_nombre
+      FROM proyectos_rfp r LEFT JOIN proyectos p ON p.id=r.proyecto_id
+      WHERE r.id=$1`, [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'RFP no encontrado' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/proyectos/rfp', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureRFPTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { titulo, proyecto_id, descripcion, alcance, entregables, hitos, criterios,
+            propuestas, requisitos_propuesta, presupuesto_max, fecha_limite,
+            fecha_inicio_estimada, duracion, metodologia, modalidad, condiciones, estatus } = req.body;
+    if (!titulo) return res.status(400).json({ error: 'título requerido' });
+    const yr  = new Date().getFullYear();
+    const cnt = (await QR(req, 'SELECT COUNT(*) c FROM proyectos_rfp'))[0]?.c || 0;
+    const num = `RFP-${yr}-${String(parseInt(cnt)+1).padStart(3,'0')}`;
+    const toJ = v => typeof v==='string' ? v : JSON.stringify(v||[]);
+    const rows = await QR(req, `
+      INSERT INTO proyectos_rfp
+        (numero_rfp, proyecto_id, titulo, descripcion, alcance, entregables, hitos,
+         criterios, propuestas, requisitos_propuesta, presupuesto_max, fecha_limite,
+         fecha_inicio_estimada, duracion, metodologia, modalidad, condiciones, estatus, created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
+      [num, proyecto_id||null, titulo, descripcion||null, alcance||null,
+       toJ(entregables), hitos||null, toJ(criterios), toJ(propuestas), toJ(requisitos_propuesta),
+       parseFloat(presupuesto_max)||null, fecha_limite||null, fecha_inicio_estimada||null,
+       duracion||null, metodologia||null, modalidad||null, condiciones||null,
+       estatus||'borrador', req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/proyectos/rfp/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureRFPTable(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const b = req.body;
+    const toJ = v => v===undefined ? undefined : (typeof v==='string' ? v : JSON.stringify(v));
+    const sets=[]; const vals=[]; let i=1;
+    const add=(k,v)=>{if(v!==undefined){sets.push(`${k}=$${i++}`);vals.push(v);}};
+    add('estatus',           b.estatus);
+    add('propuestas',        toJ(b.propuestas));
+    add('entregables',       toJ(b.entregables));
+    add('criterios',         toJ(b.criterios));
+    add('proveedor_ganador', b.proveedor_ganador);
+    add('monto_adjudicado',  b.monto_adjudicado!==undefined?parseFloat(b.monto_adjudicado)||null:undefined);
+    add('justificacion_adjudicacion', b.justificacion_adjudicacion);
+    add('fecha_adjudicacion',b.fecha_adjudicacion);
+    sets.push(`updated_at=NOW()`);
+    vals.push(req.params.id);
+    await QR(req, `UPDATE proyectos_rfp SET ${sets.join(',')} WHERE id=$${i}`, vals);
+    const rows=await QR(req,`SELECT r.*,p.nombre proyecto_nombre FROM proyectos_rfp r LEFT JOIN proyectos p ON p.id=r.proyecto_id WHERE r.id=$1`,[req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/proyectos/rfp/:id', auth, empresaActiva, licencia, adminOnly, async (req,res)=>{
+  try{await QR(req,'DELETE FROM proyectos_rfp WHERE id=$1',[req.params.id]);res.json({ok:true});}
+  catch(e){res.status(500).json({error:e.message});}
+});
+
+// ================================================================
+// ALMACÉN — Ubicaciones, Lotes, FIFO
+// ================================================================
+async function ensureAlmacenTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS alm_ubicaciones (
+      id SERIAL PRIMARY KEY, nombre TEXT NOT NULL,
+      tipo VARCHAR(50) DEFAULT 'General', descripcion TEXT,
+      activo BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`);
+    await client.query(`CREATE TABLE IF NOT EXISTS alm_lotes (
+      id SERIAL PRIMARY KEY,
+      numero_lote VARCHAR(100), numero_serie VARCHAR(100),
+      producto_id INTEGER NOT NULL,
+      ubicacion_id INTEGER,
+      cantidad_inicial NUMERIC(12,3) DEFAULT 0,
+      cantidad_disponible NUMERIC(12,3) DEFAULT 0,
+      costo_unitario NUMERIC(15,4),
+      fecha_entrada DATE DEFAULT CURRENT_DATE,
+      fecha_caducidad DATE,
+      referencia_oc TEXT, notas TEXT,
+      activo BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT NOW())`);
+    await client.query(`CREATE TABLE IF NOT EXISTS alm_movimientos (
+      id SERIAL PRIMARY KEY,
+      lote_id INTEGER NOT NULL,
+      producto_id INTEGER,
+      ubicacion_id INTEGER,
+      tipo VARCHAR(20) NOT NULL,
+      cantidad NUMERIC(12,3) NOT NULL,
+      costo_unitario NUMERIC(15,4),
+      referencia TEXT, notas TEXT,
+      created_by INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.post('/api/almacen/init', auth, async (req, res) => {
+  try {
+    await ensureAlmacenTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json({ ok: true });
+  } catch(e) { res.json({ ok: false, error: e.message }); }
+});
+
+app.get('/api/almacen/ubicaciones', auth, licencia, async (req, res) => {
+  try {
+    await ensureAlmacenTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT u.*, COUNT(l.id) lotes_count
+      FROM alm_ubicaciones u
+      LEFT JOIN alm_lotes l ON l.ubicacion_id=u.id AND l.cantidad_disponible>0
+      WHERE u.activo=true GROUP BY u.id ORDER BY u.nombre`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/almacen/ubicaciones', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureAlmacenTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { nombre, tipo, descripcion } = req.body;
+    if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
+    const rows = await QR(req,
+      'INSERT INTO alm_ubicaciones (nombre,tipo,descripcion) VALUES ($1,$2,$3) RETURNING *',
+      [nombre, tipo||'General', descripcion||null]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/almacen/lotes', auth, licencia, async (req, res) => {
+  try {
+    await ensureAlmacenTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT l.*, i.nombre producto_nombre, i.unidad,
+             u.nombre ubicacion_nombre
+      FROM alm_lotes l
+      LEFT JOIN inventario i ON i.id=l.producto_id
+      LEFT JOIN alm_ubicaciones u ON u.id=l.ubicacion_id
+      WHERE l.activo=true
+      ORDER BY l.fecha_entrada ASC, l.id ASC`);  // ASC = FIFO order
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/almacen/lotes/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, `
+      SELECT l.*, i.nombre producto_nombre, i.unidad, u.nombre ubicacion_nombre
+      FROM alm_lotes l
+      LEFT JOIN inventario i ON i.id=l.producto_id
+      LEFT JOIN alm_ubicaciones u ON u.id=l.ubicacion_id
+      WHERE l.id=$1`, [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/almacen/lotes', auth, empresaActiva, licencia, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query('BEGIN');
+    await ensureAlmacenTables(schema);
+
+    const { producto_id, ubicacion_id, numero_lote, numero_serie,
+            cantidad_inicial, costo_unitario, fecha_entrada,
+            fecha_caducidad, referencia_oc, notas } = req.body;
+
+    if (!producto_id) return res.status(400).json({ error: 'producto_id requerido' });
+    const qty = parseFloat(cantidad_inicial) || 0;
+    if (qty <= 0) return res.status(400).json({ error: 'Cantidad debe ser mayor a 0' });
+
+    // Auto-generate lot number if not provided
+    const cnt = (await client.query('SELECT COUNT(*) c FROM alm_lotes')).rows[0]?.c || 0;
+    const loteNum = numero_lote || `LOT-${new Date().getFullYear()}-${String(parseInt(cnt)+1).padStart(4,'0')}`;
+
+    // Insert lote
+    const { rows: [lote] } = await client.query(`
+      INSERT INTO alm_lotes (numero_lote,numero_serie,producto_id,ubicacion_id,
+        cantidad_inicial,cantidad_disponible,costo_unitario,
+        fecha_entrada,fecha_caducidad,referencia_oc,notas)
+      VALUES ($1,$2,$3,$4,$5,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [loteNum, numero_serie||null, producto_id, ubicacion_id||null,
+       qty, costo_unitario||null,
+       fecha_entrada||new Date().toISOString().slice(0,10),
+       fecha_caducidad||null, referencia_oc||null, notas||null]);
+
+    // Register movement
+    await client.query(`
+      INSERT INTO alm_movimientos (lote_id,producto_id,ubicacion_id,tipo,cantidad,costo_unitario,referencia,created_by)
+      VALUES ($1,$2,$3,'entrada',$4,$5,$6,$7)`,
+      [lote.id, producto_id, ubicacion_id||null, qty, costo_unitario||null, referencia_oc||null, req.user.id]);
+
+    // Update inventario stock
+    await client.query(`
+      UPDATE inventario SET
+        cantidad_actual = COALESCE(cantidad_actual,0) + $1,
+        stock_actual    = COALESCE(stock_actual,0)    + $1,
+        fecha_ultima_entrada = $2
+      WHERE id = $3`,
+      [qty, fecha_entrada||new Date().toISOString().slice(0,10), producto_id]);
+
+    await client.query('COMMIT');
+    res.status(201).json(lote);
+  } catch(e) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: e.message });
+  } finally { client.release(); }
+});
+
+app.post('/api/almacen/lotes/:id/salida', auth, empresaActiva, licencia, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const schema = req.user?.schema || global._defaultSchema || 'emp_vef';
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query('BEGIN');
+
+    const { cantidad, referencia, notas } = req.body;
+    const qty = parseFloat(cantidad) || 0;
+    if (qty <= 0) return res.status(400).json({ error: 'Cantidad inválida' });
+
+    const loteR = await client.query(
+      'SELECT * FROM alm_lotes WHERE id=$1', [req.params.id]);
+    if (!loteR.rows.length) return res.status(404).json({ error: 'Lote no encontrado' });
+    const lote = loteR.rows[0];
+
+    if (parseFloat(lote.cantidad_disponible) < qty)
+      return res.status(400).json({ error: `Stock insuficiente. Disponible: ${lote.cantidad_disponible}` });
+
+    // Update lote
+    await client.query(
+      'UPDATE alm_lotes SET cantidad_disponible = cantidad_disponible - $1 WHERE id=$2',
+      [qty, lote.id]);
+
+    // Register movement
+    await client.query(`
+      INSERT INTO alm_movimientos (lote_id,producto_id,ubicacion_id,tipo,cantidad,costo_unitario,referencia,notas,created_by)
+      VALUES ($1,$2,$3,'salida',$4,$5,$6,$7,$8)`,
+      [lote.id, lote.producto_id, lote.ubicacion_id, qty,
+       lote.costo_unitario, referencia||null, notas||null, req.user.id]);
+
+    // Update inventario stock
+    await client.query(`
+      UPDATE inventario SET
+        cantidad_actual = GREATEST(0, COALESCE(cantidad_actual,0) - $1),
+        stock_actual    = GREATEST(0, COALESCE(stock_actual,0)    - $1)
+      WHERE id = $2`, [qty, lote.producto_id]);
+
+    await client.query('COMMIT');
+    res.json({ ok: true, cantidad_retirada: qty,
+      cantidad_disponible: parseFloat(lote.cantidad_disponible) - qty });
+  } catch(e) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: e.message });
+  } finally { client.release(); }
+});
+
+app.get('/api/almacen/movimientos', auth, licencia, async (req, res) => {
+  try {
+    await ensureAlmacenTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT m.*, l.numero_lote, i.nombre producto_nombre, u.nombre ubicacion_nombre
+      FROM alm_movimientos m
+      LEFT JOIN alm_lotes l ON l.id=m.lote_id
+      LEFT JOIN inventario i ON i.id=m.producto_id
+      LEFT JOIN alm_ubicaciones u ON u.id=m.ubicacion_id
+      ORDER BY m.created_at DESC LIMIT 500`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/almacen/alertas', auth, licencia, async (req, res) => {
+  try {
+    await ensureAlmacenTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT l.*, i.nombre producto_nombre
+      FROM alm_lotes l LEFT JOIN inventario i ON i.id=l.producto_id
+      WHERE l.fecha_caducidad IS NOT NULL
+        AND l.cantidad_disponible > 0
+        AND l.fecha_caducidad <= CURRENT_DATE + INTERVAL '30 days'
+      ORDER BY l.fecha_caducidad ASC`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ================================================================
+// CONTABILIDAD — Tablas init + saldos + importar facturas
+// ================================================================
+async function ensureContabilidadTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS cat_cuentas (
+      id SERIAL PRIMARY KEY, num_cta VARCHAR(30) NOT NULL UNIQUE,
+      desc_cta VARCHAR(200) NOT NULL, cod_agrup VARCHAR(30),
+      nivel INTEGER DEFAULT 1, naturaleza CHAR(1) DEFAULT 'D',
+      tipo_cta CHAR(1) DEFAULT 'M', sub_cta_de VARCHAR(30),
+      activo BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`);
+    await client.query(`CREATE TABLE IF NOT EXISTS polizas (
+      id SERIAL PRIMARY KEY, fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+      tipo_pol CHAR(1) DEFAULT 'D', num_un_iden_pol VARCHAR(50),
+      concepto TEXT, created_by INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
+    await client.query(`CREATE TABLE IF NOT EXISTS polizas_detalle (
+      id SERIAL PRIMARY KEY, poliza_id INTEGER NOT NULL,
+      num_cta VARCHAR(30), concepto TEXT,
+      debe NUMERIC(15,2) DEFAULT 0, haber NUMERIC(15,2) DEFAULT 0,
+      num_cta_banco VARCHAR(30), banco_en_ext VARCHAR(3), dig_iden_ban CHAR(1),
+      fec_cap DATE, num_refer VARCHAR(50), monto_total NUMERIC(15,2),
+      tipo_moneda VARCHAR(5), tip_camb NUMERIC(10,4),
+      num_factura_pago VARCHAR(50), folio_fiscal0 VARCHAR(50),
+      rfc_emp VARCHAR(20), monto_tot_gravado NUMERIC(15,2))`);
+  } finally { client.release(); }
+}
+
+app.post('/api/contabilidad/init', auth, async (req, res) => {
+  try {
+    await ensureContabilidadTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json({ ok: true });
+  } catch(e) { res.json({ ok: false, error: e.message }); }
+});
+
+// Saldos acumulados por cuenta para el período
+app.get('/api/contabilidad/saldos', auth, licencia, async (req, res) => {
+  try {
+    await ensureContabilidadTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { mes, anio } = req.query;
+    const rows = await QR(req, `
+      SELECT d.num_cta,
+        COALESCE(c.desc_cta,'') desc_cta,
+        COALESCE(c.naturaleza,'D') naturaleza,
+        SUM(d.debe)  AS debe,
+        SUM(d.haber) AS haber,
+        CASE COALESCE(c.naturaleza,'D')
+          WHEN 'D' THEN SUM(d.debe)  - SUM(d.haber)
+          ELSE          SUM(d.haber) - SUM(d.debe)
+        END AS saldo
+      FROM polizas_detalle d
+      JOIN polizas p ON p.id=d.poliza_id
+      LEFT JOIN cat_cuentas c ON c.num_cta=d.num_cta
+      WHERE ($1::int IS NULL OR EXTRACT(MONTH FROM p.fecha)=$1::int)
+        AND ($2::int IS NULL OR EXTRACT(YEAR  FROM p.fecha)=$2::int)
+      GROUP BY d.num_cta, c.desc_cta, c.naturaleza
+      ORDER BY d.num_cta`,
+      [mes||null, anio||null]);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Import facturas as accounting entries automatically
+app.post('/api/contabilidad/importar-facturas', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureContabilidadTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { mes, anio } = req.body;
+    const facturas = await QR(req, `
+      SELECT f.*, cl.nombre cliente_nombre
+      FROM facturas f LEFT JOIN clientes cl ON cl.id=f.cliente_id
+      WHERE ($1::int IS NULL OR EXTRACT(MONTH FROM f.fecha_emision)=$1::int)
+        AND ($2::int IS NULL OR EXTRACT(YEAR  FROM f.fecha_emision)=$2::int)
+        AND f.total > 0`,
+      [mes||null, anio||null]);
+
+    let importadas = 0;
+    for (const f of facturas) {
+      const subtotal = parseFloat(f.subtotal || f.total || 0);
+      const iva      = parseFloat(f.iva || 0);
+      const total    = subtotal + iva;
+      if (!total) continue;
+
+      // Check if already imported
+      const exists = await QR(req,
+        `SELECT id FROM polizas WHERE concepto LIKE $1 LIMIT 1`,
+        [`%FAC${f.numero_factura}%`]);
+      if (exists.length) continue;
+
+      const client2 = await pool.connect();
+      try {
+        const schema2 = req.user?.schema || global._defaultSchema || 'emp_vef';
+        await client2.query(`SET search_path TO "${schema2}", public`);
+        await client2.query('BEGIN');
+        const { rows: [pol] } = await client2.query(`
+          INSERT INTO polizas (fecha,tipo_pol,concepto,created_by)
+          VALUES ($1,'I',$2,$3) RETURNING id`,
+          [f.fecha_emision, `Ingreso Factura ${f.numero_factura} - ${f.cliente_nombre||'Cliente'}`, req.user.id]);
+        // Debe: Clientes (105)
+        await client2.query(`INSERT INTO polizas_detalle (poliza_id,num_cta,concepto,debe,haber) VALUES ($1,'105',$2,$3,0)`,
+          [pol.id, f.numero_factura||'Factura', total]);
+        // Haber: Ventas (401)
+        await client2.query(`INSERT INTO polizas_detalle (poliza_id,num_cta,concepto,debe,haber) VALUES ($1,'401',$2,0,$3)`,
+          [pol.id, `Venta ${f.cliente_nombre||''}`, subtotal]);
+        // Haber: IVA por pagar (213) si hay IVA
+        if (iva > 0) {
+          await client2.query(`INSERT INTO polizas_detalle (poliza_id,num_cta,concepto,debe,haber) VALUES ($1,'213','IVA Facturado',0,$2)`,
+            [pol.id, iva]);
+        }
+        await client2.query('COMMIT');
+        importadas++;
+      } catch { await client2.query('ROLLBACK'); }
+      finally { client2.release(); }
+    }
+    res.json({ ok: true, importadas });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+
+// ================================================================
+// ACTIVOS FIJOS
+// ================================================================
+async function ensureActivosFijosTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS activos_fijos (
+      id SERIAL PRIMARY KEY,
+      codigo VARCHAR(50), nombre TEXT NOT NULL, categoria VARCHAR(100),
+      marca VARCHAR(100), modelo VARCHAR(100), numero_serie VARCHAR(100),
+      valor_original NUMERIC(15,2) DEFAULT 0,
+      valor_salvamento NUMERIC(15,2) DEFAULT 0,
+      valor_actual NUMERIC(15,2) DEFAULT 0,
+      depreciacion_acumulada NUMERIC(15,2) DEFAULT 0,
+      metodo_depr VARCHAR(30) DEFAULT 'Línea Recta',
+      vida_util_anos INTEGER DEFAULT 10,
+      tasa_depr NUMERIC(8,4),
+      fecha_adquisicion DATE,
+      ubicacion TEXT, proveedor_factura TEXT,
+      estatus VARCHAR(20) DEFAULT 'activo',
+      motivo_baja TEXT, valor_recuperacion NUMERIC(15,2),
+      notas_baja TEXT,
+      created_by INTEGER, created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW())`);
+    await client.query(`CREATE TABLE IF NOT EXISTS depreciaciones_af (
+      id SERIAL PRIMARY KEY,
+      activo_id INTEGER NOT NULL,
+      periodo VARCHAR(20),
+      monto_depr NUMERIC(15,2) DEFAULT 0,
+      valor_libros_inicio NUMERIC(15,2),
+      valor_libros_fin NUMERIC(15,2),
+      metodo VARCHAR(30),
+      created_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.post('/api/activos-fijos/init', auth, async (req, res) => {
+  try { await ensureActivosFijosTables(req.user?.schema || global._defaultSchema || 'emp_vef'); res.json({ ok: true }); }
+  catch(e) { res.json({ ok: false }); }
+});
+
+app.get('/api/activos-fijos', auth, licencia, async (req, res) => {
+  try {
+    await ensureActivosFijosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json(await QR(req, 'SELECT * FROM activos_fijos ORDER BY created_at DESC'));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/activos-fijos/depreciaciones', auth, licencia, async (req, res) => {
+  try {
+    await ensureActivosFijosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const rows = await QR(req, `
+      SELECT d.*, a.nombre activo_nombre
+      FROM depreciaciones_af d LEFT JOIN activos_fijos a ON a.id=d.activo_id
+      ORDER BY d.created_at DESC LIMIT 100`);
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/activos-fijos/depreciar', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureActivosFijosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { mes, anio } = req.body;
+    const periodo = `${anio}-${String(mes).padStart(2,'0')}`;
+    const activos = await QR(req,
+      "SELECT * FROM activos_fijos WHERE estatus='activo' AND vida_util_anos>0 AND valor_actual>0");
+    let procesados = 0; let totalDepr = 0;
+    for (const a of activos) {
+      const vOrig = parseFloat(a.valor_original || 0);
+      const vSalv = parseFloat(a.valor_salvamento || 0);
+      const vida  = parseInt(a.vida_util_anos || 10);
+      const vAct  = parseFloat(a.valor_actual || 0);
+      let deprMes = 0;
+      if (a.metodo_depr === 'Línea Recta') {
+        deprMes = (vOrig - vSalv) / vida / 12;
+      } else if (a.metodo_depr === 'Saldo Decreciente') {
+        deprMes = vAct * 0.20 / 12;
+      }
+      deprMes = Math.min(deprMes, Math.max(0, vAct - vSalv));
+      if (deprMes <= 0) continue;
+      const vFin = Math.max(vSalv, vAct - deprMes);
+      // Register depreciation
+      await QR(req, `INSERT INTO depreciaciones_af (activo_id,periodo,monto_depr,valor_libros_inicio,valor_libros_fin,metodo) VALUES ($1,$2,$3,$4,$5,$6)`,
+        [a.id, periodo, deprMes, vAct, vFin, a.metodo_depr]);
+      // Update activo
+      await QR(req, `UPDATE activos_fijos SET valor_actual=$1, depreciacion_acumulada=COALESCE(depreciacion_acumulada,0)+$2, updated_at=NOW() WHERE id=$3`,
+        [vFin, deprMes, a.id]);
+      // Register accounting entry if polizas exists
+      await QR(req, `INSERT INTO polizas (fecha,tipo_pol,concepto,created_by) VALUES ($1,'D',$2,$3)`,
+        [`${anio}-${String(mes).padStart(2,'0')}-01`,
+         `Depreciación ${a.nombre} ${periodo}`, req.user.id]).catch(() => {});
+      procesados++;
+      totalDepr += deprMes;
+    }
+    res.json({ ok: true, procesados, total: totalDepr.toFixed(2) });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ================================================================
+// CONTROL DE CALIDAD
+// ================================================================
+async function ensureCalidadTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS cal_inspecciones (
+      id SERIAL PRIMARY KEY, tipo VARCHAR(50) NOT NULL,
+      producto_id INTEGER, referencia TEXT, inspector TEXT,
+      fecha DATE DEFAULT CURRENT_DATE,
+      cantidad_inspeccionada INTEGER DEFAULT 0,
+      cantidad_aprobada INTEGER DEFAULT 0,
+      cantidad_rechazada INTEGER DEFAULT 0,
+      resultado VARCHAR(30) DEFAULT 'pendiente',
+      observaciones TEXT, acciones_correctivas TEXT,
+      created_by INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
+    await client.query(`CREATE TABLE IF NOT EXISTS cal_no_conformidades (
+      id SERIAL PRIMARY KEY, descripcion TEXT NOT NULL,
+      area VARCHAR(100), severidad VARCHAR(20) DEFAULT 'menor',
+      accion_correctiva TEXT, responsable TEXT,
+      fecha_deteccion DATE DEFAULT CURRENT_DATE,
+      fecha_limite DATE, fecha_cierre DATE,
+      estatus VARCHAR(20) DEFAULT 'abierta',
+      created_by INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.post('/api/calidad/init', auth, async (req, res) => {
+  try { await ensureCalidadTables(req.user?.schema || global._defaultSchema || 'emp_vef'); res.json({ ok: true }); }
+  catch(e) { res.json({ ok: false }); }
+});
+
+app.get('/api/calidad/inspecciones', auth, licencia, async (req, res) => {
+  try {
+    await ensureCalidadTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json(await QR(req, 'SELECT ci.*, i.nombre producto_nombre FROM cal_inspecciones ci LEFT JOIN inventario i ON i.id=ci.producto_id ORDER BY ci.fecha DESC'));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/calidad/inspecciones/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, 'SELECT * FROM cal_inspecciones WHERE id=$1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/calidad/inspecciones', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureCalidadTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { tipo, producto_id, referencia, inspector, fecha, cantidad_inspeccionada,
+            cantidad_aprobada, cantidad_rechazada, resultado, observaciones, acciones_correctivas } = req.body;
+    const rows = await QR(req, `
+      INSERT INTO cal_inspecciones (tipo,producto_id,referencia,inspector,fecha,
+        cantidad_inspeccionada,cantidad_aprobada,cantidad_rechazada,resultado,observaciones,acciones_correctivas,created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+      [tipo, producto_id||null, referencia||null, inspector||null,
+       fecha||new Date().toISOString().slice(0,10),
+       parseInt(cantidad_inspeccionada)||0, parseInt(cantidad_aprobada)||0,
+       parseInt(cantidad_rechazada)||0, resultado||'pendiente',
+       observaciones||null, acciones_correctivas||null, req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/calidad/no-conformidades', auth, licencia, async (req, res) => {
+  try {
+    await ensureCalidadTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json(await QR(req, 'SELECT * FROM cal_no_conformidades ORDER BY CASE severidad WHEN \'critica\' THEN 1 WHEN \'mayor\' THEN 2 ELSE 3 END, created_at DESC'));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/calidad/no-conformidades/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, 'SELECT * FROM cal_no_conformidades WHERE id=$1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/calidad/no-conformidades', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureCalidadTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { descripcion, area, severidad, accion_correctiva, responsable, fecha_limite } = req.body;
+    if (!descripcion) return res.status(400).json({ error: 'descripcion requerida' });
+    const rows = await QR(req, `
+      INSERT INTO cal_no_conformidades (descripcion,area,severidad,accion_correctiva,responsable,fecha_limite,created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [descripcion, area||null, severidad||'menor', accion_correctiva||null,
+       responsable||null, fecha_limite||null, req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/calidad/no-conformidades/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const b = req.body;
+    const sets = []; const vals = []; let i = 1;
+    const add = (k,v) => { sets.push(`${k}=$${i++}`); vals.push(v); };
+    if (b.estatus      !== undefined) add('estatus',      b.estatus);
+    if (b.fecha_cierre !== undefined) add('fecha_cierre', b.fecha_cierre);
+    if (b.accion_correctiva !== undefined) add('accion_correctiva', b.accion_correctiva);
+    vals.push(req.params.id);
+    await QR(req, `UPDATE cal_no_conformidades SET ${sets.join(',')} WHERE id=$${i}`, vals);
+    const rows = await QR(req, 'SELECT * FROM cal_no_conformidades WHERE id=$1', [req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ================================================================
+// CONTRATOS / SLA
+// ================================================================
+async function ensureContratosTables(schema) {
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+    await client.query(`CREATE TABLE IF NOT EXISTS contratos_servicio (
+      id SERIAL PRIMARY KEY,
+      numero_contrato VARCHAR(50),
+      cliente_id INTEGER, tipo VARCHAR(80),
+      descripcion TEXT,
+      fecha_inicio DATE, fecha_fin DATE,
+      valor_mensual NUMERIC(15,2),
+      sla_horas_respuesta INTEGER DEFAULT 24,
+      sla_horas_resolucion INTEGER DEFAULT 48,
+      visitas_mes INTEGER DEFAULT 0,
+      horas_soporte INTEGER DEFAULT 0,
+      estatus VARCHAR(20) DEFAULT 'activo',
+      created_by INTEGER, created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW())`);
+  } finally { client.release(); }
+}
+
+app.post('/api/contratos/init', auth, async (req, res) => {
+  try { await ensureContratosTables(req.user?.schema || global._defaultSchema || 'emp_vef'); res.json({ ok: true }); }
+  catch(e) { res.json({ ok: false }); }
+});
+
+app.get('/api/contratos', auth, licencia, async (req, res) => {
+  try {
+    await ensureContratosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    res.json(await QR(req, `
+      SELECT cs.*, cl.nombre cliente_nombre
+      FROM contratos_servicio cs LEFT JOIN clientes cl ON cl.id=cs.cliente_id
+      ORDER BY cs.fecha_fin ASC NULLS LAST`));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/contratos/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, `
+      SELECT cs.*, cl.nombre cliente_nombre
+      FROM contratos_servicio cs LEFT JOIN clientes cl ON cl.id=cs.cliente_id
+      WHERE cs.id=$1`, [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/contratos', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureContratosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { cliente_id, tipo, descripcion, fecha_inicio, fecha_fin, valor_mensual,
+            sla_horas_respuesta, sla_horas_resolucion, visitas_mes, horas_soporte, estatus } = req.body;
+    if (!cliente_id) return res.status(400).json({ error: 'cliente_id requerido' });
+    const cnt = (await QR(req, 'SELECT COUNT(*) c FROM contratos_servicio'))[0]?.c || 0;
+    const num = `CT-${new Date().getFullYear()}-${String(parseInt(cnt)+1).padStart(3,'0')}`;
+    const rows = await QR(req, `
+      INSERT INTO contratos_servicio
+        (numero_contrato,cliente_id,tipo,descripcion,fecha_inicio,fecha_fin,valor_mensual,
+         sla_horas_respuesta,sla_horas_resolucion,visitas_mes,horas_soporte,estatus,created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [num, parseInt(cliente_id), tipo||'Servicio', descripcion||null,
+       fecha_inicio||null, fecha_fin||null, parseFloat(valor_mensual)||null,
+       parseInt(sla_horas_respuesta)||24, parseInt(sla_horas_resolucion)||48,
+       parseInt(visitas_mes)||0, parseInt(horas_soporte)||0,
+       estatus||'activo', req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/contratos/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const b = req.body;
+    const sets = []; const vals = []; let i = 1;
+    const add = (k,v) => { sets.push(`${k}=$${i++}`); vals.push(v); };
+    if (b.estatus    !== undefined) add('estatus',    b.estatus);
+    if (b.fecha_fin  !== undefined) add('fecha_fin',  b.fecha_fin);
+    if (b.valor_mensual !== undefined) add('valor_mensual', parseFloat(b.valor_mensual)||null);
+    sets.push(`updated_at=NOW()`);
+    vals.push(req.params.id);
+    await QR(req, `UPDATE contratos_servicio SET ${sets.join(',')} WHERE id=$${i}`, vals);
+    const rows = await QR(req, 'SELECT * FROM contratos_servicio WHERE id=$1', [req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ================================================================
+// STRIPE — Rutas de pago (registro con pago)
+// Requiere: npm install stripe
+// .env: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID
+// ================================================================
+try {
+  const stripe = process.env.STRIPE_SECRET_KEY
+    ? require('stripe')(process.env.STRIPE_SECRET_KEY)
+    : null;
+  if (stripe) {
+    require('./stripe_routes')(app, pool, stripe);
+    console.log('💳 Stripe rutas de pago cargadas');
+  } else {
+    console.log('💳 Stripe no configurado (STRIPE_SECRET_KEY no definida — solo registro gratuito disponible)');
+  }
+} catch(e) {
+  console.warn('⚠️  stripe_routes no disponible:', e.message);
+}
+
+
+// ================================================================
+// SEED DE DATOS INICIALES — FAC-2026-001 (VEF Automatización)
+// Se ejecuta al iniciar si no existen datos
+// ================================================================
+async function seedDatosIniciales() {
+  const schema = global._defaultSchema || 'emp_vef';
+  const client = await pool.connect();
+  try {
+    await client.query(`SET search_path TO "${schema}", public`);
+
+    // ── 1. Empresa config ──────────────────────────────────────
+    const ec = await client.query('SELECT id FROM empresa_config LIMIT 1');
+    if (ec.rows.length) {
+      await client.query(`UPDATE empresa_config SET
+        nombre='VEF Automatización',
+        rfc='GOBE840604JLA',
+        regimen_fiscal='Régimen Simplificado de Confianza',
+        telefono='+52 (722) 115-7792',
+        email='soporte.ventas@vef-automatizacion.com',
+        direccion='Privada Rio Panuco, Manzana 5 Lote 10',
+        ciudad='Toluca', estado='Estado de México',
+        cp='50227', pais='México',
+        moneda_default='MXN', iva_default=16.00,
+        updated_at=NOW()
+        WHERE id=$1`, [ec.rows[0].id]);
+    } else {
+      await client.query(`INSERT INTO empresa_config
+        (nombre,rfc,regimen_fiscal,telefono,email,direccion,ciudad,estado,cp,pais,moneda_default,iva_default)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+        ['VEF Automatización','GOBE840604JLA','Régimen Simplificado de Confianza',
+         '+52 (722) 115-7792','soporte.ventas@vef-automatizacion.com',
+         'Privada Rio Panuco, Manzana 5 Lote 10','Toluca','Estado de México',
+         '50227','México','MXN',16.00]);
+    }
+    console.log('  ✅ empresa_config configurada');
+
+    // ── 2. Cliente HMO ────────────────────────────────────────
+    let cliId;
+    const cliRes = await client.query(`SELECT id FROM clientes WHERE rfc='HAC190729242' LIMIT 1`);
+    if (cliRes.rows.length) {
+      cliId = cliRes.rows[0].id;
+    } else {
+      // Asegurar columnas opcionales existen
+      const colsExist = {
+        uso_cfdi:       false, cp: false, ciudad: false,
+        tipo_persona:   false, regimen_fiscal: false,
+      };
+      for (const col of Object.keys(colsExist)) {
+        try {
+          await client.query(`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS ${col} TEXT`);
+          colsExist[col] = true;
+        } catch {}
+      }
+      const ins = await client.query(`INSERT INTO clientes
+        (nombre,rfc,regimen_fiscal,tipo_persona,email,telefono,direccion,cp,ciudad,uso_cfdi,activo)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true) RETURNING id`,
+        ['HMO AUTOMATIZACION Y COMERCIALIZACION INDUSTRIAL',
+         'HAC190729242','Régimen Simplificado de Confianza','moral',
+         'hmo.venta1@gmail.com','7223087247',
+         'Melero y Piña 511-interior 102, San Sebastian',
+         '50150','Toluca de Lerdo, Méx.','G03']);
+      cliId = ins.rows[0].id;
+      console.log(`  ✅ Cliente HMO creado ID=${cliId}`);
+    }
+
+    // ── 3. Proyecto ──────────────────────────────────────────
+    let proyId;
+    const proyRes = await client.query(`SELECT id FROM proyectos WHERE nombre='Servicio de Programación HMO' LIMIT 1`);
+    if (proyRes.rows.length) {
+      proyId = proyRes.rows[0].id;
+    } else {
+      const ins = await client.query(`INSERT INTO proyectos (nombre,cliente_id,estatus,responsable)
+        VALUES($1,$2,'activo',$3) RETURNING id`,
+        ['Servicio de Programación HMO', cliId, 'VEF Automatización']);
+      proyId = ins.rows[0].id;
+      console.log(`  ✅ Proyecto creado ID=${proyId}`);
+    }
+
+    // ── 4. Cotización ────────────────────────────────────────
+    let cotId;
+    const cotRes = await client.query(`SELECT id FROM cotizaciones WHERE numero_cotizacion='COT-2026-001' LIMIT 1`);
+    if (cotRes.rows.length) {
+      cotId = cotRes.rows[0].id;
+    } else {
+      const ins = await client.query(`INSERT INTO cotizaciones
+        (numero_cotizacion,proyecto_id,fecha_emision,validez_hasta,
+         alcance_tecnico,moneda,subtotal,iva,total,estatus)
+        VALUES('COT-2026-001',$1,'2026-04-10','2026-04-10',
+               'Servicio de programación industrial','MXN',
+               35750.00,5720.00,37208.59,'aprobada') RETURNING id`, [proyId]);
+      cotId = ins.rows[0].id;
+
+      // Items cotización
+      try {
+        const coluIco = await client.query(`SELECT column_name FROM information_schema.columns
+          WHERE table_schema=$1 AND table_name='items_cotizacion'`,[schema]);
+        const iCols = coluIco.rows.map(r=>r.column_name);
+        const extraCols = iCols.includes('clave_prod_serv') ?
+          ',clave_prod_serv,clave_unidad,objeto_imp' : '';
+        const extraVals = iCols.includes('clave_prod_serv') ?
+          ",'81111600','H87','02'" : '';
+        await client.query(`INSERT INTO items_cotizacion
+          (cotizacion_id,descripcion,cantidad,precio_unitario,total${extraCols})
+          VALUES($1,'Servicio de programacion',1,35750.00,35750.00${extraVals})`, [cotId]);
+      } catch(e) { console.log('  ⚠ items_cotizacion:', e.message); }
+      console.log(`  ✅ Cotización COT-2026-001 creada ID=${cotId}`);
+    }
+
+    // ── 5. Factura FAC-2026-001 ──────────────────────────────
+    const facRes = await client.query(`SELECT id FROM facturas WHERE numero_factura='FAC-2026-001' LIMIT 1`);
+    if (facRes.rows.length) {
+      console.log(`  ✅ Factura FAC-2026-001 ya existe ID=${facRes.rows[0].id}`);
+    } else {
+      // Asegurar columnas retenciones
+      for (const col of ['retencion_isr','retencion_iva','estatus_pago','cliente_id',
+                          'subtotal','iva','moneda','fecha_vencimiento']) {
+        try { await client.query(`ALTER TABLE facturas ADD COLUMN IF NOT EXISTS ${col} TEXT`); } catch {}
+      }
+      const fCols = await client.query(`SELECT column_name FROM information_schema.columns
+        WHERE table_schema=$1 AND table_name='facturas'`,[schema]);
+      const fc = fCols.rows.map(r=>r.column_name);
+
+      const cols = ['numero_factura','cotizacion_id'];
+      const vals = ['FAC-2026-001', cotId];
+      const mp=(col,val)=>{if(fc.includes(col)){cols.push(col);vals.push(val);}};
+      mp('cliente_id',    cliId);
+      mp('moneda',        'MXN');
+      mp('subtotal',      35750.00);
+      mp('iva',           5720.00);
+      mp('retencion_isr', 446.88);
+      mp('retencion_iva', 3814.53);
+      mp('total',         37208.59);
+      mp('monto',         37208.59);
+      mp('fecha_emision', '2026-04-10');
+      mp('fecha_vencimiento','2026-04-10');
+      mp('estatus',       'pendiente');
+      mp('estatus_pago',  'pendiente');
+      mp('notas',         'PPD — Pago en Parcialidades o Diferido | Forma de Pago: 03 — Transferencia electrónica');
+      const ph = vals.map((_,i)=>`$${i+1}`).join(',');
+      const ins = await client.query(
+        `INSERT INTO facturas (${cols.join(',')}) VALUES (${ph}) RETURNING id`, vals);
+      console.log(`  ✅ Factura FAC-2026-001 creada ID=${ins.rows[0].id}`);
+      console.log(`     Subtotal: $35,750 | IVA: $5,720 | ISR: -$446.88 | RetIVA: -$3,814.53 | Total: $37,208.59`);
+    }
+
+  } catch(e) {
+    console.error('  ❌ seedDatosIniciales:', e.message);
+  } finally {
+    client.release();
+  }
+}
+
 app.listen(PORT, async ()=>{
   console.log(`\n${'═'.repeat(50)}`);
   console.log(`  VEF ERP — Puerto ${PORT}`);
   console.log(`  DB: ${process.env.DB_HOST}`);
   console.log('═'.repeat(50)+'\n');
   await autoSetup();
+  await seedDatosIniciales();
   console.log(`\n🚀 http://localhost:${PORT}`);
   console.log(`🔐 Licencias: activas (trial 30 días por defecto)`);
   console.log(`🔑 Solo admin puede gestionar usuarios y empresas\n`);
 });
-module.exports=app;
+module.exports=app
+app.get('/api/activos-fijos/:id', auth, licencia, async (req, res) => {
+  try {
+    const rows = await QR(req, 'SELECT * FROM activos_fijos WHERE id=$1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/activos-fijos', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    await ensureActivosFijosTables(req.user?.schema || global._defaultSchema || 'emp_vef');
+    const { nombre, codigo, categoria, marca, modelo, numero_serie,
+            valor_original, valor_salvamento, metodo_depr, vida_util_anos,
+            fecha_adquisicion, ubicacion, proveedor_factura } = req.body;
+    if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
+    const cnt = (await QR(req, 'SELECT COUNT(*) c FROM activos_fijos'))[0]?.c || 0;
+    const cod = codigo || `AF-${new Date().getFullYear()}-${String(parseInt(cnt)+1).padStart(3,'0')}`;
+    const vOrig = parseFloat(valor_original) || 0;
+    const vSalv = parseFloat(valor_salvamento) || 0;
+    const vida  = parseInt(vida_util_anos) || 10;
+    const tasa  = vida > 0 ? Math.round((vOrig - vSalv) / vida / vOrig * 10000) / 100 : 0;
+    const rows = await QR(req, `
+      INSERT INTO activos_fijos
+        (codigo,nombre,categoria,marca,modelo,numero_serie,valor_original,valor_salvamento,
+         valor_actual,metodo_depr,vida_util_anos,tasa_depr,fecha_adquisicion,ubicacion,proveedor_factura,created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$7,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
+      [cod, nombre, categoria||null, marca||null, modelo||null, numero_serie||null,
+       vOrig, vSalv, metodo_depr||'Línea Recta', vida, tasa,
+       fecha_adquisicion||null, ubicacion||null, proveedor_factura||null, req.user.id]);
+    res.status(201).json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/activos-fijos/:id', auth, empresaActiva, licencia, async (req, res) => {
+  try {
+    const b = req.body;
+    const sets = []; const vals = []; let i = 1;
+    const add = (k,v) => { sets.push(`${k}=$${i++}`); vals.push(v); };
+    if (b.estatus            !== undefined) add('estatus',            b.estatus);
+    if (b.motivo_baja        !== undefined) add('motivo_baja',        b.motivo_baja);
+    if (b.valor_recuperacion !== undefined) add('valor_recuperacion', parseFloat(b.valor_recuperacion)||0);
+    if (b.notas_baja         !== undefined) add('notas_baja',         b.notas_baja);
+    if (b.valor_actual       !== undefined) add('valor_actual',       parseFloat(b.valor_actual)||0);
+    if (b.depreciacion_acumulada !== undefined) add('depreciacion_acumulada', parseFloat(b.depreciacion_acumulada)||0);
+    sets.push(`updated_at=NOW()`);
+    vals.push(req.params.id);
+    await QR(req, `UPDATE activos_fijos SET ${sets.join(',')} WHERE id=$${i}`, vals);
+    const rows = await QR(req, 'SELECT * FROM activos_fijos WHERE id=$1', [req.params.id]);
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+;

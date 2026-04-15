@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VEF ERP · Proveedores</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --azul:#0D2B55;--azul-med:#1A4A8A;--azul-claro:#2E6DB4;
+  --azul-suave:#D6E4F7;--azul-bg:#EBF3FB;
+  --verde:#27AE60;--verde-claro:#f0fdf4;
+  --rojo:#C0392B;--naranja:#E67E22;
+  --gris:#f1f5f9;--gris-txt:#1e293b;--borde:#e2e8f0;
+  --sidebar-w:220px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--gris);color:var(--gris-txt);}
+/* ── Layout ── */
+.layout{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar-w);background:var(--azul);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid var(--borde);padding:12px 24px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.content{flex:1;overflow-y:auto;padding:24px}
+
+/* ── Sidebar ── */
+.sidebar-logo{padding:20px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-logo img{width:38px;height:38px;object-fit:contain;border-radius:10px}
+.brand{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff}
+.brand span{color:var(--azul-suave)}
+.sidebar-nav{padding:12px 8px;flex:1}
+.nav-section{font-size:.62rem;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:rgba(255,255,255,.7);font-size:.84rem;cursor:pointer;transition:.15s;margin-bottom:2px;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--azul-med);color:#fff;font-weight:600}
+.nav-item .icon{font-size:1rem;width:22px;text-align:center;flex-shrink:0}
+.badge-count{margin-left:auto;background:var(--naranja);color:#fff;border-radius:10px;padding:1px 7px;font-size:.68rem;font-weight:700}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;background:var(--azul-bg);border-radius:10px;padding:4px;width:fit-content;margin-bottom:20px}
+.tab{padding:8px 18px;border:none;background:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:500;color:#64748b;cursor:pointer;transition:.15s;white-space:nowrap}
+.tab.active{background:#fff;color:var(--azul);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+/* ── Cards / KPIs ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--borde);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.kpi-label{font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:1.5rem;font-weight:800;color:var(--azul);line-height:1}
+.kpi-sub{font-size:.72rem;color:#94a3b8;margin-top:4px}
+.kpi-bar{height:3px;background:#e5e7eb;border-radius:2px;margin-top:8px}
+.kpi-bar-fill{height:3px;border-radius:2px;transition:width .6s}
+
+/* ── Table ── */
+.card{background:#fff;border-radius:12px;border:1px solid var(--borde);box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;margin-bottom:18px}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-title{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;color:var(--azul)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.81rem}
+thead tr{background:var(--azul);color:#fff}
+th{padding:10px 13px;text-align:left;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+tbody tr{border-bottom:1px solid #f8fafc;transition:.12s;cursor:pointer}
+tbody tr:hover{background:var(--azul-bg)}
+td{padding:9px 13px;color:var(--gris-txt)}
+.tag{display:inline-block;padding:2px 9px;border-radius:10px;font-size:.7rem;font-weight:700}
+.tag-moral{background:#dbeafe;color:#1d4ed8}
+.tag-fisica{background:#f0fdf4;color:#15803d}
+.tag-activo{background:#dcfce7;color:#166534}
+.tag-inactivo{background:#fee2e2;color:#991b1b}
+.tag-evaluado{background:#f0fdf4;color:#166534}
+.tag-pendiente{background:#fef9c3;color:#854d0e}
+.tag-critico{background:#fee2e2;color:#991b1b}
+
+/* ── Buttons ── */
+.btn{padding:8px 16px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,var(--azul),var(--azul-med));color:#fff}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-secondary{background:var(--gris);color:var(--azul);border:1px solid var(--borde)}
+.btn-secondary:hover{background:var(--azul-bg)}
+.btn-sm{padding:5px 11px;font-size:.75rem}
+.btn-danger{background:#fef2f2;color:var(--rojo);border:1px solid #fecaca}
+.btn-success{background:#f0fdf4;color:var(--verde);border:1px solid #bbf7d0}
+.btn-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+
+/* ── Forms / Modals ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(13,43,85,.5);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:680px;box-shadow:0 24px 60px rgba(0,0,0,.2);margin:auto}
+.modal-lg{max-width:900px}
+.modal-header{padding:18px 22px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--azul)}
+.modal-body{padding:20px 22px;max-height:75vh;overflow-y:auto}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--borde);display:flex;justify-content:flex-end;gap:8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-full{grid-column:1/-1}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:.73rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+.field-group label.req::after{content:' *';color:var(--rojo)}
+.form-control{width:100%;padding:8px 11px;border:1.5px solid var(--borde);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;background:#f8fafc;color:var(--gris-txt);transition:.15s}
+.form-control:focus{border-color:var(--azul-med);background:#fff;outline:none;box-shadow:0 0 0 3px rgba(26,74,138,.08)}
+textarea.form-control{resize:vertical;min-height:70px}
+.section-label{font-size:.72rem;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:.6px;padding:10px 0 6px;border-bottom:2px solid var(--azul-bg);margin:10px 0 10px;grid-column:1/-1}
+
+/* ── Search ── */
+.search-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.search-input{padding:8px 12px;border:1.5px solid var(--borde);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;background:#fff;width:240px;transition:.15s}
+.search-input:focus{border-color:var(--azul-med);outline:none}
+
+/* ── RFQ specific ── */
+.rfq-status-bar{display:flex;gap:0;margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid var(--borde)}
+.rfq-stage{flex:1;padding:10px 6px;text-align:center;background:#fff;transition:.2s;cursor:default}
+.rfq-stage.done{background:var(--azul);color:#fff}
+.rfq-stage.active{background:var(--azul-bg);color:var(--azul);font-weight:700}
+.rfq-stage-num{font-size:1.1rem;font-weight:800;font-family:'Syne',sans-serif}
+.rfq-stage-lbl{font-size:.63rem;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;opacity:.8}
+.rfq-stage-sep{width:1px;background:var(--borde)}
+
+/* ── Evaluation stars ── */
+.stars{display:flex;gap:3px;cursor:pointer}
+.star{font-size:1.1rem;color:#e5e7eb;transition:.1s}
+.star.on{color:#f59e0b}
+.star:hover,.star:hover~.star{color:#e5e7eb}
+.stars:hover .star{color:#f59e0b}
+
+/* ── Empty state ── */
+.empty{padding:50px;text-align:center;color:#94a3b8}
+.empty .emoji{font-size:2.5rem;margin-bottom:12px}
+.empty h3{font-size:1rem;font-weight:600;color:#64748b;margin-bottom:6px}
+.empty p{font-size:.83rem}
+
+/* ── Alert ── */
+.alert{padding:10px 14px;border-radius:8px;font-size:.83rem;margin-bottom:12px}
+.alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.alert-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.alert-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:#1e293b;color:#fff;padding:11px 18px;border-radius:10px;font-size:.84rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:slideIn .3s ease;max-width:320px}
+.toast.ok{background:#065f46}
+.toast.err{background:#7f1d1d}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Progress ── */
+.progress{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .layout{flex-direction:column}
+  .sidebar{width:100%;height:auto;flex-direction:row;overflow-x:auto}
+  .sidebar-nav{display:flex;flex-direction:row;padding:6px;overflow-x:auto}
+  .nav-section{display:none}
+  .form-grid{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo" style="display:flex;align-items:center;gap:10px">
+    <img src="/logo.png" onerror="this.style.display='none'" alt="">
+    <div class="brand">VEF <span>ERP</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Proveedores</div>
+    <a class="nav-item active" onclick="showTab('directorio')"><span class="icon">🏭</span>Directorio</a>
+    <a class="nav-item" onclick="showTab('evaluacion')"><span class="icon">⭐</span>Evaluación</a>
+    <div class="nav-section">Compras</div>
+    <a class="nav-item" onclick="showTab('rfq')"><span class="icon">📋</span>RFQ <span class="badge-count" id="badgeRfq">0</span></a>
+    <a class="nav-item" onclick="showTab('oc')"><span class="icon">📦</span>Órdenes de Compra</a>
+    <div class="nav-section">Sistema</div>
+    <a class="nav-item" href="/app" style="color:rgba(255,255,255,.5)"><span class="icon">⬅️</span>Volver al ERP</a>
+  </nav>
+</aside>
+
+<!-- ══ MAIN ════════════════════════════════════════════ -->
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--azul)" id="pageTitle">🏭 Directorio de Proveedores</div>
+    <div style="flex:1"></div>
+    <div id="userInfo" style="font-size:.8rem;color:#64748b"></div>
+    <button class="btn btn-primary btn-sm" id="btnPrimary" onclick="provNuevo()">➕ Nuevo Proveedor</button>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="mainContent">
+    <div class="empty"><div class="emoji">⏳</div><h3>Cargando...</h3></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL ═══════════════════════════════════════════ -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Modal</div>
+      <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:#64748b">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIG & AUTH
+═══════════════════════════════════════════════════════ */
+const BASE = window.location.origin;
+let TOKEN = sessionStorage.getItem('vef_token') || '';
+let USER  = {};
+try{ USER = JSON.parse(sessionStorage.getItem('vef_user') || '{}'); }catch(e){}
+
+// If no token, redirect to login
+if(!TOKEN){
+  window.location.href = '/';
+}
+
+document.getElementById('userInfo').textContent = USER.nombre || USER.username || '';
+
+/* ═══════════════════════════════════════════════════════
+   CORE UTILITIES
+═══════════════════════════════════════════════════════ */
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(v){ if(!v)return '—'; try{return new Date(v).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return v;} }
+function fmtM(n,mon='MXN'){ return (mon==='USD'?'USD $':'MX$')+' '+parseFloat(n||0).toLocaleString('es-MX',{minimumFractionDigits:2}); }
+
+async function api(path, method='GET', body=null){
+  const opts = {
+    method,
+    headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
+  };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(BASE+path, opts);
+  if(r.status===401){ window.location.href='/'; return; }
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.error||'Error '+r.status);
+  return d;
+}
+
+function toast(msg, type='ok'){
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast '+type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+function openModal(title, body, footer, lg=false){
+  document.getElementById('modalTitle').innerHTML = title;
+  document.getElementById('modalBody').innerHTML  = body;
+  document.getElementById('modalFooter').innerHTML= footer;
+  const box = document.getElementById('modalBox');
+  box.className = lg ? 'modal modal-lg' : 'modal';
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('open'); }
+document.getElementById('modalBg').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+function ge(id){ return document.getElementById(id); }
+function toNum(v){ return parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0; }
+
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+let _provData=[], _rfqData=[], _ocData=[], _evalData=[];
+let _currentTab='directorio';
+let _selProv=null, _selRfq=null, _selOc=null;
+
+const CATEGORIAS = ['Materiales','Servicios','Equipos','Tecnología','Logística','Mantenimiento','Consumibles','Otros'];
+const CONDICIONES = ['15 días','30 días','45 días','60 días','90 días','Contado','Contra entrega'];
+const MONEDAS     = ['MXN','USD','EUR'];
+
+/* ═══════════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════════ */
+function showTab(tab){
+  _currentTab = tab;
+  document.querySelectorAll('.nav-item').forEach(i=>{
+    i.classList.toggle('active', i.getAttribute('onclick')===`showTab('${tab}')`);
+  });
+  const titles={directorio:'🏭 Directorio de Proveedores',rfq:'📋 Solicitudes de Cotización (RFQ)',oc:'📦 Órdenes de Compra',evaluacion:'⭐ Evaluación de Proveedores'};
+  const btns  ={directorio:'➕ Nuevo Proveedor',rfq:'➕ Nueva RFQ',oc:'➕ Nueva OC',evaluacion:'➕ Evaluar'};
+  const fns   ={directorio:provNuevo,rfq:rfqNueva,oc:ocNueva,evaluacion:evalNueva};
+  ge('pageTitle').textContent = titles[tab]||'Proveedores';
+  ge('btnPrimary').textContent = btns[tab]||'Nuevo';
+  ge('btnPrimary').onclick = fns[tab]||provNuevo;
+  const renders={directorio:renderDirectorio,rfq:renderRFQ,oc:renderOC,evaluacion:renderEvaluacion};
+  (renders[tab]||renderDirectorio)();
+}
+
+/* ═══════════════════════════════════════════════════════
+   1. DIRECTORIO
+═══════════════════════════════════════════════════════ */
+async function loadAll(){
+  try{
+    [_provData, _rfqData, _ocData] = await Promise.all([
+      api('/api/proveedores').catch(()=>[]),
+      api('/api/rfq').catch(()=>[]),
+      api('/api/ordenes-proveedor').catch(()=>[]),
+    ]);
+    // Update RFQ badge
+    const pend = (_rfqData||[]).filter(r=>r.estatus==='borrador'||r.estatus==='enviada').length;
+    const badge = ge('badgeRfq');
+    if(badge) badge.textContent = pend;
+    if(badge) badge.style.display = pend>0?'':'none';
+  }catch(e){ console.error(e); }
+}
+
+async function renderDirectorio(){
+  ge('mainContent').innerHTML = '<div class="empty"><div class="emoji">⏳</div><h3>Cargando directorio...</h3></div>';
+  await loadAll();
+  const provs = _provData||[];
+
+  // KPIs
+  const activos   = provs.filter(p=>p.activo!==false).length;
+  const morales   = provs.filter(p=>p.tipo_persona==='moral').length;
+  const conDoc    = provs.filter(p=>p.constancia_pdf||p.constancia_nombre).length;
+  const ocMes     = (_ocData||[]).filter(o=>{
+    const d=new Date(o.fecha_emision||'');
+    return d.getMonth()===new Date().getMonth()&&d.getFullYear()===new Date().getFullYear();
+  }).length;
+
+  let html = `
+  <div class="kpi-grid">
+    <div class="kpi" style="border-left:4px solid var(--azul)">
+      <div class="kpi-label">Total Proveedores</div>
+      <div class="kpi-val">${provs.length}</div>
+      <div class="kpi-sub">${activos} activos</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:${provs.length?activos/provs.length*100:0}%;background:var(--azul)"></div></div>
+    </div>
+    <div class="kpi" style="border-left:4px solid #7c3aed">
+      <div class="kpi-label">Personas Morales</div>
+      <div class="kpi-val">${morales}</div>
+      <div class="kpi-sub">${provs.length-morales} personas físicas</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid var(--verde)">
+      <div class="kpi-label">Con Documentos</div>
+      <div class="kpi-val">${conDoc}</div>
+      <div class="kpi-sub">Constancia fiscal</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid var(--naranja)">
+      <div class="kpi-label">OC este Mes</div>
+      <div class="kpi-val">${ocMes}</div>
+      <div class="kpi-sub">Órdenes de compra</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Proveedores Registrados</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input class="search-input" id="provSearch" placeholder="🔍 Buscar nombre, RFC, contacto..." oninput="filtrarProveedores(this.value)" style="width:260px">
+        <select class="form-control" style="width:140px;padding:7px 10px" onchange="filtrarProveedoresCat(this.value)">
+          <option value="">Todas las categorías</option>
+          ${CATEGORIAS.map(c=>`<option>${c}</option>`).join('')}
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="exportarCSV()">📥 CSV</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="tblProv">
+        <thead><tr>
+          <th>Proveedor</th><th>Tipo</th><th>RFC</th><th>Contacto</th>
+          <th>Teléfono / Email</th><th>Categoría</th><th>Cond. Pago</th>
+          <th>Calificación</th><th>Docs</th><th>Estado</th><th>Acciones</th>
+        </tr></thead>
+        <tbody id="provBody">${renderProvRows(provs)}</tbody>
+      </table>
+    </div>
+    ${provs.length===0?'<div class="empty"><div class="emoji">🏭</div><h3>Sin proveedores registrados</h3><p>Agrega tu primer proveedor con el botón ➕</p></div>':''}
+  </div>`;
+
+  ge('mainContent').innerHTML = html;
+}
+
+function renderProvRows(provs){
+  return provs.map(p=>{
+    const estrellas = p.calificacion_promedio
+      ? '★'.repeat(Math.round(p.calificacion_promedio||0))+'☆'.repeat(5-Math.round(p.calificacion_promedio||0))
+      : '☆☆☆☆☆';
+    const starColor = p.calificacion_promedio>=4?'#f59e0b':p.calificacion_promedio>=2?'#d97706':'#94a3b8';
+    const activo = p.activo!==false;
+    return `<tr onclick="verProveedor(${p.id})">
+      <td>
+        <div style="font-weight:700;color:var(--azul)">${esc(p.nombre)}</div>
+        ${p.ciudad?`<div style="font-size:.72rem;color:#94a3b8">📍 ${esc(p.ciudad)}</div>`:''}
+      </td>
+      <td><span class="tag tag-${p.tipo_persona==='moral'?'moral':'fisica'}">${p.tipo_persona==='moral'?'🏢 Moral':'👤 Física'}</span></td>
+      <td style="font-family:monospace;font-size:.78rem">${esc(p.rfc||'—')}</td>
+      <td style="font-size:.82rem">${esc(p.contacto||'—')}</td>
+      <td style="font-size:.78rem">
+        ${p.telefono?`<div>📞 ${esc(p.telefono)}</div>`:''}
+        ${p.email?`<div>✉ ${esc(p.email)}</div>`:''}
+      </td>
+      <td><span class="tag" style="background:#f0f4ff;color:#4338ca">${esc(p.categoria||'—')}</span></td>
+      <td style="font-size:.78rem;color:#64748b">${esc(p.condiciones_pago||'—')}</td>
+      <td style="color:${starColor};font-size:.88rem" title="${p.calificacion_promedio||0}/5">${estrellas}</td>
+      <td style="white-space:nowrap">
+        ${p.constancia_pdf||p.constancia_nombre?'<span title="Constancia" style="color:#059669">📋✅</span>':'<span style="color:#94a3b8" title="Sin constancia">📋—</span>'}
+        ${p.estado_cuenta_pdf||p.estado_cuenta_nombre?'<span title="Estado de Cuenta" style="color:#059669"> 🏦✅</span>':'<span style="color:#94a3b8" title="Sin edo cuenta"> 🏦—</span>'}
+      </td>
+      <td><span class="tag tag-${activo?'activo':'inactivo'}">${activo?'● Activo':'○ Inactivo'}</span></td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">
+        <button class="btn btn-sm btn-secondary" onclick="editarProveedor(${p.id})">✏️</button>
+        <button class="btn btn-sm btn-secondary" onclick="crearRFQProv(${p.id})" title="Crear RFQ">📋</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="11" class="empty"><div class="emoji" style="font-size:1.5rem">🔍</div><p>Sin resultados</p></td></tr>';
+}
+
+function filtrarProveedores(q){
+  q = q.toLowerCase();
+  const provs = (_provData||[]).filter(p=>{
+    return !q || ['nombre','rfc','contacto','email','telefono','ciudad','categoria']
+      .some(k=>(p[k]||'').toLowerCase().includes(q));
+  });
+  ge('provBody').innerHTML = renderProvRows(provs);
+}
+function filtrarProveedoresCat(cat){
+  const provs = cat ? (_provData||[]).filter(p=>p.categoria===cat) : (_provData||[]);
+  ge('provBody').innerHTML = renderProvRows(provs);
+}
+
+function verProveedor(id){
+  const p = (_provData||[]).find(x=>x.id===id);
+  if(!p) return;
+  const ocs  = (_ocData||[]).filter(o=>o.proveedor_id===id);
+  const rfqs = (_rfqData||[]).filter(r=>r.proveedor_ids&&(r.proveedor_ids+'').includes(id));
+  const estrellas=p.calificacion_promedio||0;
+
+  openModal(`🏭 ${esc(p.nombre)}`,`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    ${_f('RFC',p.rfc,true)} ${_f('Tipo',(p.tipo_persona==='moral'?'🏢 Persona Moral':'👤 Persona Física'))}
+    ${_f('Contacto',p.contacto)} ${_f('Teléfono',p.telefono)}
+    ${_f('Email',p.email)} ${_f('Ciudad/Estado',p.ciudad+(p.estado?', '+p.estado:''))}
+    ${_f('Categoría',p.categoria)} ${_f('Cond. de Pago',p.condiciones_pago)}
+    ${_f('Régimen Fiscal',p.regimen_fiscal)} ${_f('Sitio Web',p.sitio_web)}
+    ${p.notas?`<div style="grid-column:1/-1">${_f('Notas',p.notas)}</div>`:''}
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div style="font-size:.73rem;font-weight:700;color:var(--azul);text-transform:uppercase">📦 Órdenes de Compra (${ocs.length})</div>
+  </div>
+  <div style="max-height:160px;overflow-y:auto;border:1px solid var(--borde);border-radius:8px;margin-bottom:14px">
+    ${ocs.length===0?'<div style="padding:16px;text-align:center;color:#94a3b8;font-size:.82rem">Sin órdenes de compra</div>':
+    ocs.slice(0,6).map(o=>`<div style="padding:8px 12px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;font-size:.8rem">
+      <span style="font-weight:600;color:var(--azul)">${esc(o.numero_op||'—')}</span>
+      <span style="color:#64748b">${fmt(o.fecha_emision)}</span>
+      <span style="font-weight:700;color:var(--verde)">${fmtM(o.total,o.moneda)}</span>
+      <span class="tag" style="background:#f1f5f9;color:#475569">${esc(o.estatus||'—')}</span>
+    </div>`).join('')}
+  </div>
+
+  <div style="font-size:.73rem;font-weight:700;color:var(--azul);text-transform:uppercase;margin-bottom:6px">⭐ Calificación Promedio</div>
+  <div style="background:var(--azul-bg);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+    <div style="font-size:2rem;font-weight:800;color:${estrellas>=4?'#f59e0b':estrellas>=2?'#d97706':'#94a3b8'}">${estrellas?estrellas.toFixed(1):'N/D'}</div>
+    <div>
+      <div style="font-size:1.1rem;color:#f59e0b">${'★'.repeat(Math.round(estrellas))}${'☆'.repeat(5-Math.round(estrellas))}</div>
+      <div style="font-size:.75rem;color:#64748b">Calificación de desempeño</div>
+    </div>
+    <button class="btn btn-sm btn-secondary" onclick="closeModal();showTab('evaluacion');setTimeout(()=>evalNueva(${id}),300)" style="margin-left:auto">Evaluar</button>
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+   <button class="btn btn-secondary" onclick="closeModal();crearRFQProv(${id})">📋 Crear RFQ</button>
+   <button class="btn btn-primary" onclick="closeModal();editarProveedor(${id})">✏️ Editar</button>`,
+  true);
+}
+
+function _f(label, val, mono=false){
+  if(!val) return '';
+  return `<div style="background:#f8fafc;border-radius:8px;padding:9px 11px">
+    <div style="font-size:.62rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">${label}</div>
+    <div style="font-size:.83rem;font-weight:600;color:#1e293b;${mono?'font-family:monospace;font-size:.78rem':''}">${esc(String(val))}</div>
+  </div>`;
+}
+
+function provNuevo(){ provForm(null); }
+function editarProveedor(id){
+  const p = (_provData||[]).find(x=>x.id===id)||{};
+  provForm(p);
+}
+
+function provForm(p){
+  openModal(p?.id?'✏️ Editar Proveedor':'➕ Nuevo Proveedor',`
+  <div class="form-grid">
+    <div class="section-label">📋 Datos Generales</div>
+    <div class="field-group form-full"><label class="req">Nombre / Razón Social</label>
+      <input id="p_nom" class="form-control" value="${esc(p?.nombre||'')}" placeholder="Nombre del proveedor"></div>
+    <div class="field-group"><label class="req">Tipo de Persona</label>
+      <select id="p_tipo" class="form-control">
+        <option value="moral" ${p?.tipo_persona==='moral'?'selected':''}>🏢 Persona Moral</option>
+        <option value="fisica" ${p?.tipo_persona==='fisica'?'selected':''}>👤 Persona Física</option>
+      </select></div>
+    <div class="field-group"><label>RFC</label>
+      <input id="p_rfc" class="form-control" value="${esc(p?.rfc||'')}" placeholder="RFC del proveedor"></div>
+    <div class="field-group"><label>Régimen Fiscal</label>
+      <input id="p_reg" class="form-control" value="${esc(p?.regimen_fiscal||'')}"></div>
+    <div class="field-group"><label>Contacto Principal</label>
+      <input id="p_cont" class="form-control" value="${esc(p?.contacto||'')}"></div>
+    <div class="field-group"><label>Cargo / Puesto</label>
+      <input id="p_cargo" class="form-control" value="${esc(p?.cargo||'')}"></div>
+    <div class="field-group"><label>Teléfono</label>
+      <input id="p_tel" class="form-control" value="${esc(p?.telefono||'')}" type="tel"></div>
+    <div class="field-group"><label>Email</label>
+      <input id="p_email" class="form-control" value="${esc(p?.email||'')}" type="email"></div>
+    <div class="section-label">📍 Ubicación</div>
+    <div class="field-group form-full"><label>Dirección</label>
+      <input id="p_dir" class="form-control" value="${esc(p?.direccion||'')}"></div>
+    <div class="field-group"><label>Ciudad</label>
+      <input id="p_ciudad" class="form-control" value="${esc(p?.ciudad||'')}"></div>
+    <div class="field-group"><label>Estado</label>
+      <input id="p_estado" class="form-control" value="${esc(p?.estado||'')}"></div>
+    <div class="field-group"><label>C.P.</label>
+      <input id="p_cp" class="form-control" value="${esc(p?.cp||'')}"></div>
+    <div class="field-group"><label>Sitio Web</label>
+      <input id="p_web" class="form-control" value="${esc(p?.sitio_web||'')}" type="url"></div>
+    <div class="section-label">💼 Comercial</div>
+    <div class="field-group"><label>Categoría</label>
+      <select id="p_cat" class="form-control">
+        <option value="">Sin categoría</option>
+        ${CATEGORIAS.map(c=>`<option ${p?.categoria===c?'selected':''}>${c}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label>Condiciones de Pago</label>
+      <select id="p_cond" class="form-control">
+        <option value="">—</option>
+        ${CONDICIONES.map(c=>`<option ${p?.condiciones_pago===c?'selected':''}>${c}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label>Moneda Preferida</label>
+      <select id="p_mon" class="form-control">
+        ${MONEDAS.map(m=>`<option ${p?.moneda===m?'selected':''}>${m}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label>Límite de Crédito (MXN)</label>
+      <input id="p_lim" class="form-control" type="number" value="${p?.limite_credito||0}"></div>
+    <div class="field-group form-full"><label>Notas / Observaciones</label>
+      <textarea id="p_notas" class="form-control">${esc(p?.notas||'')}</textarea></div>
+    ${p?.id?`<div class="field-group"><label>Estado</label>
+      <select id="p_activo" class="form-control">
+        <option value="true" ${p.activo!==false?'selected':''}>● Activo</option>
+        <option value="false" ${p.activo===false?'selected':''}>○ Inactivo</option>
+      </select></div>`:''}
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+   <button class="btn btn-primary" onclick="provGuardar(${p?.id||'null'})">💾 Guardar</button>`,
+  true);
+}
+
+async function provGuardar(id){
+  const b={
+    nombre:        ge('p_nom')?.value.trim(),
+    tipo_persona:  ge('p_tipo')?.value,
+    rfc:           ge('p_rfc')?.value.trim().toUpperCase(),
+    regimen_fiscal:ge('p_reg')?.value.trim(),
+    contacto:      ge('p_cont')?.value.trim(),
+    cargo:         ge('p_cargo')?.value.trim()||null,
+    telefono:      ge('p_tel')?.value.trim(),
+    email:         ge('p_email')?.value.trim(),
+    direccion:     ge('p_dir')?.value.trim(),
+    ciudad:        ge('p_ciudad')?.value.trim(),
+    estado:        ge('p_estado')?.value.trim(),
+    cp:            ge('p_cp')?.value.trim(),
+    sitio_web:     ge('p_web')?.value.trim()||null,
+    categoria:     ge('p_cat')?.value||null,
+    condiciones_pago:ge('p_cond')?.value||null,
+    moneda:        ge('p_mon')?.value||'MXN',
+    limite_credito:toNum(ge('p_lim')?.value||0),
+    notas:         ge('p_notas')?.value.trim()||null,
+  };
+  if(id!=='null'&&ge('p_activo')) b.activo = ge('p_activo').value==='true';
+  if(!b.nombre){toast('Nombre requerido','err');return;}
+  try{
+    id==='null'||!id
+      ? await api('/api/proveedores','POST',b)
+      : await api('/api/proveedores/'+id,'PUT',b);
+    toast('✅ Proveedor guardado');
+    closeModal();
+    await renderDirectorio();
+  }catch(e){ toast(e.message,'err'); }
+}
+
+function exportarCSV(){
+  const h='Nombre,RFC,Tipo,Contacto,Teléfono,Email,Ciudad,Categoría,Condiciones Pago,Activo\n';
+  const rows=(_provData||[]).map(p=>[p.nombre,p.rfc,p.tipo_persona,p.contacto,p.telefono,p.email,p.ciudad,p.categoria,p.condiciones_pago,p.activo!==false?'Sí':'No'].map(v=>`"${v||''}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([h+rows],{type:'text/csv'}));
+  a.download='Proveedores_VEF.csv'; a.click();
+}
+
+/* ═══════════════════════════════════════════════════════
+   2. RFQ — SOLICITUD DE COTIZACIÓN
+   Best practices: ISO 9001, CIPS, CPSM standards
+═══════════════════════════════════════════════════════ */
+const RFQ_ETAPAS = [
+  {id:'borrador',   lbl:'Borrador',    ico:'📝', color:'#64748b'},
+  {id:'enviada',    lbl:'Enviada',     ico:'📤', color:'#2563eb'},
+  {id:'recibida',   lbl:'Resp. Recibida',ico:'📥',color:'#7c3aed'},
+  {id:'evaluacion', lbl:'Evaluación',  ico:'⚖️', color:'#d97706'},
+  {id:'adjudicada', lbl:'Adjudicada',  ico:'🏆', color:'#059669'},
+  {id:'cancelada',  lbl:'Cancelada',   ico:'❌', color:'#dc2626'},
+];
+
+async function renderRFQ(){
+  ge('mainContent').innerHTML = '<div class="empty"><div class="emoji">⏳</div><h3>Cargando RFQs...</h3></div>';
+  await loadAll();
+  const rfqs = _rfqData||[];
+
+  const stats={};
+  RFQ_ETAPAS.forEach(e=>stats[e.id]=0);
+  rfqs.forEach(r=>{ if(stats[r.estatus]!==undefined) stats[r.estatus]++; else stats['borrador']++; });
+
+  const valTotal = rfqs.filter(r=>r.estatus==='adjudicada').reduce((s,r)=>s+parseFloat(r.monto_adjudicado||0),0);
+
+  let html = `
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi" style="border-left:4px solid #2563eb">
+      <div class="kpi-label">RFQ Activas</div>
+      <div class="kpi-val">${stats.enviada+stats.recibida+stats.evaluacion}</div>
+      <div class="kpi-sub">En proceso</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid var(--verde)">
+      <div class="kpi-label">Adjudicadas</div>
+      <div class="kpi-val">${stats.adjudicada}</div>
+      <div class="kpi-sub">${fmtM(valTotal)} total</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid #d97706">
+      <div class="kpi-label">En Evaluación</div>
+      <div class="kpi-val">${stats.evaluacion}</div>
+      <div class="kpi-sub">Comparando cotizaciones</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid #64748b">
+      <div class="kpi-label">Borradores</div>
+      <div class="kpi-val">${stats.borrador}</div>
+      <div class="kpi-sub">Pendientes de enviar</div>
+    </div>
+  </div>
+
+  <!-- Pipeline visual -->
+  <div class="rfq-status-bar">
+    ${RFQ_ETAPAS.filter(e=>e.id!=='cancelada').map((e,i)=>`
+      <div class="rfq-stage" style="border-left:${i>0?'1px solid var(--borde)':'none'}">
+        <div class="rfq-stage-num" style="color:${e.color}">${stats[e.id]||0}</div>
+        <div class="rfq-stage-lbl" style="color:#64748b">${e.ico} ${e.lbl}</div>
+      </div>
+    `).join('')}
+  </div>
+
+  <!-- Tabla RFQ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Solicitudes de Cotización (${rfqs.length})</div>
+      <div style="display:flex;gap:8px">
+        <input class="search-input" placeholder="🔍 Buscar..." oninput="filtrarRFQ(this.value)" style="width:220px">
+        <select class="form-control" style="width:140px;padding:7px 10px" onchange="filtrarRFQEstatus(this.value)">
+          <option value="">Todos los estados</option>
+          ${RFQ_ETAPAS.map(e=>`<option value="${e.id}">${e.ico} ${e.lbl}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="tblRFQ">
+        <thead><tr>
+          <th>Número</th><th>Descripción</th><th>Proveedores</th><th>Fecha Límite</th>
+          <th>Presupuesto</th><th>Partidas</th><th>Estatus</th><th>Prioridad</th><th>Acciones</th>
+        </tr></thead>
+        <tbody id="rfqBody">${renderRFQRows(rfqs)}</tbody>
+      </table>
+    </div>
+    ${rfqs.length===0?`<div class="empty">
+      <div class="emoji">📋</div>
+      <h3>Sin solicitudes de cotización</h3>
+      <p>Crea tu primera RFQ para solicitar cotizaciones a proveedores</p>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="rfqNueva()">➕ Nueva RFQ</button>
+    </div>`:''}
+  </div>`;
+
+  ge('mainContent').innerHTML = html;
+}
+
+function renderRFQRows(rfqs){
+  return rfqs.map(r=>{
+    const etapa = RFQ_ETAPAS.find(e=>e.id===r.estatus)||RFQ_ETAPAS[0];
+    const dias  = r.fecha_limite ? Math.round((new Date(r.fecha_limite)-new Date())/86400000) : null;
+    const diasColor = dias===null?'#94a3b8':dias<0?'#dc2626':dias<3?'#d97706':'#059669';
+    const prio = {alta:'🔴 Alta',media:'🟡 Media',baja:'🟢 Baja'}[r.prioridad]||'🟡 Media';
+    const provNoms = r.proveedores_nombres ? r.proveedores_nombres.split(',').slice(0,2).join(', ')+(r.proveedores_nombres.split(',').length>2?' +más':'') : '—';
+    return `<tr onclick="verRFQ(${r.id})">
+      <td><span style="font-family:monospace;font-weight:700;color:var(--azul)">${esc(r.numero_rfq||'RFQ-'+r.id)}</span></td>
+      <td>
+        <div style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.descripcion||r.titulo||'—')}</div>
+        ${r.proyecto_nombre?`<div style="font-size:.72rem;color:#94a3b8">📁 ${esc(r.proyecto_nombre)}</div>`:''}
+      </td>
+      <td style="font-size:.78rem;color:#64748b;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(provNoms)}</td>
+      <td style="color:${diasColor};font-weight:${dias!==null&&dias<3?700:400};font-size:.8rem">
+        ${r.fecha_limite?fmt(r.fecha_limite)+(dias!==null&&dias<0?' ⚠️':''):'—'}
+      </td>
+      <td style="font-weight:600;color:var(--verde)">${r.presupuesto_max?fmtM(r.presupuesto_max,r.moneda||'MXN'):'—'}</td>
+      <td style="text-align:center"><span style="background:var(--azul-bg);color:var(--azul);padding:2px 8px;border-radius:10px;font-weight:700">${r.total_partidas||0}</span></td>
+      <td><span class="tag" style="background:${etapa.color}18;color:${etapa.color}">${etapa.ico} ${etapa.lbl}</span></td>
+      <td style="font-size:.78rem">${prio}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">
+        <button class="btn btn-sm btn-secondary" onclick="verRFQ(${r.id})">👁 Ver</button>
+        ${r.estatus==='borrador'?`<button class="btn btn-sm btn-primary" onclick="enviarRFQ(${r.id})">📤</button>`:''}
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="9" style="padding:30px;text-align:center;color:#94a3b8">Sin RFQs encontradas</td></tr>';
+}
+
+function filtrarRFQ(q){
+  q=q.toLowerCase();
+  ge('rfqBody').innerHTML = renderRFQRows((_rfqData||[]).filter(r=>
+    !q||[r.descripcion,r.titulo,r.numero_rfq,r.proveedores_nombres].some(v=>(v||'').toLowerCase().includes(q))));
+}
+function filtrarRFQEstatus(est){
+  ge('rfqBody').innerHTML = renderRFQRows(est?(_rfqData||[]).filter(r=>r.estatus===est):_rfqData||[]);
+}
+
+function crearRFQProv(provId){
+  showTab('rfq');
+  setTimeout(()=>rfqNueva(provId), 200);
+}
+
+function rfqNueva(provId=null){
+  const provOpts = (_provData||[]).map(p=>`<option value="${p.id}" ${p.id===provId?'selected':''}>${esc(p.nombre)}</option>`).join('');
+  const proyOpts = '<option value="">— Sin proyecto —</option>'; // Could load proyectos
+
+  openModal('📋 Nueva Solicitud de Cotización (RFQ)', `
+  <div style="background:var(--azul-bg);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.8rem;color:var(--azul-med)">
+    💡 <strong>Buenas prácticas RFQ:</strong> Define claramente las especificaciones técnicas, plazos de entrega, 
+    condiciones de pago, criterios de evaluación y fecha límite de respuesta. Envía a mínimo 3 proveedores calificados.
+  </div>
+  <div class="form-grid">
+    <div class="section-label">📄 Información General</div>
+    <div class="field-group form-full"><label class="req">Descripción / Objeto de la Compra</label>
+      <input id="rfq_desc" class="form-control" placeholder="Ej: Adquisición de controladores industriales PLC Serie 300"></div>
+    <div class="field-group"><label>Proyecto Relacionado</label>
+      <input id="rfq_proy" class="form-control" placeholder="Nombre del proyecto (opcional)"></div>
+    <div class="field-group"><label>Prioridad</label>
+      <select id="rfq_prio" class="form-control">
+        <option value="media">🟡 Media</option>
+        <option value="alta">🔴 Alta</option>
+        <option value="baja">🟢 Baja</option>
+      </select></div>
+    <div class="field-group"><label>Fecha Límite de Respuesta</label>
+      <input id="rfq_fecha" type="date" class="form-control" value="${new Date(Date.now()+7*86400000).toISOString().slice(0,10)}"></div>
+    <div class="field-group"><label>Presupuesto Máximo (MXN)</label>
+      <input id="rfq_pres" type="number" class="form-control" placeholder="0 = sin límite"></div>
+    <div class="field-group"><label>Moneda</label>
+      <select id="rfq_mon" class="form-control">${MONEDAS.map(m=>`<option>${m}</option>`).join('')}</select></div>
+
+    <div class="section-label">📦 Partidas / Ítems</div>
+    <div class="form-full" id="rfqItemsContainer">
+      <div class="alert alert-info" style="margin-bottom:10px">Define las partidas específicas que requieres cotizar. Sé preciso en cantidades, unidades y especificaciones técnicas.</div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 2fr 30px;gap:6px;margin-bottom:6px">
+          <div style="font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase">Descripción</div>
+          <div style="font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase">Cantidad</div>
+          <div style="font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase">Unidad</div>
+          <div style="font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase">Especificación Técnica</div>
+          <div></div>
+        </div>
+        <div id="rfqItems"></div>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="rfqAgregarItem()">➕ Agregar partida</button>
+    </div>
+
+    <div class="section-label">🏭 Proveedores a Cotizar</div>
+    <div class="form-full">
+      <div class="alert alert-warn" style="margin-bottom:8px">Selecciona mínimo 3 proveedores para garantizar competencia y mejores precios.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px" id="rfqProvCheck">
+        ${(_provData||[]).filter(p=>p.activo!==false).map(p=>`
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--borde);border-radius:8px;cursor:pointer;transition:.15s"
+            onmouseover="this.style.background='var(--azul-bg)'" onmouseout="this.style.background=''">
+            <input type="checkbox" value="${p.id}" ${p.id===provId?'checked':''} style="width:15px;height:15px;accent-color:var(--azul)">
+            <div>
+              <div style="font-size:.82rem;font-weight:600">${esc(p.nombre)}</div>
+              <div style="font-size:.7rem;color:#94a3b8">${esc(p.categoria||'—')}</div>
+            </div>
+          </label>`).join('')||'<div style="color:#94a3b8;font-size:.82rem">Sin proveedores activos</div>'}
+      </div>
+    </div>
+
+    <div class="section-label">📋 Condiciones y Criterios</div>
+    <div class="field-group"><label>Condiciones de Pago Requeridas</label>
+      <select id="rfq_cond" class="form-control">
+        <option value="">Sin especificar</option>
+        ${CONDICIONES.map(c=>`<option>${c}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label>Lugar de Entrega</label>
+      <input id="rfq_lugar" class="form-control" placeholder="Ej: Toluca, Estado de México"></div>
+    <div class="field-group form-full"><label>Criterios de Evaluación</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;padding:8px;background:#f8fafc;border-radius:8px;border:1px solid var(--borde)">
+        ${['Precio (40%)','Calidad (25%)','Tiempo entrega (20%)','Garantía (10%)','Experiencia (5%)'].map((c,i)=>`
+          <label style="display:flex;align-items:center;gap:5px;font-size:.8rem;cursor:pointer">
+            <input type="checkbox" checked value="${c}" class="rfq_criterio" style="accent-color:var(--azul)"> ${c}
+          </label>`).join('')}
+      </div></div>
+    <div class="field-group form-full"><label>Instrucciones Especiales / Notas</label>
+      <textarea id="rfq_notas" class="form-control" placeholder="Especificaciones adicionales, normas aplicables, condiciones especiales..."></textarea></div>
+    <div class="field-group form-full"><label>Términos y Condiciones</label>
+      <textarea id="rfq_terms" class="form-control" rows="3" placeholder="Ej: Las cotizaciones deben incluir IVA desglosado. Vigencia mínima de cotización: 30 días. Se requiere garantía de al menos 12 meses..."></textarea></div>
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+   <button class="btn btn-secondary" onclick="rfqGuardar('borrador')">💾 Guardar borrador</button>
+   <button class="btn btn-primary" onclick="rfqGuardar('enviada')">📤 Crear y Enviar</button>`,
+  true);
+
+  // Init items
+  window._rfqItems = [{desc:'',qty:1,unit:'pza',spec:''}];
+  rfqRenderItems();
+}
+
+function rfqRenderItems(){
+  const items = window._rfqItems||[];
+  ge('rfqItems').innerHTML = items.map((it,i)=>`
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 2fr 30px;gap:6px;margin-bottom:6px">
+      <input class="form-control" value="${esc(it.desc)}" placeholder="Descripción del ítem" oninput="window._rfqItems[${i}].desc=this.value">
+      <input class="form-control" type="number" value="${it.qty}" min="0.01" step="any" oninput="window._rfqItems[${i}].qty=parseFloat(this.value)||1">
+      <input class="form-control" value="${esc(it.unit)}" placeholder="pza / kg / m" oninput="window._rfqItems[${i}].unit=this.value">
+      <input class="form-control" value="${esc(it.spec)}" placeholder="Especificación técnica" oninput="window._rfqItems[${i}].spec=this.value">
+      <button type="button" onclick="rfqRemItem(${i})" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:6px;cursor:pointer;padding:0 6px">✕</button>
+    </div>`).join('');
+}
+function rfqAgregarItem(){ (window._rfqItems=window._rfqItems||[]).push({desc:'',qty:1,unit:'pza',spec:''}); rfqRenderItems(); }
+function rfqRemItem(i){ (window._rfqItems||[]).splice(i,1); rfqRenderItems(); }
+
+async function rfqGuardar(estatus){
+  const provIds = [...document.querySelectorAll('#rfqProvCheck input[type=checkbox]:checked')].map(c=>parseInt(c.value));
+  const criterios = [...document.querySelectorAll('.rfq_criterio:checked')].map(c=>c.value);
+  const items = (window._rfqItems||[]).filter(it=>it.desc.trim());
+
+  const b = {
+    descripcion:     ge('rfq_desc')?.value.trim(),
+    proyecto_nombre: ge('rfq_proy')?.value.trim()||null,
+    prioridad:       ge('rfq_prio')?.value||'media',
+    fecha_limite:    ge('rfq_fecha')?.value||null,
+    presupuesto_max: toNum(ge('rfq_pres')?.value||0)||null,
+    moneda:          ge('rfq_mon')?.value||'MXN',
+    condiciones_pago:ge('rfq_cond')?.value||null,
+    lugar_entrega:   ge('rfq_lugar')?.value.trim()||null,
+    criterios_eval:  criterios.join(', '),
+    notas:           ge('rfq_notas')?.value.trim()||null,
+    terminos:        ge('rfq_terms')?.value.trim()||null,
+    proveedor_ids:   provIds,
+    items:           items,
+    estatus,
+  };
+
+  if(!b.descripcion){ toast('La descripción es requerida','err'); return; }
+  if(provIds.length===0){ toast('Selecciona al menos un proveedor','err'); return; }
+  if(items.length===0){ toast('Agrega al menos una partida','err'); return; }
+
+  try{
+    await api('/api/rfq','POST',b);
+    toast(estatus==='enviada'?'✅ RFQ creada y enviada':'💾 RFQ guardada como borrador');
+    closeModal();
+    _rfqData = await api('/api/rfq').catch(()=>[]);
+    renderRFQ();
+  }catch(e){ toast(e.message,'err'); }
+}
+
+function verRFQ(id){
+  const r = (_rfqData||[]).find(x=>x.id===id);
+  if(!r) return;
+  const etapa = RFQ_ETAPAS.find(e=>e.id===r.estatus)||RFQ_ETAPAS[0];
+  let items=[]; try{items=Array.isArray(r.items)?r.items:(JSON.parse(r.items||'[]')||[]);}catch(e){}
+
+  openModal(`📋 ${esc(r.numero_rfq||'RFQ-'+r.id)} — ${esc(r.descripcion||'—')}`,`
+  <!-- Estatus pipeline -->
+  <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--borde);margin-bottom:16px">
+    ${RFQ_ETAPAS.filter(e=>e.id!=='cancelada').map(e=>`
+      <div style="flex:1;padding:8px 4px;text-align:center;background:${e.id===r.estatus?'var(--azul)':''};border-left:1px solid var(--borde)">
+        <div style="font-size:.75rem;color:${e.id===r.estatus?'#fff':e.color}">${e.ico}</div>
+        <div style="font-size:.62rem;color:${e.id===r.estatus?'rgba(255,255,255,.8)':'#94a3b8'};text-transform:uppercase">${e.lbl}</div>
+      </div>`).join('')}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    ${_f('Descripción',r.descripcion)}
+    ${_f('Prioridad',r.prioridad==='alta'?'🔴 Alta':r.prioridad==='baja'?'🟢 Baja':'🟡 Media')}
+    ${_f('Fecha Límite',fmt(r.fecha_limite))}
+    ${_f('Presupuesto Máx.',r.presupuesto_max?fmtM(r.presupuesto_max,r.moneda):null)}
+    ${_f('Cond. de Pago',r.condiciones_pago)}
+    ${_f('Lugar de Entrega',r.lugar_entrega)}
+    ${_f('Criterios de Evaluación',r.criterios_eval)}
+    ${_f('Creada',fmt(r.created_at))}
+    ${r.notas?`<div style="grid-column:1/-1">${_f('Notas',r.notas)}</div>`:''}
+    ${r.terminos?`<div style="grid-column:1/-1">${_f('Términos y Condiciones',r.terminos)}</div>`:''}
+  </div>
+
+  <!-- Partidas -->
+  <div style="font-size:.73rem;font-weight:700;color:var(--azul);text-transform:uppercase;margin-bottom:8px">📦 Partidas (${items.length})</div>
+  <div style="border:1px solid var(--borde);border-radius:8px;overflow:hidden;margin-bottom:14px">
+    <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+      <thead><tr style="background:var(--azul-bg)">
+        <th style="padding:7px 10px;text-align:left;color:var(--azul);font-size:.68rem;text-transform:uppercase">#</th>
+        <th style="padding:7px 10px;text-align:left;color:var(--azul);font-size:.68rem;text-transform:uppercase">Descripción</th>
+        <th style="padding:7px 10px;text-align:right;color:var(--azul);font-size:.68rem;text-transform:uppercase">Cantidad</th>
+        <th style="padding:7px 10px;text-align:left;color:var(--azul);font-size:.68rem;text-transform:uppercase">Unidad</th>
+        <th style="padding:7px 10px;text-align:left;color:var(--azul);font-size:.68rem;text-transform:uppercase">Especificación</th>
+      </tr></thead>
+      <tbody>
+        ${items.map((it,i)=>`<tr style="border-top:1px solid #f8fafc">
+          <td style="padding:7px 10px;color:#94a3b8">${i+1}</td>
+          <td style="padding:7px 10px;font-weight:600">${esc(it.desc||it.descripcion||'—')}</td>
+          <td style="padding:7px 10px;text-align:right">${it.qty||it.cantidad||1}</td>
+          <td style="padding:7px 10px">${esc(it.unit||it.unidad||'pza')}</td>
+          <td style="padding:7px 10px;color:#64748b;font-size:.78rem">${esc(it.spec||it.especificacion||'—')}</td>
+        </tr>`).join('')||'<tr><td colspan="5" style="padding:16px;text-align:center;color:#94a3b8">Sin partidas</td></tr>'}
+      </tbody>
+    </table>
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+   ${r.estatus==='borrador'?`<button class="btn btn-primary" onclick="closeModal();enviarRFQ(${r.id})">📤 Enviar RFQ</button>`:''}
+   ${r.estatus==='recibida'||r.estatus==='enviada'?`<button class="btn btn-secondary" onclick="closeModal();evaluarRFQ(${r.id})">⚖️ Comparar Cotizaciones</button>`:''}`,
+  true);
+}
+
+async function enviarRFQ(id){
+  if(!confirm('¿Enviar esta RFQ a los proveedores seleccionados?')) return;
+  try{
+    await api('/api/rfq/'+id+'/estatus','PUT',{estatus:'enviada'});
+    toast('✅ RFQ enviada a proveedores');
+    _rfqData = await api('/api/rfq').catch(()=>[]);
+    renderRFQ();
+  }catch(e){ toast(e.message,'err'); }
+}
+
+function evaluarRFQ(id){
+  const r = (_rfqData||[]).find(x=>x.id===id);
+  if(!r) return;
+  // Cuadro comparativo de cotizaciones
+  openModal(`⚖️ Comparativo de Cotizaciones — ${esc(r.descripcion||'RFQ-'+id)}`,`
+  <div class="alert alert-info" style="margin-bottom:14px">
+    Compare las propuestas recibidas. Seleccione la mejor opción considerando precio, calidad, tiempo de entrega y garantía.
+  </div>
+  <div style="text-align:center;padding:30px;color:#94a3b8">
+    <div style="font-size:2rem;margin-bottom:10px">📊</div>
+    <p style="font-size:.85rem">Registra las cotizaciones recibidas de cada proveedor para comparar.</p>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="registrarCotizacion(${id})">+ Registrar Cotización</button>
+  </div>`,
+  '<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>',
+  true);
+}
+
+function registrarCotizacion(rfqId){ toast('Función de registro de cotizaciones — próximamente','ok'); }
+
+/* ═══════════════════════════════════════════════════════
+   3. ÓRDENES DE COMPRA
+═══════════════════════════════════════════════════════ */
+async function renderOC(){
+  ge('mainContent').innerHTML = '<div class="empty"><div class="emoji">⏳</div><h3>Cargando...</h3></div>';
+  await loadAll();
+  const ocs = _ocData||[];
+  const montos = ocs.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const pendientes = ocs.filter(o=>['borrador','enviada','pendiente'].includes(o.estatus)).length;
+
+  let html = `
+  <div class="kpi-grid">
+    <div class="kpi" style="border-left:4px solid var(--azul)">
+      <div class="kpi-label">Total OC</div><div class="kpi-val">${ocs.length}</div>
+      <div class="kpi-sub">${pendientes} pendientes</div></div>
+    <div class="kpi" style="border-left:4px solid var(--verde)">
+      <div class="kpi-label">Monto Total</div><div class="kpi-val" style="font-size:1.1rem">${fmtM(montos)}</div>
+      <div class="kpi-sub">Todas las órdenes</div></div>
+    <div class="kpi" style="border-left:4px solid #d97706">
+      <div class="kpi-label">Aprobadas</div><div class="kpi-val">${ocs.filter(o=>o.estatus==='aprobada').length}</div></div>
+    <div class="kpi" style="border-left:4px solid var(--rojo)">
+      <div class="kpi-label">Canceladas</div><div class="kpi-val">${ocs.filter(o=>o.estatus==='cancelada').length}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Órdenes de Compra (${ocs.length})</div>
+      <div style="display:flex;gap:8px">
+        <input class="search-input" placeholder="🔍 Buscar OC, proveedor..." oninput="filtrarOC(this.value)" style="width:220px">
+        <button class="btn btn-secondary btn-sm" onclick="exportarOCCSV()">📥 CSV</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="tblOC">
+        <thead><tr>
+          <th>Número OC</th><th>Proveedor</th><th>Fecha</th><th>Entrega Estimada</th>
+          <th>Total</th><th>Estatus</th><th>Factura</th><th>Acciones</th>
+        </tr></thead>
+        <tbody id="ocBody">${renderOCRows(ocs)}</tbody>
+      </table>
+    </div>
+    ${ocs.length===0?`<div class="empty"><div class="emoji">📦</div><h3>Sin órdenes de compra</h3>
+      <p>Crea una nueva OC o genera una desde una RFQ adjudicada</p>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="ocNueva()">➕ Nueva OC</button></div>`:''}
+  </div>`;
+
+  ge('mainContent').innerHTML = html;
+}
+
+function renderOCRows(ocs){
+  const colors={borrador:'#64748b',enviada:'#2563eb',pendiente:'#d97706',aprobada:'#059669',recibida:'#7c3aed',pagada:'#059669',cancelada:'#dc2626'};
+  return ocs.map(o=>{
+    const c=colors[o.estatus]||'#64748b';
+    const tieneFac = o.tiene_factura||o.factura_pdf;
+    return `<tr onclick="verOC(${o.id})">
+      <td><span style="font-family:monospace;font-weight:700;color:var(--azul)">${esc(o.numero_op||'OC-'+o.id)}</span></td>
+      <td style="font-weight:600">${esc(o.proveedor_nombre||'—')}</td>
+      <td style="font-size:.8rem">${fmt(o.fecha_emision)}</td>
+      <td style="font-size:.8rem;color:${o.fecha_entrega&&new Date(o.fecha_entrega)<new Date()?'#dc2626':'#64748b'}">${fmt(o.fecha_entrega)||'—'}</td>
+      <td style="font-weight:700;color:var(--verde)">${fmtM(o.total,o.moneda)}</td>
+      <td><span class="tag" style="background:${c}18;color:${c}">● ${esc(o.estatus||'—')}</span></td>
+      <td>${tieneFac?'<span style="color:#059669;font-weight:700">✅ Recibida</span>':'<span style="color:#94a3b8">— Pendiente</span>'}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">
+        <button class="btn btn-sm btn-secondary" onclick="verOC(${o.id})">👁</button>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8" style="padding:30px;text-align:center;color:#94a3b8">Sin resultados</td></tr>';
+}
+
+function filtrarOC(q){
+  q=q.toLowerCase();
+  ge('ocBody').innerHTML=renderOCRows((_ocData||[]).filter(o=>!q||[o.numero_op,o.proveedor_nombre].some(v=>(v||'').toLowerCase().includes(q))));
+}
+
+function verOC(id){
+  // Redirect to main app OC view
+  window.location.href = '/app#oc-prov';
+}
+
+function ocNueva(){ window.location.href='/app'; setTimeout(()=>{if(window.ocProv)window.ocProv();},500); }
+function exportarOCCSV(){
+  const h='Número,Proveedor,Fecha,Entrega,Total,Moneda,Estatus\n';
+  const rows=(_ocData||[]).map(o=>[o.numero_op,o.proveedor_nombre,o.fecha_emision,o.fecha_entrega,o.total,o.moneda,o.estatus].map(v=>`"${v||''}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([h+rows],{type:'text/csv'}));
+  a.download='OrdenesCompra_VEF.csv'; a.click();
+}
+
+/* ═══════════════════════════════════════════════════════
+   4. EVALUACIÓN DE PROVEEDORES
+═══════════════════════════════════════════════════════ */
+const EVAL_CRITERIOS = [
+  {id:'calidad',      lbl:'Calidad del Producto/Servicio', peso:25, icon:'⭐'},
+  {id:'precio',       lbl:'Competitividad de Precios',      peso:20, icon:'💰'},
+  {id:'entrega',      lbl:'Cumplimiento de Entrega',        peso:20, icon:'🚚'},
+  {id:'servicio',     lbl:'Servicio y Atención',            peso:15, icon:'🤝'},
+  {id:'documentacion',lbl:'Documentación y Cumplimiento',   peso:10, icon:'📋'},
+  {id:'garantia',     lbl:'Garantía y Post-venta',          peso:10, icon:'🛡️'},
+];
+
+async function renderEvaluacion(){
+  ge('mainContent').innerHTML = '<div class="empty"><div class="emoji">⏳</div><h3>Cargando...</h3></div>';
+  await loadAll();
+  const provs = _provData||[];
+
+  let html = `
+  <div class="alert alert-info" style="margin-bottom:16px">
+    📊 <strong>Sistema de Evaluación de Proveedores</strong> — Califica a tus proveedores en 6 criterios ponderados según 
+    buenas prácticas (ISO 9001, NMX-CC-9001). Las evaluaciones generan un historial de desempeño para tomar mejores decisiones de compra.
+  </div>
+
+  <!-- Criterios con pesos -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-header"><div class="card-title">⚖️ Criterios de Evaluación (Ponderación)</div></div>
+    <div style="padding:14px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+      ${EVAL_CRITERIOS.map(c=>`
+        <div style="background:var(--azul-bg);border-radius:8px;padding:10px 12px;border-left:3px solid var(--azul-med)">
+          <div style="font-size:.85rem;font-weight:700;color:var(--azul)">${c.icon} ${c.lbl}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div style="flex:1;height:6px;background:#e5e7eb;border-radius:3px">
+              <div style="height:6px;width:${c.peso*4}%;background:var(--azul-med);border-radius:3px"></div>
+            </div>
+            <span style="font-size:.78rem;font-weight:700;color:var(--azul-med)">${c.peso}%</span>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Tabla de proveedores con calificaciones -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📊 Calificaciones por Proveedor</div>
+      <button class="btn btn-primary btn-sm" onclick="evalNueva()">➕ Nueva Evaluación</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Proveedor</th><th>Categoría</th>
+          ${EVAL_CRITERIOS.map(c=>`<th title="${c.lbl}">${c.icon}</th>`).join('')}
+          <th>Promedio</th><th>Evaluaciones</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${provs.map(p=>{
+            const prom = parseFloat(p.calificacion_promedio||0);
+            const color = prom>=4?'#059669':prom>=3?'#d97706':prom>0?'#dc2626':'#94a3b8';
+            const estado = prom>=4?'tag-evaluado':prom>=2?'tag-pendiente':'tag-critico';
+            return `<tr onclick="evalNueva(${p.id})">
+              <td><div style="font-weight:700;color:var(--azul)">${esc(p.nombre)}</div></td>
+              <td><span class="tag" style="background:#f0f4ff;color:#4338ca">${esc(p.categoria||'—')}</span></td>
+              ${EVAL_CRITERIOS.map(()=>`<td style="text-align:center;color:#94a3b8;font-size:.8rem">—</td>`).join('')}
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-weight:800;color:${color};font-size:1.1rem">${prom?prom.toFixed(1):'—'}</span>
+                  <div style="font-size:.85rem;color:#f59e0b">${prom?'★'.repeat(Math.round(prom))+'☆'.repeat(5-Math.round(prom)):'☆☆☆☆☆'}</div>
+                </div>
+              </td>
+              <td style="text-align:center;color:#64748b">${p.num_evaluaciones||0}</td>
+              <td><span class="tag ${prom>=4?'tag-evaluado':prom>=2?'tag-pendiente':'tag-critico'}">${prom>=4?'✅ Excelente':prom>=3?'⚡ Bueno':prom>0?'⚠️ Regular':'📝 Sin evaluar'}</span></td>
+              <td onclick="event.stopPropagation()">
+                <button class="btn btn-sm btn-primary" onclick="evalNueva(${p.id})">Evaluar</button>
+              </td>
+            </tr>`;
+          }).join('')||'<tr><td colspan="12" style="padding:30px;text-align:center;color:#94a3b8">Sin proveedores registrados</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  ge('mainContent').innerHTML = html;
+}
+
+function evalNueva(provId=null){
+  const provOpts = (_provData||[]).map(p=>`<option value="${p.id}" ${p.id===provId?'selected':''}>${esc(p.nombre)}</option>`).join('');
+  let estrellas = {};
+
+  openModal('⭐ Nueva Evaluación de Proveedor',`
+  <div class="alert alert-info" style="margin-bottom:14px">
+    Evalúa el desempeño del proveedor en cada criterio del 1 al 5. Esta evaluación quedará registrada en el historial.
+  </div>
+  <div class="form-grid">
+    <div class="field-group form-full"><label class="req">Proveedor</label>
+      <select id="ev_prov" class="form-control"><option value="">— Seleccionar —</option>${provOpts}</select></div>
+    <div class="field-group"><label>Período de Evaluación</label>
+      <input id="ev_periodo" class="form-control" value="${new Date().toLocaleString('es-MX',{month:'long',year:'numeric'})}"></div>
+    <div class="field-group"><label>OC / Proyecto Relacionado</label>
+      <input id="ev_ref" class="form-control" placeholder="Ej: OC-2026-045"></div>
+    <div class="section-label">⭐ Calificación por Criterio (1-5 estrellas)</div>
+    ${EVAL_CRITERIOS.map(c=>`
+      <div class="field-group form-full" style="background:var(--azul-bg);border-radius:8px;padding:10px 12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <label style="font-size:.82rem;font-weight:600;color:var(--azul);text-transform:none;letter-spacing:0">
+            ${c.icon} ${c.lbl} <span style="color:#94a3b8;font-weight:400">(${c.peso}%)</span></label>
+          <div class="stars" id="stars_${c.id}" onclick="setEstrella('${c.id}',event)">
+            ${[1,2,3,4,5].map(n=>`<span class="star" data-val="${n}">★</span>`).join('')}
+          </div>
+        </div>
+        <input type="hidden" id="ev_${c.id}" value="0">
+      </div>`).join('')}
+    <div class="field-group form-full"><label>Comentarios / Observaciones</label>
+      <textarea id="ev_notas" class="form-control" placeholder="Observaciones sobre el desempeño, incidencias, aspectos destacados..."></textarea></div>
+    <div class="field-group form-full"><label>Recomendación</label>
+      <select id="ev_recom" class="form-control">
+        <option value="mantener">✅ Mantener como proveedor aprobado</option>
+        <option value="desarrollar">⚡ Desarrollar — Requiere mejoras</option>
+        <option value="vigilar">⚠️ Vigilar — En período de observación</option>
+        <option value="descalificar">❌ Descalificar — No cumple requisitos</option>
+      </select></div>
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+   <button class="btn btn-primary" onclick="evalGuardar()">💾 Guardar Evaluación</button>`,
+  true);
+}
+
+function setEstrella(criterio, event){
+  const val = parseInt(event.target.dataset.val);
+  if(!val) return;
+  ge('ev_'+criterio).value = val;
+  const stars = ge('stars_'+criterio).querySelectorAll('.star');
+  stars.forEach((s,i)=>s.classList.toggle('on', i<val));
+}
+
+async function evalGuardar(){
+  const provId = parseInt(ge('ev_prov')?.value)||null;
+  if(!provId){ toast('Selecciona un proveedor','err'); return; }
+
+  const scores = {};
+  let totalPonderado = 0;
+  for(const c of EVAL_CRITERIOS){
+    const val = parseInt(ge('ev_'+c.id)?.value||0);
+    if(val===0){ toast(`Califica "${c.lbl}"`, 'err'); return; }
+    scores[c.id] = val;
+    totalPonderado += val * (c.peso/100);
+  }
+
+  const b={
+    proveedor_id: provId,
+    periodo:      ge('ev_periodo')?.value||null,
+    referencia:   ge('ev_ref')?.value||null,
+    notas:        ge('ev_notas')?.value||null,
+    recomendacion:ge('ev_recom')?.value||'mantener',
+    ...scores,
+    calificacion_total: Math.round(totalPonderado*10)/10,
+  };
+
+  try{
+    await api('/api/proveedores/'+provId+'/evaluacion','POST',b);
+    toast(`✅ Evaluación guardada — Calificación: ${b.calificacion_total}/5`);
+    closeModal();
+    _provData = await api('/api/proveedores').catch(()=>[]);
+    renderEvaluacion();
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+(async function init(){
+  // Check token
+  if(!TOKEN){ window.location.href='/'; return; }
+  // Detect initial tab from URL hash
+  const hash = window.location.hash.replace('#','');
+  const validTabs = ['directorio','rfq','oc','evaluacion'];
+  const startTab = validTabs.includes(hash) ? hash : 'directorio';
+  await loadAll();
+  showTab(startTab);
+})();
+</script>
+</body>
+</html>

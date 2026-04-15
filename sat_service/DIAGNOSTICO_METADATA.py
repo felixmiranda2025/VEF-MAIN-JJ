@@ -14,7 +14,7 @@ PASSWORD  = "Brabata1207"         # Cambia la contraseña
 
 # ID de solicitud/paquete ya existente (cópialo del ERP)
 # O deja vacío para hacer una solicitud nueva
-ID_PAQUETE = ""  "f088f95a-8004-4db5-98e6-d77a74f024e7_01"
+ID_PAQUETE = "f088f95a-8004-4db5-98e6-d77a74f024e7_01"  # ← Pega aquí tu ID de paquete, o deja "" para solicitar uno nuevo
 # ────────────────────────────────────────────────────────────────
 
 try:

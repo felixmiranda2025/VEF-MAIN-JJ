@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>VEF ERP · Sistema Industrial de Gestión Empresarial</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--azul:#0D2B55;--azul2:#1A4A8A;--verde:#059669;--rojo:#dc2626;--gris:#f1f5f9;--border:#e2e8f0;--r:10px}
+body{min-height:100vh;background:linear-gradient(145deg,#060f1e 0%,#0D2B55 55%,#0f3460 100%);
+  display:flex;font-family:'DM Sans',sans-serif}
+
+/* ── LEFT PANEL ───────────────────────────────────────────── */
+.left{width:48%;display:flex;flex-direction:column;justify-content:space-between;
+  padding:52px 56px;position:relative;overflow:hidden}
+
+/* Decorative blobs */
+.left::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(96,165,250,.08),transparent 70%);
+  top:-150px;right:-150px;pointer-events:none}
+.left::after{content:'';position:absolute;width:350px;height:350px;border-radius:50%;
+  background:radial-gradient(circle,rgba(52,211,153,.06),transparent 70%);
+  bottom:-100px;left:-80px;pointer-events:none}
+.blob-mid{position:absolute;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(167,139,250,.05),transparent 70%);
+  top:45%;left:40%}
+
+/* Brand */
+.brand{position:relative;z-index:1}
+.brand-logo{width:60px;height:60px;background:rgba(255,255,255,.09);border-radius:18px;
+  display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin-bottom:22px;
+  border:1px solid rgba(255,255,255,.14);overflow:hidden;backdrop-filter:blur(8px)}
+.brand-logo img{width:54px;height:54px;object-fit:contain}
+.brand h1{font-family:'Syne',sans-serif;font-size:2.6rem;font-weight:800;color:#fff;line-height:1.1;
+  letter-spacing:-.5px}
+.brand h1 span{background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent}
+.brand p{color:rgba(255,255,255,.5);font-size:.95rem;margin-top:10px;line-height:1.5}
+
+/* Feature list */
+.features{position:relative;z-index:1;display:flex;flex-direction:column;gap:13px;margin-top:40px}
+.feat{display:flex;align-items:center;gap:14px}
+.feat-icon{width:40px;height:40px;background:rgba(255,255,255,.07);border-radius:11px;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;
+  border:1px solid rgba(255,255,255,.09)}
+.feat-text strong{display:block;color:#fff;font-size:.9rem;font-weight:600}
+.feat-text span{color:rgba(255,255,255,.45);font-size:.8rem}
+
+/* Bottom stats */
+.left-stats{position:relative;z-index:1;display:flex;gap:28px;margin-top:44px;
+  padding-top:28px;border-top:1px solid rgba(255,255,255,.08)}
+.stat-item{text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#60a5fa}
+.stat-lbl{font-size:.73rem;color:rgba(255,255,255,.4);margin-top:2px}
+
+/* ── RIGHT PANEL ──────────────────────────────────────────── */
+.right{flex:1;display:flex;align-items:center;justify-content:center;
+  padding:32px 40px;overflow-y:auto}
+.card{background:#fff;border-radius:22px;width:100%;max-width:460px;padding:36px 38px;
+  box-shadow:0 30px 100px rgba(0,0,0,.35)}
+
+/* Tabs */
+.tab-nav{display:flex;background:#f1f5f9;border-radius:12px;padding:4px;margin-bottom:28px;gap:2px}
+.tab-nav button{flex:1;padding:10px 8px;border:none;background:none;border-radius:9px;
+  font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;color:#64748b;cursor:pointer;
+  transition:.2s;position:relative}
+.tab-nav button.active{background:#fff;color:var(--azul);font-weight:700;
+  box-shadow:0 1px 6px rgba(0,0,0,.1)}
+
+/* Form */
+.form-title{font-family:'Syne',sans-serif;font-size:1.42rem;font-weight:800;color:var(--azul);margin-bottom:3px}
+.form-sub{font-size:.83rem;color:#64748b;margin-bottom:22px;line-height:1.4}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:.73rem;font-weight:700;color:#64748b;
+  margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select{width:100%;padding:11px 13px;border:1.5px solid var(--border);
+  border-radius:9px;font-size:.9rem;font-family:'DM Sans',sans-serif;transition:.2s;
+  background:#f8fafc;color:#1e293b}
+.field input:focus,.field select:focus{outline:none;border-color:var(--azul2);
+  background:#fff;box-shadow:0 0 0 3px rgba(26,74,138,.08)}
+.field input.error{border-color:var(--rojo)}
+.field-hint{font-size:.73rem;color:#94a3b8;margin-top:4px}
+.field-hint.ok{color:var(--verde)}.field-hint.err{color:var(--rojo)}
+
+/* Checkbox */
+.check-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:18px;font-size:.83rem;color:#475569;line-height:1.4}
+.check-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--verde);margin-top:2px;flex-shrink:0}
+.check-row a{color:var(--azul2);text-decoration:none}
+
+/* Buttons */
+.btn-main{width:100%;padding:13px;background:linear-gradient(135deg,var(--azul),var(--azul2));
+  border:none;border-radius:10px;color:#fff;font-size:.97rem;font-weight:700;
+  font-family:'Syne',sans-serif;cursor:pointer;transition:.2s;letter-spacing:.2px}
+.btn-main:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(13,43,85,.3)}
+.btn-main:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-main.verde{background:linear-gradient(135deg,#059669,#047857)}
+
+/* Alert */
+.alert{padding:10px 14px;border-radius:9px;font-size:.83rem;margin-bottom:14px;display:none;line-height:1.4}
+.alert.err{background:#fef2f2;border:1px solid #fecaca;color:var(--rojo)}
+.alert.ok{background:#f0fdf4;border:1px solid #a7f3d0;color:#065f46}
+.alert.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+
+/* Divider */
+.divider{text-align:center;margin:16px 0;color:#94a3b8;font-size:.8rem;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:#e2e8f0}
+.divider::before{left:0}.divider::after{right:0}
+
+/* Pricing badge */
+.pricing-box{background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1.5px solid #a7f3d0;
+  border-radius:14px;padding:18px 20px;margin:20px 0;text-align:center}
+.pricing-price{font-family:'Syne',sans-serif;font-size:2.6rem;font-weight:800;color:#065f46;line-height:1}
+.pricing-price sup{font-size:1rem;margin-right:3px;font-weight:600}
+.pricing-price sub{font-size:.85rem;font-weight:500;color:#10b981}
+.pricing-features{display:flex;flex-direction:column;gap:5px;margin-top:12px;text-align:left}
+.pricing-feat{display:flex;align-items:center;gap:7px;font-size:.8rem;color:#374151}
+.pricing-feat::before{content:'✓';color:#059669;font-weight:800;flex-shrink:0}
+
+/* Trial pill */
+.trial-pill{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#fef3c7,#fde68a);
+  border:1px solid #fbbf24;color:#78350f;border-radius:20px;padding:5px 14px;
+  font-size:.78rem;font-weight:700;margin-bottom:20px}
+
+/* Plan card */
+.plan-card{border:2px solid var(--border);border-radius:13px;padding:15px 14px;
+  cursor:pointer;text-align:center;transition:.2s;position:relative}
+.plan-card:hover{border-color:#94a3b8}
+.plan-card.selected{border-color:var(--azul);background:#eff6ff}
+.plan-card.selected-green{border-color:#059669;background:#f0fdf4}
+.plan-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  background:#059669;color:#fff;border-radius:10px;padding:2px 10px;
+  font-size:.68rem;font-weight:700;white-space:nowrap}
+
+/* Empresa field */
+.empresa-field{display:none}
+.empresa-field.show{display:block}
+
+@media(max-width:860px){.left{display:none}.right{padding:20px}}
+</style>
+</head>
+<body>
+
+<!-- ── LEFT PANEL ───────────────────────────────────────────────────────────── -->
+<div class="left">
+  <div>
+    <div class="brand">
+      <div class="brand-logo">
+        <img src="/logo.png" alt="VEF" onerror="this.parentElement.innerHTML='⚡'">
+      </div>
+      <h1>VEF <span>ERP</span></h1>
+      <p>Sistema Industrial de Gestión Empresarial<br>Especializado para México · SAT · CFDI 4.0</p>
+    </div>
+
+    <div class="features">
+      <div class="feat">
+        <div class="feat-icon">🏛</div>
+        <div class="feat-text">
+          <strong>SAT Nativo · CFDI 4.0</strong>
+          <span>Descarga masiva, timbrado, contabilidad electrónica</span>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">📄</div>
+        <div class="feat-text">
+          <strong>Cotizaciones y Facturación</strong>
+          <span>PDFs profesionales, flujo completo de ventas</span>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🏭</div>
+        <div class="feat-text">
+          <strong>Industrial: Producción · MRP · Mantenimiento</strong>
+          <span>Órdenes de producción, BOM, almacén con lotes FIFO</span>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🧮</div>
+        <div class="feat-text">
+          <strong>Contabilidad y Nómina México</strong>
+          <span>ISR, IMSS, INFONAVIT · Tablas 2026 · SBC integrado</span>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">📊</div>
+        <div class="feat-text">
+          <strong>BI · CRM · Reportes Ejecutivos</strong>
+          <span>KPIs en tiempo real, gráficas, metas de ventas</span>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔒</div>
+        <div class="feat-text">
+          <strong>Multi-empresa · Roles y Permisos</strong>
+          <span>Datos 100% aislados, control de accesos por módulo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="blob-mid"></div>
+
+  <div class="left-stats">
+    <div class="stat-item">
+      <div class="stat-num">25+</div>
+      <div class="stat-lbl">Módulos activos</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">SAT</div>
+      <div class="stat-lbl">CFDI 4.0 nativo</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">100%</div>
+      <div class="stat-lbl">Hecho en México</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">24/7</div>
+      <div class="stat-lbl">Soporte incluido</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── RIGHT PANEL ───────────────────────────────────────────────────────────── -->
+<div class="right">
+  <div class="card">
+
+    <div class="tab-nav" id="tabNav">
+      <button id="btnTabReg" onclick="showTab('registro')" class="active">Crear cuenta</button>
+      <button id="btnTabLog" onclick="showTab('login')">Ya tengo cuenta</button>
+    </div>
+
+    <!-- ── REGISTRO ────────────────────────────────────────────────────────── -->
+    <div id="tab_registro">
+      <div class="trial-pill">🎁 30 días gratis · Sin tarjeta de crédito</div>
+      <div class="form-title">Crea tu cuenta</div>
+      <div class="form-sub">Empieza a gestionar tu empresa hoy mismo</div>
+      <div id="reg_alert" class="alert"></div>
+
+      <div class="row">
+        <div class="field"><label>Nombre *</label>
+          <input id="r_nombre" placeholder="Juan" autocomplete="given-name"></div>
+        <div class="field"><label>Apellido *</label>
+          <input id="r_apellido" placeholder="García" autocomplete="family-name"></div>
+      </div>
+      <div class="field"><label>Email corporativo *</label>
+        <input id="r_email" type="email" placeholder="juan@miempresa.com" autocomplete="email"></div>
+      <div class="field"><label>Empresa *</label>
+        <input id="r_empresa" placeholder="Nombre de tu empresa" autocomplete="organization" oninput="updateSlug()"></div>
+      <div class="field"><label>Teléfono</label>
+        <input id="r_tel" type="tel" placeholder="+52 722 123 4567" autocomplete="tel"></div>
+      <div class="field"><label>Contraseña * <span id="pass_strength"></span></label>
+        <input id="r_pass" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" oninput="checkPass()">
+        <div class="field-hint" id="pass_hint">Mínimo 8 caracteres</div>
+      </div>
+
+      <div class="check-row">
+        <input type="checkbox" id="r_terms">
+        <label for="r_terms">Acepto los <a href="#" onclick="return false">términos de servicio</a> y la <a href="#" onclick="return false">política de privacidad</a></label>
+      </div>
+
+      <button class="btn-main" id="btn_reg" onclick="doRegistro()">Crear cuenta gratis →</button>
+
+      <div style="margin-top:18px;background:#f8fafc;border-radius:11px;padding:14px 16px">
+        <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Después del período de prueba</div>
+        <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:6px">
+          <span style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--azul)">$800</span>
+          <span style="font-size:.85rem;color:#64748b">MXN / mes</span>
+          <span style="background:#e0f2fe;color:#0369a1;border-radius:6px;padding:1px 7px;font-size:.72rem;font-weight:700;margin-left:4px">TODO INCLUIDO</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+          ${['✓ Módulos ilimitados','✓ Usuarios ilimitados','✓ SAT · CFDI 4.0','✓ Soporte prioritario'].map(f=>`<div style="font-size:.76rem;color:#475569">${f}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LOGIN ──────────────────────────────────────────────────────────── -->
+    <div id="tab_login" style="display:none">
+      <div class="form-title">Bienvenido de vuelta</div>
+      <div class="form-sub">Ingresa con tu email y contraseña</div>
+      <div id="log_alert" class="alert"></div>
+
+      <div class="field"><label>Email / Usuario</label>
+        <input id="l_user" type="text" placeholder="usuario@empresa.com"
+          autocomplete="username" onblur="loginBuscarEmpresas()"></div>
+
+      <div id="empresa_field" class="empresa-field">
+        <div class="field"><label>🏢 Empresa</label>
+          <select id="l_empresa">
+            <option value="">Selecciona tu empresa...</option>
+          </select>
+          <div style="font-size:.72rem;color:#64748b;margin-top:4px">Si tienes una sola empresa se selecciona automáticamente</div>
+        </div>
+      </div>
+
+      <div class="field"><label>Contraseña</label>
+        <input id="l_pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+
+      <button class="btn-main" id="btn_log" onclick="doLogin()">Iniciar Sesión</button>
+
+      <div class="divider">¿Primera vez?</div>
+      <button onclick="showTab('registro')"
+        style="width:100%;padding:11px;background:none;border:1.5px solid var(--border);
+               border-radius:10px;color:var(--azul);font-size:.9rem;font-weight:600;
+               font-family:'DM Sans',sans-serif;cursor:pointer;transition:.2s"
+        onmouseover="this.style.borderColor='var(--azul)';this.style.background='#eff6ff'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.background='none'">
+        Crea tu cuenta gratis →
+      </button>
+    </div>
+
+    <!-- ── PAGO REQUERIDO ──────────────────────────────────────────────────── -->
+    <div id="tab_pago" style="display:none">
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:3rem;margin-bottom:14px">🔐</div>
+        <div class="form-title">Período de prueba vencido</div>
+        <div class="form-sub" id="pago_msg">Tu trial ha terminado. Activa tu suscripción para continuar.</div>
+
+        <div class="pricing-box">
+          <div style="font-size:.72rem;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Plan VEF ERP — Todo incluido</div>
+          <div class="pricing-price"><sup>$</sup>800<sub> MXN/mes</sub></div>
+          <div class="pricing-features">
+            <div class="pricing-feat">25+ módulos: CRM, SAT, Producción, Contabilidad</div>
+            <div class="pricing-feat">CFDI 4.0 · Descarga masiva SAT · Nómina México</div>
+            <div class="pricing-feat">Usuarios y documentos ilimitados</div>
+            <div class="pricing-feat">Soporte prioritario WhatsApp + email</div>
+          </div>
+        </div>
+
+        <button class="btn-main verde" onclick="irAPago()" style="font-size:1rem">💳 Activar por $800 MXN/mes</button>
+        <div style="margin-top:10px">
+          <button onclick="showTab('login')" style="background:none;border:none;color:#94a3b8;font-size:.83rem;cursor:pointer;text-decoration:underline">← Volver al login</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Admin link -->
+  <div style="text-align:center;padding:12px 0 4px;margin-top:10px">
+    <a href="/admin"
+      style="color:rgba(255,255,255,.2);font-size:.68rem;text-decoration:none;
+             letter-spacing:.6px;text-transform:uppercase;padding:4px 10px;border-radius:5px;
+             transition:.2s;display:inline-block"
+      onmouseover="this.style.color='rgba(255,255,255,.5)';this.style.background='rgba(255,255,255,.06)'"
+      onmouseout="this.style.color='rgba(255,255,255,.2)';this.style.background='none'">
+      🛡 Sistema · Administrador
+    </a>
+  </div>
+</div>
+
+<script>
+// ── Verificar sesión activa ───────────────────────────────────────────────────
+(async()=>{
+  const t=sessionStorage.getItem('vef_token');
+  if(!t) return;
+  try{
+    const r=await fetch('/api/auth/verify',{headers:{'Authorization':'Bearer '+t}});
+    const ct=r.headers.get('content-type')||'';
+    if(!ct.includes('application/json')){ sessionStorage.removeItem('vef_token'); return; }
+    const d=await r.json();
+    if(r.ok&&d.ok){ window.location.replace('/app'); }
+    else { sessionStorage.removeItem('vef_token'); sessionStorage.removeItem('vef_user'); }
+  }catch(e){}
+})();
+
+function showTab(t){
+  ['registro','login','pago'].forEach(n=>{
+    document.getElementById('tab_'+n).style.display=n===t?'block':'none';
+  });
+  document.getElementById('btnTabReg').classList.toggle('active',t==='registro');
+  document.getElementById('btnTabLog').classList.toggle('active',t==='login');
+  if(t==='pago'){
+    document.getElementById('btnTabReg').style.display='none';
+    document.getElementById('btnTabLog').style.display='none';
+  } else {
+    document.getElementById('btnTabReg').style.display='';
+    document.getElementById('btnTabLog').style.display='';
+  }
+}
+
+// ── Password strength ─────────────────────────────────────────────────────────
+function checkPass(){
+  const v=document.getElementById('r_pass').value;
+  const h=document.getElementById('pass_hint');
+  const s=document.getElementById('pass_strength');
+  if(!v.length){h.className='field-hint';h.textContent='Mínimo 8 caracteres';s.textContent='';return;}
+  if(v.length<8){h.className='field-hint err';h.textContent=`Muy corta (${v.length}/8 caracteres)`;s.textContent='';return;}
+  const strong=v.length>=12&&/[A-Z]/.test(v)&&/[0-9]/.test(v)&&/[^A-Za-z0-9]/.test(v);
+  const medium=v.length>=8;
+  h.className='field-hint ok';
+  h.textContent=strong?'✓ Contraseña fuerte':'✓ Contraseña aceptable';
+  s.style.cssText=`display:inline-block;margin-left:6px;padding:1px 7px;border-radius:5px;font-size:.68rem;font-weight:700;background:${strong?'#dcfce7':'#fef9c3'};color:${strong?'#166534':'#713f12'}`;
+  s.textContent=strong?'Fuerte':'Aceptable';
+}
+
+// ── Registro ──────────────────────────────────────────────────────────────────
+let slugTimeout;
+function updateSlug(){}
+
+function showAlert(id,msg,type){
+  const el=document.getElementById(id);
+  el.className='alert '+type;el.innerHTML=msg;el.style.display='block';
+  if(type!=='ok') setTimeout(()=>el.style.display='none',7000);
+}
+
+async function doRegistro(){
+  const nombre   = document.getElementById('r_nombre').value.trim();
+  const apellido = document.getElementById('r_apellido').value.trim();
+  const email    = document.getElementById('r_email').value.trim();
+  const pass     = document.getElementById('r_pass').value;
+  const empresa  = document.getElementById('r_empresa').value.trim();
+  const tel      = document.getElementById('r_tel').value.trim();
+  const terms    = document.getElementById('r_terms').checked;
+
+  if(!nombre||!apellido){showAlert('reg_alert','Ingresa nombre y apellido','err');return;}
+  if(!email||!email.includes('@')){showAlert('reg_alert','Email inválido','err');return;}
+  if(pass.length<8){showAlert('reg_alert','La contraseña debe tener mínimo 8 caracteres','err');return;}
+  if(!empresa){showAlert('reg_alert','Ingresa el nombre de tu empresa','err');return;}
+  if(!terms){showAlert('reg_alert','Debes aceptar los términos de servicio','err');return;}
+
+  const btn=document.getElementById('btn_reg');
+  btn.disabled=true;btn.textContent='Creando tu cuenta...';
+
+  try{
+    const r=await fetch('/api/registro',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre,apellido,email,password:pass,empresa_nombre:empresa,telefono:tel})});
+    const ct=r.headers.get('content-type')||'';
+    if(!ct.includes('application/json')) throw new Error('Error del servidor. Intenta de nuevo en unos segundos.');
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'Error al crear cuenta');
+    showAlert('reg_alert','✅ '+d.mensaje+' Iniciando sesión automáticamente...','ok');
+    setTimeout(async()=>{
+      const lr=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:email,password:pass})});
+      const ld=await lr.json();
+      if(ld.token){
+        sessionStorage.setItem('vef_token',ld.token);
+        sessionStorage.setItem('vef_user',JSON.stringify(ld.user));
+        window.location.replace('/app');
+      }
+    },1500);
+  }catch(e){
+    showAlert('reg_alert',e.message,'err');
+    btn.disabled=false;btn.textContent='Crear cuenta gratis →';
+  }
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    const tl=document.getElementById('tab_login');
+    const tr=document.getElementById('tab_registro');
+    if(tl&&tl.style.display!=='none') doLogin();
+  }
+});
+
+async function loginBuscarEmpresas(){
+  const user=document.getElementById('l_user').value.trim();
+  if(!user||user.length<3) return;
+  try{
+    const r=await fetch('/api/auth/mis-empresas',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user})});
+    const empresas=await r.json();
+    const field=document.getElementById('empresa_field');
+    const sel=document.getElementById('l_empresa');
+    if(empresas.length>1){
+      sel.innerHTML='<option value="">Selecciona tu empresa...</option>'+
+        empresas.map(e=>`<option value="${e.id}">${e.nombre}</option>`).join('');
+      field.classList.add('show');
+    }else if(empresas.length===1){
+      sel.innerHTML=`<option value="${empresas[0].id}">${empresas[0].nombre}</option>`;
+      field.classList.add('show');
+    }else{
+      field.classList.remove('show');
+    }
+  }catch(e){}
+}
+
+async function doLogin(){
+  const user=document.getElementById('l_user').value.trim();
+  const pass=document.getElementById('l_pass').value;
+  if(!user||!pass){showAlert('log_alert','Ingresa email y contraseña','err');return;}
+  const btn=document.getElementById('btn_log');
+  btn.disabled=true;btn.textContent='Verificando...';
+  try{
+    const empresaSel=document.getElementById('l_empresa')?.value;
+    const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:user,password:pass,empresa_id:empresaSel||undefined})});
+    const ct=r.headers.get('content-type')||'';
+    if(!ct.includes('application/json')) throw new Error('Error del servidor. Recarga la página e intenta de nuevo.');
+    const d=await r.json();
+    if(!r.ok){
+      if(d.requiere_pago){document.getElementById('pago_msg').textContent=d.error;showTab('pago');btn.disabled=false;btn.textContent='Iniciar Sesión';return;}
+      throw new Error(d.error||'Credenciales incorrectas');
+    }
+    if(d.user.trial&&d.user.dias_restantes<=5){
+      showAlert('log_alert',`⚠️ Tu período de prueba vence en ${d.user.dias_restantes} días.`,'warn');
+      await new Promise(res=>setTimeout(res,2000));
+    }
+    sessionStorage.setItem('vef_token',d.token);
+    sessionStorage.setItem('vef_user',JSON.stringify(d.user));
+    window.location.replace('/app');
+  }catch(e){
+    showAlert('log_alert',e.message,'err');
+    btn.disabled=false;btn.textContent='Iniciar Sesión';
+  }
+}
+
+// ── Pago / Stripe ─────────────────────────────────────────────────────────────
+function irAPago(){
+  fetch('/api/stripe/planes')
+    .then(r=>r.json())
+    .then(planes=>{
+      const overlay=document.createElement('div');
+      overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:20px';
+      overlay.innerHTML=`
+        <div style="background:#fff;border-radius:22px;padding:36px 32px;max-width:440px;width:100%;box-shadow:0 30px 100px rgba(0,0,0,.4)">
+          <div style="text-align:center;margin-bottom:24px">
+            <div style="font-size:2.4rem;margin-bottom:10px">💳</div>
+            <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:#0D2B55">Activa tu suscripción</div>
+            <div style="font-size:.83rem;color:#64748b;margin-top:4px">Acceso completo · Usuarios ilimitados · Soporte incluido</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+            <label style="border:2px solid #e2e8f0;border-radius:13px;padding:16px 12px;cursor:pointer;text-align:center;transition:.2s;position:relative" id="lbl_mensual">
+              <input type="radio" name="plan_sel" value="mensual" checked style="display:none">
+              <div style="font-weight:700;color:#0D2B55;font-size:.9rem">Mensual</div>
+              <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:#0D2B55;margin:6px 0">$800</div>
+              <div style="font-size:.72rem;color:#64748b">MXN / mes</div>
+            </label>
+            <label style="border:2px solid #059669;border-radius:13px;padding:16px 12px;cursor:pointer;text-align:center;background:#f0fdf4;transition:.2s;position:relative" id="lbl_anual">
+              <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#059669;color:#fff;border-radius:10px;padding:2px 10px;font-size:.67rem;font-weight:700;white-space:nowrap">AHORRA 2 MESES</div>
+              <input type="radio" name="plan_sel" value="anual" style="display:none">
+              <div style="font-weight:700;color:#065f46;font-size:.9rem">Anual</div>
+              <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:#065f46;margin:6px 0">$8,000</div>
+              <div style="font-size:.72rem;color:#065f46">MXN / año</div>
+            </label>
+          </div>
+          <div style="background:#f8fafc;border-radius:9px;padding:10px 14px;font-size:.78rem;color:#475569;margin-bottom:18px;line-height:1.6">
+            ✅ 25+ módulos activos &nbsp;·&nbsp; 🏛 SAT · CFDI 4.0 &nbsp;·&nbsp; 🔒 Pago seguro Stripe
+          </div>
+          <button onclick="procesarPago()" style="width:100%;padding:13px;background:linear-gradient(135deg,#0D2B55,#1A4A8A);border:none;border-radius:10px;color:#fff;font-size:.97rem;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:.2s" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+            Continuar con el pago →
+          </button>
+          <button onclick="this.closest('[style]').remove()" style="width:100%;margin-top:10px;padding:10px;background:none;border:1px solid #e2e8f0;border-radius:9px;color:#64748b;font-size:.88rem;cursor:pointer">
+            Cancelar
+          </button>
+          <div id="pago_error" style="display:none;border-radius:8px;padding:10px 14px;font-size:.82rem;margin-top:12px"></div>
+        </div>`;
+      overlay.addEventListener('change',e=>{
+        if(e.target.name==='plan_sel'){
+          const m=document.getElementById('lbl_mensual');
+          const a=document.getElementById('lbl_anual');
+          m.style.borderColor=e.target.value==='mensual'?'#0D2B55':'#e2e8f0';
+          m.style.background =e.target.value==='mensual'?'#eff6ff':'#fff';
+          a.style.borderColor=e.target.value==='anual'?'#059669':'#e2e8f0';
+          a.style.background =e.target.value==='anual'?'#f0fdf4':'#fff';
+        }
+      });
+      document.body.appendChild(overlay);
+    })
+    .catch(()=>{
+      showAlert('log_alert','Para activar tu suscripción contáctanos:<br>📧 soporte.ventas@vef-automatizacion.com · 📞 +52 (722) 115-7792','warn');
+      showTab('login');
+    });
+}
+
+async function procesarPago(){
+  const plan=document.querySelector('input[name="plan_sel"]:checked')?.value||'mensual';
+  const errEl=document.getElementById('pago_error');
+  try{
+    const r=await fetch('/api/stripe/crear-payment-intent',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'Error al iniciar pago');
+    if(d.checkoutUrl){ window.location.href=d.checkoutUrl; }
+    else{
+      errEl.style.cssText='display:block;background:#f0fdf4;border:1px solid #a7f3d0;color:#065f46;border-radius:8px;padding:10px 14px;font-size:.82rem;margin-top:12px';
+      errEl.textContent='✅ Pago iniciado. Ref: '+(d.clientSecret?.slice(-8).toUpperCase()||'—')+'. Contacta soporte para completar.';
+    }
+  }catch(e){
+    errEl.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:.82rem;margin-top:12px';
+    errEl.textContent=e.message;
+  }
+}
+
+// Init: show registro by default
+showTab('registro');
+</script>
+</body>
+</html>

@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VEF ERP · Nómina / RRHH</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --azul:#0D2B55;--azul-med:#1A4A8A;--azul-claro:#2E6DB4;
+  --azul-suave:#D6E4F7;--azul-bg:#EBF3FB;
+  --verde:#059669;--rojo:#dc2626;--naranja:#d97706;--morado:#7c3aed;
+  --gris:#f1f5f9;--gris-txt:#1e293b;--borde:#e2e8f0;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--gris);color:var(--gris-txt)}
+.layout{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--azul);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid var(--borde);padding:12px 24px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.content{flex:1;overflow-y:auto;padding:22px}
+.sidebar-logo{padding:18px 16px 10px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.brand{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff}
+.brand span{color:var(--azul-suave)}
+.nav-section{font-size:.62rem;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 6px;border-radius:8px;color:rgba(255,255,255,.7);font-size:.84rem;cursor:pointer;transition:.15s;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--azul-med);color:#fff;font-weight:600}
+.nav-item .icon{font-size:1rem;width:22px;text-align:center;flex-shrink:0}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--borde);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.kpi-lbl{font-size:.67rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:3px}
+.kpi-sub{font-size:.72rem;color:#94a3b8}
+.card{background:#fff;border-radius:12px;border:1px solid var(--borde);box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;margin-bottom:18px}
+.card-hdr{padding:13px 18px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;color:var(--azul)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+thead tr{background:var(--azul);color:#fff}
+th{padding:9px 12px;text-align:left;font-weight:600;font-size:.69rem;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+tbody tr{border-bottom:1px solid #f8fafc;transition:.1s}
+tbody tr:hover{background:var(--azul-bg)}
+td{padding:8px 12px}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700}
+.btn{padding:7px 14px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--azul),var(--azul-med));color:#fff}
+.btn-primary:hover{opacity:.9}
+.btn-secondary{background:var(--gris);color:var(--azul);border:1px solid var(--borde)}
+.btn-secondary:hover{background:var(--azul-bg)}
+.btn-success{background:#059669;color:#fff}
+.btn-sm{padding:5px 10px;font-size:.74rem}
+.mbg{display:none;position:fixed;inset:0;background:rgba(13,43,85,.55);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px}
+.mbg.open{display:flex}
+.mbox{background:#fff;border-radius:16px;width:100%;max-width:680px;box-shadow:0 24px 60px rgba(0,0,0,.2);margin:auto}
+.mbox.lg{max-width:940px}
+.mhdr{padding:16px 20px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between}
+.mtitle{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--azul)}
+.mbody{padding:18px 20px;max-height:75vh;overflow-y:auto}
+.mftr{padding:12px 20px;border-top:1px solid var(--borde);display:flex;justify-content:flex-end;gap:8px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.ff{grid-column:1/-1}
+.field label{display:block;font-size:.71rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.field label.req::after{content:' *';color:var(--rojo)}
+.fc{width:100%;padding:8px 10px;border:1.5px solid var(--borde);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.83rem;background:#f8fafc;color:var(--gris-txt);transition:.15s}
+.fc:focus{border-color:var(--azul-med);background:#fff;outline:none}
+textarea.fc{resize:vertical;min-height:65px}
+.slabel{font-size:.7rem;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--azul-bg);padding-bottom:5px;margin:10px 0 8px;grid-column:1/-1}
+.alert{padding:9px 13px;border-radius:8px;font-size:.8rem;margin-bottom:10px}
+.alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.alert-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.toast-ct{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:#1e293b;color:#fff;padding:10px 16px;border-radius:10px;font-size:.82rem;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:si .3s ease;max-width:320px}
+.toast.ok{background:#065f46}.toast.err{background:#7f1d1d}
+@keyframes si{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Recibo */
+.recibo{border:2px solid var(--borde);border-radius:12px;padding:20px;background:#fff}
+.recibo-hdr{background:linear-gradient(135deg,var(--azul),var(--azul-med));color:#fff;border-radius:8px;padding:14px 18px;margin-bottom:14px}
+.recibo-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #e2e8f0;font-size:.83rem}
+.recibo-section{font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:8px 0 4px;margin-top:6px}
+.recibo-total{background:linear-gradient(135deg,#0D2B55,#1A4A8A);color:#fff;border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;justify-content:space-between;font-weight:800;font-size:1.05rem}
+.ing{color:var(--verde);font-weight:600}
+.ded{color:var(--rojo);font-weight:600}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--azul-med);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;color:#fff;flex-shrink:0}
+.progress{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-bar{height:100%;border-radius:3px;transition:width 1s}
+@media print{.sidebar,.topbar,.mftr,.btn{display:none!important}.main{width:100%}.recibo{border:none}}
+@media(max-width:768px){.layout{flex-direction:column}.sidebar{width:100%;height:auto}.fg{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="/logo.png" onerror="this.style.display='none'" style="width:32px;height:32px;border-radius:8px;object-fit:contain">
+    <div class="brand">VEF <span>ERP</span></div>
+  </div>
+  <nav style="padding:10px 6px;flex:1">
+    <div class="nav-section">RRHH</div>
+    <a class="nav-item active" id="tab-empleados" onclick="showTab('empleados')"><span class="icon">👥</span>Empleados</a>
+    <a class="nav-item" id="tab-nomina" onclick="showTab('nomina')"><span class="icon">🧮</span>Calcular Nómina</a>
+    <a class="nav-item" id="tab-historial" onclick="showTab('historial')"><span class="icon">📋</span>Historial Pagos</a>
+    <a class="nav-item" id="tab-prestaciones" onclick="showTab('prestaciones')"><span class="icon">🎁</span>Prestaciones / PTU</a>
+    <a class="nav-item" id="tab-vacaciones" onclick="showTab('vacaciones')"><span class="icon">🏖</span>Vacaciones</a>
+    <div class="nav-section">Sistema</div>
+    <a class="nav-item" href="/app"><span class="icon">⬅️</span>Volver al ERP</a>
+  </nav>
+  <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.08);font-size:.72rem;color:rgba(255,255,255,.4)">
+    UMA 2026: $117.31/día<br>SM: $315.04/día
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:var(--azul)" id="pageTitle">👥 Empleados</div>
+    <div style="flex:1"></div>
+    <div id="userInfo" style="font-size:.78rem;color:#64748b"></div>
+    <button class="btn btn-primary btn-sm" id="btnPrimary" onclick="accionPrimaria()">➕ Nuevo</button>
+  </div>
+  <div class="content" id="mainContent">
+    <div style="padding:40px;text-align:center;color:#94a3b8">⏳ Cargando...</div>
+  </div>
+</div>
+</div>
+<div class="toast-ct" id="tc"></div>
+<!-- Modal -->
+<div class="mbg" id="mbg">
+  <div class="mbox" id="mbox">
+    <div class="mhdr"><div class="mtitle" id="mtitle">—</div><button onclick="closeModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#94a3b8">✕</button></div>
+    <div class="mbody" id="mbody"></div>
+    <div class="mftr" id="mftr"></div>
+  </div>
+</div>
+<script>
+// ── Constantes fiscales México 2026 (DOF 28/12/2025) ──────────────────────────
+const UMA_DIARIA   = 117.31;   // UMA diaria 2026
+const UMA_MENSUAL  = 3566.80;  // UMA mensual (117.31 × 30.4)
+const SMGDF        = 315.04;   // Salario mínimo general diario 2026
+const SUBSIDIO_EMP = 475.84;   // Subsidio al empleo mensual máximo 2026
+
+// Tabla ISR mensual 2026 (Art. 96 LISR — Anexo 8 RMF 2026)
+// [lim_inf, lim_sup, cuota_fija, porcentaje_excedente]
+const ISR_TABLA_MENSUAL = [
+  [0.01,      746.04,    0.00,     0.0192],
+  [746.05,    6332.05,   14.32,    0.0640],
+  [6332.06,   11128.01,  371.83,   0.1088],
+  [11128.02,  12935.83,  893.63,   0.1600],
+  [12935.84,  15487.71,  1182.88,  0.1792],
+  [15487.72,  31236.49,  1640.18,  0.2136],
+  [31236.50,  49233.00,  5004.12,  0.2352],
+  [49233.01,  93993.90,  9236.89,  0.3000],
+  [93993.91,  125325.20, 22665.17, 0.3200],
+  [125325.21, 375975.61, 32691.18, 0.3400],
+  [375975.62, Infinity,  117912.32,0.3500],
+];
+
+// Tabla Subsidio al Empleo mensual 2026 (DOF 28/12/2025)
+const SUBSIDIO_TABLA = [
+  [0.01,      1768.96,  407.02],
+  [1768.97,   2653.38,  406.83],
+  [2653.39,   3472.84,  406.62],
+  [3472.85,   3537.87,  392.77],
+  [3537.88,   4446.15,  382.46],
+  [4446.16,   4717.18,  354.23],
+  [4717.19,   5335.42,  324.87],
+  [5335.43,   6224.67,  294.63],
+  [6224.68,   7113.90,  253.54],
+  [7113.91,   7382.33,  217.61],
+  [7382.34,   Infinity, 0.00],
+];
+
+// ── Cuotas IMSS 2026 (Ley del Seguro Social) ─────────────────────────────────
+// Retenciones al TRABAJADOR (porcentaje del SBC)
+function calcImssObrero(sbcMensual){
+  const uma = UMA_MENSUAL;
+  const sbc  = Math.min(sbcMensual, uma * 25); // Tope 25 UMA
+  return (
+    sbc * 0.02500  // Enfermedades y Maternidad — especie
+    + sbc * 0.00900  // Enfermedades y Maternidad — dinero
+    + sbc * 0.00375  // Invalidez y Vida
+    + sbc * 0.01125  // Cesantía y Vejez (SAR obrero)
+  );
+}
+
+// Cuotas PATRONALES (para mostrar al usuario — costo empresa)
+function calcImssPatron(sbcMensual){
+  const uma = UMA_MENSUAL;
+  const sbc  = Math.min(sbcMensual, uma * 25);
+  return (
+    uma * 0.2040         // Enf. y Mat. cuota fija patrón
+    + sbc * 0.01100      // Enf. y Mat. excedente patrón
+    + sbc * 0.01100      // Enf. y Mat. prestaciones dinero
+    + sbc * 0.00700      // Enf. y Mat. gastos médicos pensionados
+    + sbc * 0.01000      // Riesgo de trabajo (prima media)
+    + sbc * 0.01750      // Invalidez y Vida patrón
+    + sbc * 0.03150      // Cesantía y Vejez patrón (SAR)
+    + sbc * 0.05000      // INFONAVIT aportación
+  );
+}
+
+function calcISR(baseGravableMensual){
+  const base = Math.max(0, baseGravableMensual);
+  for(const [li, ls, cf, pct] of ISR_TABLA_MENSUAL){
+    if(base >= li && base <= ls){
+      return cf + (base - li) * pct;
+    }
+  }
+  return 0;
+}
+
+function calcSubsidio(baseGravable){
+  for(const [li, ls, sub] of SUBSIDIO_TABLA){
+    if(baseGravable >= li && baseGravable <= ls) return sub;
+  }
+  return 0;
+}
+
+// Factor de integración (prestaciones mínimas ley)
+// Fi = 1 + (prima_vac + aguinaldo_diario + parte_proporcional) / 365
+function factorIntegracion(diasVacaciones=6, primaVac=0.25, aguinaldo=15){
+  const factorVac = (diasVacaciones * primaVac) / 365;
+  const factorAg  = aguinaldo / 365;
+  return 1 + factorVac + factorAg;
+}
+
+function calcNominaCompleta(salarioDiario, periodo, extra=0, dedExtra=0, diasVac=6, primaVac=0.25, aguinaldo=15){
+  const fi     = factorIntegracion(diasVac, primaVac, aguinaldo);
+  const sbcD   = salarioDiario * fi;   // SBC diario
+  const diasP  = periodo === 'semanal' ? 7 : periodo === 'quincenal' ? 15 : 30;
+  const factor = diasP / 30;           // Ajuste a período
+
+  // Salario base del período
+  const salBaseP  = salarioDiario * diasP;
+  const sbcMens   = sbcD * 30;         // SBC mensual para IMSS
+
+  // Percepciones totales del período
+  const percepciones = salBaseP + extra;
+
+  // IMSS obrero (sobre SBC, proporcional al período)
+  const imssObrero = calcImssObrero(sbcMens) * factor;
+
+  // Base gravable ISR mensualizada
+  const baseGravMens  = (percepciones / factor) - (imssObrero / factor);
+  const isrMensual    = calcISR(baseGravMens);
+  const subsidioMens  = calcSubsidio(baseGravMens);
+  const isrNetoMens   = Math.max(0, isrMensual - subsidioMens);
+  const isrPeriodo    = isrNetoMens * factor;
+
+  // INFONAVIT (solo patrón, no se descuenta al trabajador — salvo crédito)
+  const infonavitP    = sbcMens * 0.05 * factor; // 5% patrón
+
+  // Totales
+  const totalPerc     = percepciones;
+  const totalDed      = imssObrero + isrPeriodo + dedExtra;
+  const neto          = totalPerc - totalDed;
+
+  // Costo empresa del período
+  const imssPatron    = calcImssPatron(sbcMens) * factor;
+  const costoEmpresa  = totalPerc + imssPatron;
+
+  return {
+    diasPeriodo: diasP, salBaseP, extra, percepciones,
+    sbcD: parseFloat(sbcD.toFixed(4)), sbcMens,
+    fi: parseFloat(fi.toFixed(4)),
+    imssObrero, isrPeriodo, subsidioMens, isrMensual,
+    dedExtra, totalDed, neto,
+    imssPatron, infonavitP, costoEmpresa,
+    baseGravMens,
+  };
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+let _emps = [], _currentTab = 'empleados';
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtM(n){ return '$'+parseFloat(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(v){if(!v)return '—';try{return new Date(v).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return v;}}
+function ge(id){return document.getElementById(id);}
+function toNum(v){return parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0;}
+async function api(path,method='GET',body=null){
+  const tok=sessionStorage.getItem('vef_token')||localStorage.getItem('vef_token')||'';
+  const opts={method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(path,opts);
+  if(!r.ok) throw new Error((await r.json().catch(()=>({error:'Error '+r.status}))).error||'Error '+r.status);
+  return r.json();
+}
+function toast(msg,type='ok'){
+  const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;
+  ge('tc').appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+function openModal(title,body,footer,lg=false){
+  ge('mtitle').textContent=title;ge('mbody').innerHTML=body;ge('mftr').innerHTML=footer;
+  ge('mbox').className='mbox'+(lg?' lg':'');ge('mbg').classList.add('open');
+}
+function closeModal(){ge('mbg').classList.remove('open');}
+function accionPrimaria(){
+  if(_currentTab==='empleados') formEmpleado();
+}
+
+function showTab(tab){
+  _currentTab=tab;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const el=ge('tab-'+tab); if(el) el.classList.add('active');
+  const titles={empleados:'👥 Empleados',nomina:'🧮 Cálculo de Nómina',historial:'📋 Historial de Pagos',prestaciones:'🎁 Prestaciones / PTU',vacaciones:'🏖 Vacaciones'};
+  ge('pageTitle').textContent = titles[tab]||tab;
+  ge('btnPrimary').style.display = tab==='empleados'?'':'none';
+  if(tab==='empleados')  renderEmpleados();
+  else if(tab==='nomina') renderNomina();
+  else if(tab==='historial') renderHistorial();
+  else if(tab==='prestaciones') renderPrestaciones();
+  else if(tab==='vacaciones') renderVacaciones();
+}
+
+// ── EMPLEADOS ─────────────────────────────────────────────────────────────────
+async function renderEmpleados(){
+  ge('mainContent').innerHTML='<div style="padding:30px;text-align:center;color:#94a3b8">⏳</div>';
+  try{ _emps = await api('/api/nomina/empleados'); }catch(e){ _emps=[]; }
+  const activos = _emps.filter(e=>e.activo!==false);
+  const totalNom = activos.reduce((s,e)=>{
+    const r = calcNominaCompleta(parseFloat(e.salario_diario||0),'mensual');
+    return s + r.costoEmpresa;
+  }, 0);
+
+  ge('mainContent').innerHTML=`
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-lbl">Empleados Activos</div><div class="kpi-val" style="color:var(--azul)">${activos.length}</div><div class="kpi-sub">de ${_emps.length} totales</div></div>
+    <div class="kpi"><div class="kpi-lbl">Nómina Total Mensual</div><div class="kpi-val" style="color:var(--verde);font-size:1.2rem">${fmtM(totalNom)}</div><div class="kpi-sub">Costo empresa inc. IMSS</div></div>
+    <div class="kpi"><div class="kpi-lbl">UMA Diaria 2026</div><div class="kpi-val" style="color:var(--morado);font-size:1.2rem">${fmtM(UMA_DIARIA)}</div><div class="kpi-sub">SM: ${fmtM(SMGDF)}/día</div></div>
+    <div class="kpi"><div class="kpi-lbl">Departamentos</div><div class="kpi-val" style="color:var(--naranja)">${new Set(activos.map(e=>e.departamento).filter(Boolean)).size}</div><div class="kpi-sub">áreas activas</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">👥 Directorio de Empleados</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="empSearch" class="fc" placeholder="Buscar nombre, RFC, puesto..." oninput="buscarEmp(this.value)" style="width:220px;padding:6px 10px">
+        <select id="empDepto" class="fc" onchange="filtrarDepto(this.value)" style="width:160px;padding:6px 10px">
+          <option value="">Todos los deptos.</option>
+          ${[...new Set(_emps.map(e=>e.departamento).filter(Boolean))].map(d=>`<option>${esc(d)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>Empleado</th><th>Puesto / Depto.</th><th>RFC / NSS</th>
+          <th style="text-align:right">Salario Diario</th><th style="text-align:right">SBC</th>
+          <th style="text-align:right">Neto Quincenal Est.</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="empBody">${renderEmpRows(_emps)}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderEmpRows(emps){
+  if(!emps.length) return '<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8">Sin empleados registrados</td></tr>';
+  return emps.map(e=>{
+    const sd = parseFloat(e.salario_diario||0);
+    const fi = factorIntegracion(parseInt(e.dias_vacaciones||6), parseFloat(e.prima_vacacional||0.25), parseInt(e.aguinaldo_dias||15));
+    const sbcD = sd * fi;
+    const r = calcNominaCompleta(sd, 'quincenal');
+    const initials = (e.nombre||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const activo = e.activo !== false;
+    return `<tr onclick="verEmpleado(${e.id})">
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar" style="width:34px;height:34px;font-size:.78rem">${initials}</div>
+          <div><div style="font-weight:600;font-size:.86rem">${esc(e.nombre)}</div>
+            <div style="font-size:.72rem;color:#94a3b8">${esc(e.email||'—')}</div></div>
+        </div>
+      </td>
+      <td><div style="font-size:.84rem">${esc(e.puesto||'—')}</div><div style="font-size:.72rem;color:#94a3b8">${esc(e.departamento||'—')}</div></td>
+      <td style="font-family:monospace;font-size:.79rem"><div>${esc(e.rfc||'—')}</div><div style="color:#94a3b8">${esc(e.numero_imss||'—')}</div></td>
+      <td style="text-align:right;font-weight:700">${fmtM(sd)}</td>
+      <td style="text-align:right;font-size:.82rem;color:#7c3aed">${fmtM(sbcD)}<span style="font-size:.69rem;color:#94a3b8">/día</span></td>
+      <td style="text-align:right;font-weight:700;color:var(--verde)">${fmtM(r.neto)}</td>
+      <td><span class="tag" style="background:${activo?'#f0fdf4':'#fef2f2'};color:${activo?'#059669':'#dc2626'}">${activo?'Activo':'Inactivo'}</span></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();editarEmp(${e.id})">✏️</button>
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();calcEmpNomina(${e.id})">🧮</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function buscarEmp(q){
+  const fil = !q ? _emps : _emps.filter(e=>[e.nombre,e.puesto,e.departamento,e.rfc,e.email,e.numero_imss].some(v=>(v||'').toLowerCase().includes(q.toLowerCase())));
+  ge('empBody').innerHTML = renderEmpRows(fil);
+}
+function filtrarDepto(d){
+  ge('empBody').innerHTML = renderEmpRows(d ? _emps.filter(e=>e.departamento===d) : _emps);
+}
+
+function verEmpleado(id){
+  const e = _emps.find(x=>x.id===id); if(!e) return;
+  const r = calcNominaCompleta(parseFloat(e.salario_diario||0),'mensual');
+  openModal(`👤 ${esc(e.nombre)}`,`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:.84rem;margin-bottom:14px">
+      <div><b>Puesto:</b> ${esc(e.puesto||'—')}</div>
+      <div><b>Departamento:</b> ${esc(e.departamento||'—')}</div>
+      <div><b>RFC:</b> <span style="font-family:monospace">${esc(e.rfc||'—')}</span></div>
+      <div><b>CURP:</b> <span style="font-family:monospace">${esc(e.curp||'—')}</span></div>
+      <div><b>NSS IMSS:</b> ${esc(e.numero_imss||'—')}</div>
+      <div><b>N° INFONAVIT:</b> ${esc(e.numero_infonavit||'—')}</div>
+      <div><b>F. Ingreso:</b> ${fmtDate(e.fecha_ingreso)}</div>
+      <div><b>Periodicidad:</b> ${esc(e.periodicidad_pago||'Quincenal')}</div>
+      <div><b>Salario Diario:</b> <strong style="color:var(--verde)">${fmtM(e.salario_diario)}</strong></div>
+      <div><b>SBC Diario:</b> <strong style="color:var(--morado)">${fmtM(r.sbcD)}</strong></div>
+    </div>
+    <div style="background:#f0fdf4;border-radius:8px;padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+      <div><div style="font-size:1rem;font-weight:800;color:var(--verde)">${fmtM(r.neto)}</div><div style="font-size:.7rem;color:#064e3b">Neto Mensual</div></div>
+      <div><div style="font-size:1rem;font-weight:800;color:var(--rojo)">${fmtM(r.totalDed)}</div><div style="font-size:.7rem;color:#7f1d1d">Deducciones</div></div>
+      <div><div style="font-size:1rem;font-weight:800;color:var(--naranja)">${fmtM(r.costoEmpresa)}</div><div style="font-size:.7rem;color:#78350f">Costo Empresa</div></div>
+    </div>`,
+    `<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+     <button class="btn btn-primary" onclick="closeModal();calcEmpNomina(${id})">🧮 Calcular Nómina</button>`);
+}
+
+// ── CALCULADORA NÓMINA ────────────────────────────────────────────────────────
+async function renderNomina(){
+  if(!_emps.length) try{ _emps = await api('/api/nomina/empleados'); }catch(e){ _emps=[]; }
+  const activos = _emps.filter(e=>e.activo!==false);
+  const empOpts = activos.map(e=>`<option value="${e.id}">${esc(e.nombre)} — ${esc(e.periodicidad_pago||'Quincenal')}</option>`).join('');
+
+  ge('mainContent').innerHTML=`
+  <div class="alert alert-info" style="margin-bottom:16px">
+    <strong>📋 Tablas ISR 2026 (Anexo 8 RMF, DOF 28/12/2025)</strong> · UMA Diaria: <strong>${fmtM(UMA_DIARIA)}</strong> ·
+    SM: <strong>${fmtM(SMGDF)}/día</strong> · Subsidio al empleo hasta <strong>${fmtM(SUBSIDIO_EMP)}/mes</strong>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">🧮 Parámetros de Cálculo</div></div>
+      <div style="padding:16px 20px;display:grid;gap:12px">
+        <div class="field"><label class="req">Empleado</label>
+          <select id="nom_emp" class="fc" onchange="calcNominaEmp()">${empOpts}</select></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field"><label>Período</label>
+            <select id="nom_period" class="fc" onchange="calcNominaEmp()">
+              <option value="semanal">Semanal (7 días)</option>
+              <option value="quincenal" selected>Quincenal (15 días)</option>
+              <option value="mensual">Mensual (30 días)</option>
+            </select></div>
+          <div class="field"><label>Días trabajados</label>
+            <input id="nom_dias" type="number" class="fc" min="1" max="31" placeholder="Días del período" oninput="calcNominaEmp()"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field"><label>Horas Extra (dobles)</label>
+            <input id="nom_he" type="number" class="fc" min="0" step="0.5" value="0" oninput="calcNominaEmp()"></div>
+          <div class="field"><label>Faltas (días)</label>
+            <input id="nom_faltas" type="number" class="fc" min="0" value="0" oninput="calcNominaEmp()"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field"><label>Bonos / Comisiones ($)</label>
+            <input id="nom_bono" type="number" class="fc" min="0" step="0.01" value="0" oninput="calcNominaEmp()"></div>
+          <div class="field"><label>Otras Deducciones ($)</label>
+            <input id="nom_ded" type="number" class="fc" min="0" step="0.01" value="0" oninput="calcNominaEmp()"></div>
+        </div>
+        <div class="field"><label>Prestaciones</label>
+          <select id="nom_prest" class="fc" onchange="calcNominaEmp()">
+            <option value="ley">Mínimo de Ley (6 días vac, 25% prima, 15 días aguinaldo)</option>
+            <option value="doble">Doble (12 días vac, 50% prima, 30 días aguinaldo)</option>
+            <option value="superior">Superior (20 días vac, 80% prima, 45 días aguinaldo)</option>
+          </select></div>
+      </div>
+    </div>
+    <div id="nominaResultado" style="display:flex;flex-direction:column;gap:14px">
+      <div style="padding:40px;text-align:center;color:#94a3b8">Selecciona un empleado para calcular</div>
+    </div>
+  </div>`;
+
+  if(activos.length) setTimeout(calcNominaEmp, 100);
+}
+
+function calcNominaEmp(){
+  const empId  = parseInt(ge('nom_emp')?.value)||0;
+  const period = ge('nom_period')?.value||'quincenal';
+  const faltas = toNum(ge('nom_faltas')?.value||0);
+  const he     = toNum(ge('nom_he')?.value||0);
+  const bono   = toNum(ge('nom_bono')?.value||0);
+  const dedEx  = toNum(ge('nom_ded')?.value||0);
+  const prest  = ge('nom_prest')?.value||'ley';
+  const diasP  = period==='semanal'?7:period==='quincenal'?15:30;
+  const diasTrab = toNum(ge('nom_dias')?.value||diasP) - faltas;
+
+  const e = _emps.find(x=>x.id===empId); if(!e){ return; }
+  const sd = parseFloat(e.salario_diario||0);
+
+  // Prestaciones según opción
+  const prestMap = {
+    ley:      {diasVac:6,  primaVac:0.25, aguinaldo:15},
+    doble:    {diasVac:12, primaVac:0.50, aguinaldo:30},
+    superior: {diasVac:20, primaVac:0.80, aguinaldo:45},
+  };
+  const {diasVac, primaVac, aguinaldo} = prestMap[prest]||prestMap.ley;
+
+  // Ajustar salario por días trabajados
+  const sdEfectivo = diasTrab > 0 ? sd : sd;
+  const descFaltas = sd * Math.max(0, faltas);
+  const salFaltas  = sd * Math.max(0, diasTrab);
+  const salHE      = (sd / 8) * he * 2; // dobles
+  const extraTotal = bono + salHE;
+
+  const r = calcNominaCompleta(sd, period, extraTotal - descFaltas, dedEx, diasVac, primaVac, aguinaldo);
+
+  // Ajustar por días trabajados
+  const salBaseEfectivo = sd * diasTrab;
+  const percEfect = salBaseEfectivo + extraTotal;
+  const fiE = factorIntegracion(diasVac, primaVac, aguinaldo);
+  const sbcD = sd * fiE;
+  const sbcM = sbcD * 30;
+  const imssOb = calcImssObrero(sbcM) * (diasP/30);
+  const baseGrav = Math.max(0, percEfect - imssOb);
+  const baseGravMens = baseGrav / (diasP/30);
+  const isrMens = calcISR(baseGravMens);
+  const subMens = calcSubsidio(baseGravMens);
+  const isrNeto = Math.max(0, isrMens - subMens) * (diasP/30);
+  const totalDed = imssOb + isrNeto + dedEx;
+  const neto = percEfect - totalDed;
+  const imssPatD = calcImssPatron(sbcM) * (diasP/30);
+  const costoEmp = percEfect + imssPatD;
+
+  const html = `
+  <div class="recibo">
+    <div class="recibo-hdr">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800">RECIBO DE NÓMINA</div>
+          <div style="font-size:.78rem;opacity:.8;margin-top:2px">${esc(e.nombre)} · ${period.charAt(0).toUpperCase()+period.slice(1)}</div>
+          <div style="font-size:.72rem;opacity:.65">${esc(e.puesto||'')}${e.departamento?' · '+esc(e.departamento):''}</div>
+        </div>
+        <div style="text-align:right;font-size:.72rem;opacity:.65">
+          <div>RFC: ${esc(e.rfc||'—')}</div>
+          <div>NSS: ${esc(e.numero_imss||'—')}</div>
+          <div>${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div class="recibo-section">✅ PERCEPCIONES</div>
+        <div class="recibo-row"><span>Salario base (${diasTrab} días × ${fmtM(sd)})</span><span class="ing">+${fmtM(salBaseEfectivo)}</span></div>
+        ${faltas>0?`<div class="recibo-row"><span style="color:#dc2626">Descuento faltas (${faltas} días)</span><span style="color:#dc2626">-${fmtM(descFaltas)}</span></div>`:''}
+        ${he>0?`<div class="recibo-row"><span>H.E. dobles (${he} hrs)</span><span class="ing">+${fmtM(salHE)}</span></div>`:''}
+        ${bono>0?`<div class="recibo-row"><span>Bonos / comisiones</span><span class="ing">+${fmtM(bono)}</span></div>`:''}
+        <div class="recibo-row" style="font-weight:700;margin-top:4px"><span>Total Percepciones</span><span class="ing">${fmtM(percEfect)}</span></div>
+      </div>
+      <div>
+        <div class="recibo-section">❌ DEDUCCIONES</div>
+        <div class="recibo-row">
+          <span title="IMSS obrero: Enf&Mat + Inv&Vida + Cesantía">IMSS Obrero (cuotas)</span>
+          <span class="ded">-${fmtM(imssOb)}</span>
+        </div>
+        <div class="recibo-row">
+          <span title="ISR calculado con tablas Anexo 8 RMF 2026 − subsidio al empleo">ISR retenido${subMens>0?` <small style="color:#94a3b8">(subsidio -${fmtM(subMens*(diasP/30))})</small>`:''}</span>
+          <span class="ded">-${fmtM(isrNeto)}</span>
+        </div>
+        ${dedEx>0?`<div class="recibo-row"><span>Otras deducciones</span><span class="ded">-${fmtM(dedEx)}</span></div>`:''}
+        <div class="recibo-row" style="font-weight:700;margin-top:4px"><span>Total Deducciones</span><span class="ded">${fmtM(totalDed)}</span></div>
+      </div>
+    </div>
+
+    <div class="recibo-total">
+      <span>NETO A PAGAR</span>
+      <span style="font-size:1.3rem">${fmtM(neto)}</span>
+    </div>
+
+    <details style="margin-top:12px">
+      <summary style="font-size:.76rem;color:#64748b;cursor:pointer;padding:6px 0">📊 Costo empresa y datos fiscales</summary>
+      <div style="padding:10px;background:#f8fafc;border-radius:8px;margin-top:6px;font-size:.78rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div>SBC Diario: <strong>${fmtM(sbcD)}</strong></div>
+          <div>SBC Mensual: <strong>${fmtM(sbcM)}</strong></div>
+          <div>F. Integración: <strong>${fiE.toFixed(4)}</strong></div>
+          <div>Base gravable ISR: <strong>${fmtM(baseGravMens)}/mes</strong></div>
+          <div>ISR antes subsidio: <strong>${fmtM(isrMens/30*diasP)}</strong></div>
+          <div>Subsidio al empleo: <strong style="color:var(--verde)">${fmtM(subMens/30*diasP)}</strong></div>
+          <div style="grid-column:1/-1;border-top:1px solid var(--borde);padding-top:6px;margin-top:4px">
+            IMSS Patrón (no se descuenta): <strong style="color:var(--naranja)">${fmtM(imssPatD)}</strong>
+          </div>
+          <div style="grid-column:1/-1">
+            <strong>Costo Total Empresa: ${fmtM(costoEmp)}</strong>
+            <span style="font-size:.7rem;color:#94a3b8"> (salario neto + IMSS patrón)</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Imprimir</button>
+      <button class="btn btn-success btn-sm" onclick="guardarPago(${e.id},${neto.toFixed(2)},'${period}')">💾 Registrar Pago</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><div class="card-title">📊 Resumen Mensual Estimado</div></div>
+    <div style="padding:14px 18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+      ${[
+        {lbl:'Salario Bruto',   val:sd*30,           c:'var(--azul)'},
+        {lbl:'Total Deduc.',    val:(totalDed/(diasP/30)),c:'var(--rojo)'},
+        {lbl:'Neto al Mes',     val:neto/(diasP/30),  c:'var(--verde)'},
+        {lbl:'IMSS Patrón',     val:imssPatD/(diasP/30),c:'var(--naranja)'},
+        {lbl:'Costo Empresa',   val:costoEmp/(diasP/30),c:'var(--morado)'},
+        {lbl:'SBC Mensual',     val:sbcM,             c:'#0891b2'},
+      ].map(k=>`<div style="background:#f8fafc;border-radius:8px;padding:10px 6px">
+        <div style="font-size:.75rem;color:#64748b;margin-bottom:4px">${k.lbl}</div>
+        <div style="font-size:.95rem;font-weight:800;color:${k.c}">${fmtM(k.val)}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  ge('nominaResultado').innerHTML = html;
+}
+
+function calcEmpNomina(id){
+  showTab('nomina');
+  setTimeout(()=>{
+    const sel=ge('nom_emp');
+    if(sel){ sel.value=id; calcNominaEmp(); }
+  }, 200);
+}
+
+async function guardarPago(empId, monto, periodo){
+  if(!confirm(`¿Registrar pago de nómina por ${fmtM(monto)} (período ${periodo})?`)) return;
+  try{
+    await api('/api/nomina/pagos','POST',{
+      empleado_id:empId, monto:monto, periodo:periodo,
+      fecha:new Date().toISOString().slice(0,10),
+      tipo:'nomina',
+    });
+    toast('✅ Pago registrado correctamente');
+  }catch(e){ toast(e.message,'err'); }
+}
+
+// ── HISTORIAL ─────────────────────────────────────────────────────────────────
+async function renderHistorial(){
+  const pagos = await api('/api/nomina/pagos').catch(()=>[]);
+  const totalMes = (pagos||[]).filter(p=>{
+    const f=new Date(p.fecha); const n=new Date();
+    return f.getMonth()===n.getMonth()&&f.getFullYear()===n.getFullYear();
+  }).reduce((s,p)=>s+parseFloat(p.monto||0),0);
+
+  ge('mainContent').innerHTML=`
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-lbl">Pagos del Mes</div><div class="kpi-val" style="color:var(--verde);font-size:1.2rem">${fmtM(totalMes)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Total Registros</div><div class="kpi-val" style="color:var(--azul)">${(pagos||[]).length}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-title">📋 Historial de Pagos de Nómina</div></div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Fecha</th><th>Empleado</th><th>Período</th><th style="text-align:right">Monto Neto</th><th>Tipo</th></tr></thead>
+        <tbody>${(pagos||[]).map(p=>`<tr>
+          <td style="font-size:.82rem">${fmtDate(p.fecha)}</td>
+          <td style="font-size:.83rem">${esc(p.empleado_nombre||'—')}</td>
+          <td style="font-size:.82rem">${esc(p.periodo||'—')}</td>
+          <td style="text-align:right;font-weight:700;color:var(--verde)">${fmtM(p.monto)}</td>
+          <td><span class="tag" style="background:#eff6ff;color:#2563eb">${esc(p.tipo||'nómina')}</span></td>
+        </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8">Sin pagos registrados</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── PRESTACIONES ──────────────────────────────────────────────────────────────
+function renderPrestaciones(){
+  if(!_emps.length){ ge('mainContent').innerHTML='<div style="padding:30px;text-align:center;color:#94a3b8">Cargando...</div>'; api('/api/nomina/empleados').then(e=>{_emps=e;renderPrestaciones();}); return; }
+  const activos = _emps.filter(e=>e.activo!==false);
+  const SMGDF_MES = SMGDF * 30;
+
+  ge('mainContent').innerHTML=`
+  <div class="alert alert-info" style="margin-bottom:16px">
+    <strong>📋 Prestaciones mínimas de Ley (LFT 2026)</strong> · Las prestaciones adicionales mejoran el Factor de Integración y el SBC del IMSS.
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">🎁 Prestaciones Mínimas LFT</div></div>
+      <div style="padding:16px">
+        ${[
+          {ico:'🏖',lbl:'Vacaciones', desc:'6 días al primer año, +2 días c/año hasta 12, luego +2 c/5 años (Reforma 2023)'},
+          {ico:'💰',lbl:'Prima Vacacional', desc:'25% mínimo sobre días de vacaciones'},
+          {ico:'🎄',lbl:'Aguinaldo', desc:'15 días de salario por año (proporcional)'},
+          {ico:'🏥',lbl:'IMSS', desc:'Alta obligatoria, cuotas obrero-patronales'},
+          {ico:'🏠',lbl:'INFONAVIT', desc:'5% sobre SBC mensual (aportación patrón)'},
+          {ico:'📊',lbl:'PTU (Utilidades)', desc:'10% de utilidades fiscales repartidas entre empleados'},
+          {ico:'👶',lbl:'Maternidad / Paternidad', desc:'84 días maternidad, 5 días paternidad (IMSS)'},
+          {ico:'💵',lbl:'Salario Mínimo 2026', desc:'$${SMGDF}/día general · $${(SMGDF*1.20).toFixed(2)}/día frontera norte'},
+        ].map(p=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9">
+          <span style="font-size:1.2rem;flex-shrink:0">${p.ico}</span>
+          <div><div style="font-weight:600;font-size:.84rem">${p.lbl}</div>
+            <div style="font-size:.76rem;color:#64748b">${p.desc}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">📊 Calculadora de Aguinaldo y PTU</div></div>
+      <div style="padding:16px 20px;display:grid;gap:10px">
+        <div class="field"><label>Empleado</label>
+          <select id="prest_emp" class="fc" onchange="calcPrestaciones()">
+            ${activos.map(e=>`<option value="${e.id}">${esc(e.nombre)}</option>`).join('')}
+          </select></div>
+        <div class="field"><label>Días de aguinaldo</label>
+          <input id="prest_ag" type="number" class="fc" value="15" oninput="calcPrestaciones()"></div>
+        <div class="field"><label>Utilidad Fiscal Anual ($)</label>
+          <input id="prest_util" type="number" class="fc" value="0" placeholder="PTU — 10% se reparte entre empleados" oninput="calcPrestaciones()"></div>
+        <div class="field"><label>Total empleados en PTU</label>
+          <input id="prest_nump" type="number" class="fc" value="${activos.length}" oninput="calcPrestaciones()"></div>
+        <div id="prestResult"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-title">📋 Resumen de Prestaciones por Empleado</div></div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Empleado</th><th style="text-align:right">Salario Mensual</th>
+          <th style="text-align:right">Aguinaldo Anual</th><th style="text-align:right">Prima Vac.</th>
+          <th style="text-align:right">INFONAVIT/mes</th><th style="text-align:right">SBC</th></tr></thead>
+        <tbody>${activos.map(e=>{
+          const sd=parseFloat(e.salario_diario||0);
+          const fi=factorIntegracion(6,.25,15);
+          const aguinaldo=sd*15;
+          const primaVac=sd*6*.25;
+          const sbc=sd*fi*30;
+          const infonavit=sbc*.05;
+          return `<tr>
+            <td style="font-weight:500">${esc(e.nombre)}</td>
+            <td style="text-align:right">${fmtM(sd*30)}</td>
+            <td style="text-align:right">${fmtM(aguinaldo)}</td>
+            <td style="text-align:right">${fmtM(primaVac)}</td>
+            <td style="text-align:right;color:var(--naranja)">${fmtM(infonavit)}</td>
+            <td style="text-align:right;color:var(--morado)">${fmtM(sbc)}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+  setTimeout(calcPrestaciones,100);
+}
+
+function calcPrestaciones(){
+  const empId = parseInt(ge('prest_emp')?.value)||0;
+  const e = _emps.find(x=>x.id===empId); if(!e) return;
+  const sd=parseFloat(e.salario_diario||0);
+  const diasAg=parseInt(ge('prest_ag')?.value||15);
+  const utilFiscal=toNum(ge('prest_util')?.value||0);
+  const numEmp=parseInt(ge('prest_nump')?.value||1)||1;
+
+  const aguinaldo=sd*diasAg;
+  // PTU: 50% por días trabajados, 50% por salario (simplificado)
+  const ptu = utilFiscal>0 ? (utilFiscal*0.10)/numEmp : 0;
+  const fi=factorIntegracion(6,.25,diasAg);
+  const vacaciones=sd*6;
+  const primaVac=vacaciones*.25;
+
+  ge('prestResult').innerHTML=`
+  <div style="background:#f0fdf4;border-radius:8px;padding:12px;display:grid;gap:6px;font-size:.82rem">
+    <div style="font-weight:700;color:#065f46;margin-bottom:4px">📊 ${esc(e.nombre)}</div>
+    <div style="display:flex;justify-content:space-between"><span>Aguinaldo (${diasAg} días)</span><strong>${fmtM(aguinaldo)}</strong></div>
+    <div style="display:flex;justify-content:space-between"><span>Vacaciones (6 días)</span><strong>${fmtM(vacaciones)}</strong></div>
+    <div style="display:flex;justify-content:space-between"><span>Prima Vacacional (25%)</span><strong>${fmtM(primaVac)}</strong></div>
+    ${utilFiscal>0?`<div style="display:flex;justify-content:space-between"><span>PTU estimada</span><strong style="color:var(--verde)">${fmtM(ptu)}</strong></div>`:''}
+    <div style="border-top:1px solid #a7f3d0;padding-top:6px;margin-top:4px;display:flex;justify-content:space-between">
+      <span>Factor de Integración</span><strong>${fi.toFixed(4)}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <span>Total anual prestaciones</span>
+      <strong style="color:var(--azul)">${fmtM(aguinaldo+vacaciones+primaVac+ptu)}</strong>
+    </div>
+  </div>`;
+}
+
+// ── VACACIONES ────────────────────────────────────────────────────────────────
+function renderVacaciones(){
+  if(!_emps.length){ api('/api/nomina/empleados').then(e=>{_emps=e;renderVacaciones();}); return; }
+  const activos=_emps.filter(e=>e.activo!==false);
+  // Tabla de días de vacaciones según LFT 2023 reforma
+  const diasVacLFT = [
+    {anos:1,dias:12},{anos:2,dias:14},{anos:3,dias:16},{anos:4,dias:18},{anos:5,dias:20},
+    {anos:6,dias:22},{anos:7,dias:24},{anos:8,dias:26},{anos:9,dias:28},{anos:10,dias:30},
+    {anos:11,dias:32},{anos:15,dias:34},{anos:20,dias:36},
+  ];
+
+  ge('mainContent').innerHTML=`
+  <div class="alert alert-info" style="margin-bottom:16px">
+    <strong>📋 Reforma LFT 2023 — Vacaciones</strong> · A partir del 1° de enero de 2023, los trabajadores tienen derecho a 12 días al primer año (antes eran 6) e incrementan según tabla.
+  </div>
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:16px">
+    <div class="card" style="min-width:220px">
+      <div class="card-hdr" style="padding:10px 14px"><div class="card-title" style="font-size:.82rem">📅 Tabla LFT 2023</div></div>
+      <table style="font-size:.79rem">
+        <thead><tr><th>Años</th><th>Días</th></tr></thead>
+        <tbody>${diasVacLFT.map(r=>`<tr><td>${r.anos}${r.anos>=11?' ('+r.anos+')':''}</td><td><strong>${r.dias}</strong></td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">🏖 Días de Vacaciones por Empleado</div></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Empleado</th><th>F. Ingreso</th><th style="text-align:center">Antigüedad</th><th style="text-align:center">Días Vac.</th><th style="text-align:right">Prima Vac.</th><th style="text-align:center">Estado</th></tr></thead>
+          <tbody>${activos.map(e=>{
+            const fi=e.fecha_ingreso?new Date(e.fecha_ingreso):null;
+            const anos=fi?Math.floor((new Date()-fi)/(365.25*86400000)):0;
+            // LFT 2023: 12 días primer año, +2 por año hasta 20, luego +2 c/5 años
+            let diasVac=12;
+            if(anos>=20) diasVac=36;
+            else if(anos>=15) diasVac=34;
+            else if(anos>=10) diasVac=30;
+            else if(anos>=1)  diasVac=12+(anos-1)*2;
+            const sd=parseFloat(e.salario_diario||0);
+            const primaVac=sd*diasVac*.25;
+            return `<tr>
+              <td style="font-weight:500">${esc(e.nombre)}</td>
+              <td style="font-size:.82rem">${fmtDate(e.fecha_ingreso)}</td>
+              <td style="text-align:center">${fi?anos+' año'+(anos!==1?'s':''):'—'}</td>
+              <td style="text-align:center;font-weight:700;color:var(--azul)">${diasVac}</td>
+              <td style="text-align:right">${fmtM(primaVac)}</td>
+              <td style="text-align:center"><span class="tag" style="background:#f0fdf4;color:#059669">✅ Activo</span></td>
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── FORM EMPLEADO ─────────────────────────────────────────────────────────────
+function formEmpleado(id=null){
+  const e = id ? _emps.find(x=>x.id===id) : null;
+  const v = (k,d='') => esc(e?.[k]||d);
+  openModal(e?`✏️ Editar: ${esc(e.nombre)}`:'➕ Nuevo Empleado',`
+  <div class="fg">
+    <div class="slabel">Datos Personales</div>
+    <div class="field ff"><label class="req">Nombre Completo</label><input id="ef_nom" class="fc" value="${v('nombre')}"></div>
+    <div class="field"><label class="req">RFC (13 dígitos)</label><input id="ef_rfc" class="fc" value="${v('rfc')}" placeholder="XAXX010101000" maxlength="13"></div>
+    <div class="field"><label>CURP</label><input id="ef_curp" class="fc" value="${v('curp')}" placeholder="XAXX010101HXXXXX00" maxlength="18"></div>
+    <div class="field"><label>Email</label><input id="ef_email" type="email" class="fc" value="${v('email')}"></div>
+    <div class="field"><label>Teléfono</label><input id="ef_tel" class="fc" value="${v('telefono')}"></div>
+    <div class="field"><label>F. Nacimiento</label><input id="ef_nac" type="date" class="fc" value="${v('fecha_nacimiento')}"></div>
+
+    <div class="slabel">🏭 Datos Laborales</div>
+    <div class="field"><label class="req">Puesto</label><input id="ef_puesto" class="fc" value="${v('puesto')}"></div>
+    <div class="field"><label>Departamento</label><input id="ef_depto" class="fc" value="${v('departamento')}"></div>
+    <div class="field"><label>F. Ingreso</label><input id="ef_ingreso" type="date" class="fc" value="${v('fecha_ingreso')}"></div>
+    <div class="field"><label>Tipo Contrato</label>
+      <select id="ef_tipo" class="fc">
+        <option ${v('tipo_contrato')==='indefinido'?'selected':''}>indefinido</option>
+        <option ${v('tipo_contrato')==='temporal'?'selected':''}>temporal</option>
+        <option ${v('tipo_contrato')==='honorarios'?'selected':''}>honorarios</option>
+        <option ${v('tipo_contrato')==='confianza'?'selected':''}>confianza</option>
+      </select></div>
+    <div class="field"><label>Periodicidad Pago</label>
+      <select id="ef_period" class="fc">
+        <option ${v('periodicidad_pago')==='semanal'?'selected':''}>semanal</option>
+        <option ${v('periodicidad_pago')==='quincenal'||!e?'selected':''}>quincenal</option>
+        <option ${v('periodicidad_pago')==='mensual'?'selected':''}>mensual</option>
+      </select></div>
+
+    <div class="slabel">💵 Salario</div>
+    <div class="field"><label class="req">Salario Diario (MXN)</label>
+      <input id="ef_sd" type="number" class="fc" step="0.01" value="${v('salario_diario','0')}" oninput="prevSalario()"></div>
+    <div class="field"><label>Días Vacaciones (LFT)</label>
+      <input id="ef_vac" type="number" class="fc" value="${v('dias_vacaciones','12')}" min="12"></div>
+    <div id="ef_prev_sal" style="grid-column:1/-1;background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:.78rem;color:#065f46"></div>
+
+    <div class="slabel">🏛 IMSS / INFONAVIT</div>
+    <div class="field"><label>NSS (Número Seguridad Social)</label><input id="ef_nss" class="fc" value="${v('numero_imss')}" maxlength="11"></div>
+    <div class="field"><label>N° Crédito INFONAVIT</label><input id="ef_nav" class="fc" value="${v('numero_infonavit')}"></div>
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+   <button class="btn btn-primary" onclick="guardarEmpleado(${id||''})">💾 Guardar</button>`, true);
+  setTimeout(prevSalario, 100);
+}
+
+function prevSalario(){
+  const sd=toNum(ge('ef_sd')?.value||0);
+  const el=ge('ef_prev_sal'); if(!el) return;
+  if(!sd){ el.innerHTML=''; return; }
+  const r=calcNominaCompleta(sd,'mensual');
+  el.innerHTML=`<strong>Vista previa mensual:</strong> Bruto: ${fmtM(sd*30)} · Neto: <strong style="color:var(--verde)">${fmtM(r.neto)}</strong> · SBC: ${fmtM(r.sbcD)}/día · Costo empresa: ${fmtM(r.costoEmpresa)}`;
+}
+
+async function guardarEmpleado(id){
+  const b={
+    nombre:ge('ef_nom').value.trim(), rfc:ge('ef_rfc').value.trim().toUpperCase(),
+    curp:ge('ef_curp').value.trim().toUpperCase(), email:ge('ef_email').value.trim(),
+    telefono:ge('ef_tel').value.trim(), fecha_nacimiento:ge('ef_nac').value||null,
+    puesto:ge('ef_puesto').value.trim(), departamento:ge('ef_depto').value.trim(),
+    fecha_ingreso:ge('ef_ingreso').value||null, tipo_contrato:ge('ef_tipo').value,
+    periodicidad_pago:ge('ef_period').value,
+    salario_diario:parseFloat(ge('ef_sd').value)||0,
+    dias_vacaciones:parseInt(ge('ef_vac').value)||12,
+    numero_imss:ge('ef_nss').value.trim(), numero_infonavit:ge('ef_nav').value.trim(),
+  };
+  if(!b.nombre||!b.rfc){ toast('Nombre y RFC requeridos','err'); return; }
+  try{
+    id?await api('/api/nomina/empleados/'+id,'PUT',b):await api('/api/nomina/empleados','POST',b);
+    toast('✅ Empleado guardado'); closeModal(); await renderEmpleados();
+  }catch(e){ toast(e.message,'err'); }
+}
+
+function editarEmp(id){ formEmpleado(id); }
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async function init(){
+  try{
+    const u=JSON.parse(sessionStorage.getItem('vef_user')||'{}');
+    if(u.nombre) ge('userInfo').textContent='👤 '+u.nombre;
+  }catch{}
+  showTab('empleados');
+})();
+</script>
+</body>
+</html>

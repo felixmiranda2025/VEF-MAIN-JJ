@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VEF ERP · Tesorería</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --azul:#0D2B55;--azul-med:#1A4A8A;--azul-claro:#2E6DB4;
+  --azul-suave:#D6E4F7;--azul-bg:#EBF3FB;
+  --verde:#059669;--rojo:#dc2626;--naranja:#d97706;
+  --gris:#f1f5f9;--gris-txt:#1e293b;--borde:#e2e8f0;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--gris);color:var(--gris-txt)}
+.layout{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--azul);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid var(--borde);padding:12px 24px;display:flex;align-items:center;gap:14px;flex-shrink:0;min-height:54px}
+.content{flex:1;overflow-y:auto;padding:22px}
+.sidebar-logo{padding:18px 16px 10px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.brand{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff}
+.brand span{color:var(--azul-suave)}
+.nav-section{font-size:.62rem;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 6px;border-radius:8px;color:rgba(255,255,255,.7);font-size:.84rem;cursor:pointer;transition:.15s;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--azul-med);color:#fff;font-weight:600}
+.nav-item .icon{font-size:1rem;width:22px;text-align:center;flex-shrink:0}
+/* Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:12px;padding:18px 20px;border:1px solid var(--borde);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.kpi-lbl{font-size:.67rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:1.55rem;font-weight:800;line-height:1;margin-bottom:4px}
+.kpi-sub{font-size:.72rem;color:#94a3b8}
+.card{background:#fff;border-radius:12px;border:1px solid var(--borde);box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;margin-bottom:18px}
+.card-hdr{padding:13px 18px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;color:var(--azul)}
+/* Table */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+thead tr{background:var(--azul);color:#fff}
+th{padding:9px 12px;text-align:left;font-weight:600;font-size:.69rem;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+tbody tr{border-bottom:1px solid #f8fafc;transition:.1s;cursor:pointer}
+tbody tr:hover{background:var(--azul-bg)}
+td{padding:8px 12px}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700}
+/* Buttons */
+.btn{padding:7px 14px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--azul),var(--azul-med));color:#fff}
+.btn-primary:hover{opacity:.9}
+.btn-secondary{background:var(--gris);color:var(--azul);border:1px solid var(--borde)}
+.btn-secondary:hover{background:var(--azul-bg)}
+.btn-success{background:#f0fdf4;color:var(--verde);border:1px solid #bbf7d0}
+.btn-danger{background:#fef2f2;color:var(--rojo);border:1px solid #fecaca}
+.btn-sm{padding:5px 10px;font-size:.74rem}
+.btn-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+/* Modal */
+.mbg{display:none;position:fixed;inset:0;background:rgba(13,43,85,.55);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px}
+.mbg.open{display:flex}
+.mbox{background:#fff;border-radius:16px;width:100%;max-width:640px;box-shadow:0 24px 60px rgba(0,0,0,.2);margin:auto}
+.mbox.lg{max-width:860px}
+.mhdr{padding:16px 20px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between}
+.mtitle{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--azul)}
+.mbody{padding:18px 20px;max-height:72vh;overflow-y:auto}
+.mftr{padding:12px 20px;border-top:1px solid var(--borde);display:flex;justify-content:flex-end;gap:8px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.ff{grid-column:1/-1}
+.field label{display:block;font-size:.71rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.field label.req::after{content:' *';color:var(--rojo)}
+.fc{width:100%;padding:8px 10px;border:1.5px solid var(--borde);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.83rem;background:#f8fafc;color:var(--gris-txt);transition:.15s}
+.fc:focus{border-color:var(--azul-med);background:#fff;outline:none}
+textarea.fc{resize:vertical;min-height:65px}
+.slabel{font-size:.7rem;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--azul-bg);padding-bottom:5px;margin:10px 0 8px;grid-column:1/-1}
+.alert{padding:9px 13px;border-radius:8px;font-size:.8rem;margin-bottom:10px}
+.alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.alert-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.alert-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.toast-ct{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:#1e293b;color:#fff;padding:10px 16px;border-radius:10px;font-size:.82rem;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:si .3s ease;max-width:300px}
+.toast.ok{background:#065f46}.toast.err{background:#7f1d1d}
+@keyframes si{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Charts */
+.flujo-chart{display:flex;gap:4px;align-items:flex-end;height:120px;padding:0 4px}
+.flujo-bar{flex:1;border-radius:4px 4px 0 0;min-width:24px;position:relative;cursor:pointer;transition:.15s}
+.flujo-bar:hover{opacity:.8}
+.flujo-bar-lbl{font-size:.6rem;text-align:center;color:#64748b;margin-top:3px}
+/* Conciliacion */
+.concil-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #f8fafc;font-size:.8rem}
+.concil-check{width:18px;height:18px;cursor:pointer;accent-color:var(--verde);flex-shrink:0}
+.ing{color:var(--verde);font-weight:700}
+.egr{color:var(--rojo);font-weight:700}
+.neutral{color:#64748b}
+/* Flujo table */
+.flujo-semana{background:var(--azul-bg);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+.flujo-semana-hdr{font-size:.72rem;font-weight:700;color:var(--azul);margin-bottom:6px}
+@media(max-width:768px){.layout{flex-direction:column}.sidebar{width:100%;height:auto}.fg{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="/logo.png" onerror="this.style.display='none'" style="width:32px;height:32px;border-radius:8px;object-fit:contain">
+    <div class="brand">VEF <span>ERP</span></div>
+  </div>
+  <nav style="padding:10px 6px;flex:1">
+    <div class="nav-section">Tesorería</div>
+    <a class="nav-item active" onclick="showTab('cuentas')"><span class="icon">🏦</span>Cuentas Bancarias</a>
+    <a class="nav-item" onclick="showTab('movimientos')"><span class="icon">↕️</span>Movimientos</a>
+    <a class="nav-item" onclick="showTab('conciliacion')"><span class="icon">✅</span>Conciliación</a>
+    <a class="nav-item" onclick="showTab('flujo')"><span class="icon">📈</span>Flujo de Caja</a>
+    <div class="nav-section">Sistema</div>
+    <a class="nav-item" href="/app" style="color:rgba(255,255,255,.5)"><span class="icon">⬅️</span>Volver al ERP</a>
+  </nav>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:var(--azul)" id="pageTitle">🏦 Cuentas Bancarias</div>
+    <div style="flex:1"></div>
+    <div id="userInfo" style="font-size:.78rem;color:#64748b"></div>
+    <button class="btn btn-primary btn-sm" id="btnPrimary" onclick="">➕ Nueva Cuenta</button>
+  </div>
+  <div class="content" id="mainContent">
+    <div style="padding:40px;text-align:center;color:#94a3b8"><div style="font-size:2rem">⏳</div><div style="margin-top:8px">Cargando...</div></div>
+  </div>
+</div>
+</div>
+<div class="mbg" id="mbg"><div class="mbox" id="mbox">
+  <div class="mhdr"><div class="mtitle" id="mtitle">—</div><button onclick="closeModal()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#64748b">✕</button></div>
+  <div class="mbody" id="mbody"></div>
+  <div class="mftr" id="mftr"></div>
+</div></div>
+<div class="toast-ct" id="tc"></div>
+<script>
+const BASE=window.location.origin;
+let TOKEN=sessionStorage.getItem('vef_token')||'';
+let USER={};try{USER=JSON.parse(sessionStorage.getItem('vef_user')||'{}');}catch(e){}
+if(!TOKEN){window.location.href='/';}
+document.getElementById('userInfo').textContent=USER.nombre||USER.username||'';
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmt(v){if(!v)return '—';try{return new Date(v).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return v;}}
+function fmtM(n,mon='MXN'){const s=parseFloat(n||0).toLocaleString('es-MX',{minimumFractionDigits:2});return(mon==='USD'?'USD $':'MX$')+' '+s;}
+function fmtSign(n,mon='MXN'){const v=parseFloat(n||0);return(v>=0?'+':'')+fmtM(v,mon);}
+async function api(path,method='GET',body=null){
+  const r=await fetch(BASE+path,{method,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:body?JSON.stringify(body):null});
+  if(r.status===401){window.location.href='/';return;}
+  const d=await r.json();if(!r.ok)throw new Error(d.error||'Error '+r.status);return d;
+}
+function toast(msg,type='ok'){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;document.getElementById('tc').appendChild(t);setTimeout(()=>t.remove(),3500);}
+function openModal(title,body,footer,lg=false){
+  document.getElementById('mtitle').innerHTML=title;
+  document.getElementById('mbody').innerHTML=body;
+  document.getElementById('mftr').innerHTML=footer;
+  document.getElementById('mbox').className=lg?'mbox lg':'mbox';
+  document.getElementById('mbg').classList.add('open');
+}
+function closeModal(){document.getElementById('mbg').classList.remove('open');}
+document.getElementById('mbg').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+function ge(id){return document.getElementById(id);}
+function toNum(v){return parseFloat(String(v||'0').replace(/[^0-9.-]/g,''))||0;}
+
+/* ── State ── */
+let _cuentas=[], _movs=[], _ocs=[], _currentTab='cuentas';
+
+const BANCOS=['BBVA','Santander','Banamex','HSBC','Banorte','Scotiabank','Inbursa','BanBajío','Afirme','Azteca','Otro'];
+const TIPOS_MOV=['Depósito','Retiro','Transferencia','Pago a proveedor','Cobro cliente','Nómina','Impuestos','Préstamo','Inversión','Comisión bancaria','Otro'];
+const CATEGORIAS=['Ventas','Cobros','Gastos operativos','Nómina','Impuestos','Préstamos','Inversiones','Transferencias','Otros'];
+
+function showTab(tab){
+  _currentTab=tab;
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.toggle('active',i.getAttribute('onclick')===`showTab('${tab}')`));
+  const titles={cuentas:'🏦 Cuentas Bancarias',movimientos:'↕️ Movimientos',conciliacion:'✅ Conciliación Bancaria',flujo:'📈 Flujo de Caja'};
+  const btns={cuentas:'➕ Nueva Cuenta',movimientos:'➕ Nuevo Movimiento',conciliacion:'📥 Importar Estado',flujo:''};
+  const fns={cuentas:()=>formCuenta(),movimientos:()=>formMovimiento(),conciliacion:()=>toast('Importar estado bancario — próximamente','ok'),flujo:null};
+  ge('pageTitle').textContent=titles[tab]||'Tesorería';
+  ge('btnPrimary').textContent=btns[tab]||'';
+  ge('btnPrimary').onclick=fns[tab]||null;
+  ge('btnPrimary').style.display=fns[tab]?'':'none';
+  const renders={cuentas:renderCuentas,movimientos:renderMovimientos,conciliacion:renderConciliacion,flujo:renderFlujo};
+  (renders[tab]||renderCuentas)();
+}
+
+/* ═══ CUENTAS BANCARIAS ═══════════════════════════════════════ */
+async function renderCuentas(){
+  ge('mainContent').innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8">⏳ Cargando...</div>';
+  try{_cuentas=await api('/api/tesoreria/cuentas');}catch(e){_cuentas=[];}
+
+  const saldo_total=_cuentas.reduce((s,c)=>s+parseFloat(c.saldo_actual||0),0);
+  const saldo_mxn=_cuentas.filter(c=>c.moneda==='MXN').reduce((s,c)=>s+parseFloat(c.saldo_actual||0),0);
+  const saldo_usd=_cuentas.filter(c=>c.moneda==='USD').reduce((s,c)=>s+parseFloat(c.saldo_actual||0),0);
+
+  ge('mainContent').innerHTML=`
+  <div class="kpi-grid">
+    <div class="kpi" style="border-left:4px solid var(--verde);grid-column:span 2">
+      <div class="kpi-lbl">Saldo Total Consolidado</div>
+      <div class="kpi-val" style="font-size:2rem;color:var(--verde)">${fmtM(saldo_mxn)}</div>
+      <div class="kpi-sub">${_cuentas.length} cuentas activas · USD: ${fmtM(saldo_usd,'USD')}</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid var(--azul)">
+      <div class="kpi-lbl">Cuentas MXN</div>
+      <div class="kpi-val" style="color:var(--azul)">${_cuentas.filter(c=>c.moneda==='MXN').length}</div>
+      <div class="kpi-sub">${fmtM(saldo_mxn)}</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid #d97706">
+      <div class="kpi-lbl">Cuentas USD</div>
+      <div class="kpi-val" style="color:#d97706">${_cuentas.filter(c=>c.moneda==='USD').length}</div>
+      <div class="kpi-sub">${fmtM(saldo_usd,'USD')}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">Cuentas Bancarias (${_cuentas.length})</div>
+    </div>
+    ${_cuentas.length===0?`<div style="padding:50px;text-align:center;color:#94a3b8">
+      <div style="font-size:2.5rem;margin-bottom:12px">🏦</div>
+      <div style="font-weight:600;color:#64748b;margin-bottom:8px">Sin cuentas registradas</div>
+      <button class="btn btn-primary" onclick="formCuenta()">➕ Agregar primera cuenta</button>
+    </div>`:
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px">
+      ${_cuentas.map(c=>{
+        const saldo=parseFloat(c.saldo_actual||0);
+        const color=saldo>0?'var(--verde)':saldo<0?'var(--rojo)':'#64748b';
+        const alertaBaja=saldo<parseFloat(c.saldo_minimo||0);
+        return `<div style="background:${alertaBaja?'#fef2f2':'#f8fafc'};border:2px solid ${alertaBaja?'#fecaca':'var(--borde)'};border-radius:12px;padding:16px;cursor:pointer;transition:.15s"
+          onmouseover="this.style.borderColor='var(--azul-med)'" onmouseout="this.style.borderColor='${alertaBaja?'#fecaca':'var(--borde)'}'">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+            <div>
+              <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase">${esc(c.banco||'—')}</div>
+              <div style="font-weight:700;color:var(--azul);font-size:.95rem;margin-top:2px">${esc(c.nombre)}</div>
+              <div style="font-family:monospace;font-size:.75rem;color:#94a3b8;margin-top:1px">
+                ${c.numero_cuenta?'●●●● '+esc(String(c.numero_cuenta).slice(-4)):'Sin número'}
+              </div>
+            </div>
+            <span class="tag" style="background:${c.tipo==='cheques'?'#dbeafe':c.tipo==='ahorro'?'#f0fdf4':'#faf5ff'};
+              color:${c.tipo==='cheques'?'#1d4ed8':c.tipo==='ahorro'?'#166534':'#6b21a8'}">${c.tipo||'—'}</span>
+          </div>
+          <div style="font-size:1.6rem;font-weight:800;color:${color};margin-bottom:4px">${fmtM(saldo,c.moneda||'MXN')}</div>
+          <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:10px">
+            <div style="height:4px;width:${Math.min(100,Math.max(0,saldo/(parseFloat(c.saldo_maximo||saldo||1))*100))}%;background:${color};border-radius:2px"></div>
+          </div>
+          ${alertaBaja?'<div style="font-size:.72rem;color:var(--rojo);font-weight:700;margin-bottom:6px">⚠️ Saldo bajo el mínimo ('+fmtM(c.saldo_minimo,c.moneda)+')</div>':''}
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verMovCuenta(${c.id})">↕️ Movimientos</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();formCuenta(${c.id})">✏️</button>
+            <button class="btn btn-sm btn-success" onclick="event.stopPropagation();ajustarSaldo(${c.id})" style="margin-left:auto">⚖️ Ajustar</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`}
+  </div>`;
+}
+
+function formCuenta(id=null){
+  const c=id?(_cuentas.find(x=>x.id===id)||{}):null;
+  openModal(c?'✏️ Editar Cuenta':'🏦 Nueva Cuenta Bancaria',`
+  <div class="fg">
+    <div class="slabel">📋 Datos de la Cuenta</div>
+    <div class="field ff"><label class="req">Nombre / Alias</label>
+      <input id="cb_nom" class="fc" value="${esc(c?.nombre||'')}" placeholder="Ej: Cuenta Principal BBVA MXN"></div>
+    <div class="field"><label class="req">Banco</label>
+      <select id="cb_banco" class="fc">${BANCOS.map(b=>`<option ${c?.banco===b?'selected':''}>${b}</option>`).join('')}</select></div>
+    <div class="field"><label>Tipo de Cuenta</label>
+      <select id="cb_tipo" class="fc">
+        <option value="cheques" ${c?.tipo==='cheques'?'selected':''}>Cheques</option>
+        <option value="ahorro" ${c?.tipo==='ahorro'?'selected':''}>Ahorro</option>
+        <option value="inversion" ${c?.tipo==='inversion'?'selected':''}>Inversión</option>
+        <option value="credito" ${c?.tipo==='credito'?'selected':''}>Crédito</option>
+      </select></div>
+    <div class="field"><label>Número de Cuenta</label>
+      <input id="cb_num" class="fc" value="${esc(c?.numero_cuenta||'')}" placeholder="18 dígitos"></div>
+    <div class="field"><label>CLABE Interbancaria</label>
+      <input id="cb_clabe" class="fc" value="${esc(c?.clabe||'')}" placeholder="18 dígitos"></div>
+    <div class="field"><label>Moneda</label>
+      <select id="cb_mon" class="fc">
+        <option value="MXN" ${(c?.moneda||'MXN')==='MXN'?'selected':''}>MXN — Peso Mexicano</option>
+        <option value="USD" ${c?.moneda==='USD'?'selected':''}>USD — Dólar</option>
+        <option value="EUR" ${c?.moneda==='EUR'?'selected':''}>EUR — Euro</option>
+      </select></div>
+    <div class="slabel">💰 Saldos</div>
+    <div class="field"><label class="req">Saldo Actual</label>
+      <input id="cb_saldo" type="number" step="0.01" class="fc" value="${c?.saldo_actual||0}"></div>
+    <div class="field"><label>Saldo Mínimo (alerta)</label>
+      <input id="cb_min" type="number" step="0.01" class="fc" value="${c?.saldo_minimo||0}"></div>
+    <div class="field"><label>Titular de la Cuenta</label>
+      <input id="cb_titular" class="fc" value="${esc(c?.titular||'')}" placeholder="Nombre del titular"></div>
+    <div class="field"><label>RFC Titular</label>
+      <input id="cb_rfc" class="fc" value="${esc(c?.rfc_titular||'')}"></div>
+    <div class="field ff"><label>Notas</label>
+      <textarea id="cb_notas" class="fc">${esc(c?.notas||'')}</textarea></div>
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+   <button class="btn btn-primary" onclick="guardarCuenta(${c?.id||'null'})">💾 Guardar</button>`);
+}
+
+async function guardarCuenta(id){
+  const b={nombre:ge('cb_nom').value.trim(),banco:ge('cb_banco').value,tipo:ge('cb_tipo').value,
+    numero_cuenta:ge('cb_num').value.trim()||null,clabe:ge('cb_clabe').value.trim()||null,
+    moneda:ge('cb_mon').value,saldo_actual:toNum(ge('cb_saldo').value),
+    saldo_minimo:toNum(ge('cb_min').value),titular:ge('cb_titular').value.trim()||null,
+    rfc_titular:ge('cb_rfc').value.trim()||null,notas:ge('cb_notas').value.trim()||null};
+  if(!b.nombre){toast('Nombre requerido','err');return;}
+  try{
+    id==='null'||!id?await api('/api/tesoreria/cuentas','POST',b):await api('/api/tesoreria/cuentas/'+id,'PUT',b);
+    toast('✅ Cuenta guardada');closeModal();renderCuentas();
+  }catch(e){toast(e.message,'err');}
+}
+
+function ajustarSaldo(id){
+  const c=_cuentas.find(x=>x.id===id)||{};
+  openModal('⚖️ Ajustar Saldo — '+esc(c.nombre||''),`
+  <div class="alert alert-warn">Use esta función solo para correcciones de saldo. El ajuste queda registrado como movimiento de tipo "Ajuste de conciliación".</div>
+  <div class="fg">
+    <div class="field ff"><label>Saldo actual en el sistema</label>
+      <div style="font-size:1.3rem;font-weight:800;color:var(--azul)">${fmtM(c.saldo_actual,c.moneda)}</div></div>
+    <div class="field ff"><label class="req">Saldo real (según extracto bancario)</label>
+      <input id="aj_saldo" type="number" step="0.01" class="fc" value="${c.saldo_actual||0}"></div>
+    <div class="field ff"><label>Motivo del ajuste</label>
+      <textarea id="aj_notas" class="fc" placeholder="Ej: Corrección según extracto bancario de enero 2026"></textarea></div>
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+   <button class="btn btn-primary" onclick="doAjuste(${id})">✅ Aplicar Ajuste</button>`);
+}
+
+async function doAjuste(id){
+  const nuevo=toNum(ge('aj_saldo').value);
+  const notas=ge('aj_notas').value.trim();
+  try{
+    await api('/api/tesoreria/cuentas/'+id+'/ajuste','POST',{saldo_nuevo:nuevo,notas});
+    toast('✅ Saldo ajustado');closeModal();renderCuentas();
+  }catch(e){toast(e.message,'err');}
+}
+
+/* ═══ MOVIMIENTOS ═══════════════════════════════════════════ */
+function formMovimientoDesdeOC(){
+  // Opens form pre-selecting OC type
+  formMovimiento().then(()=>{
+    const sel=ge('mv_oc');
+    if(sel&&_ocs.length>0){
+      sel.focus();
+      sel.style.borderColor='#f59e0b';
+      sel.style.background='#fffbeb';
+    }
+  }).catch(()=>{});
+}
+
+async function renderMovimientos(cuentaFiltro=null){
+  ge('mainContent').innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8">⏳</div>';
+  try{
+    [_cuentas,_movs]=await Promise.all([
+      api('/api/tesoreria/cuentas').catch(()=>[]),
+      api('/api/tesoreria/movimientos'+(cuentaFiltro?'?cuenta_id='+cuentaFiltro:'')).catch(()=>[])
+    ]);
+  }catch(e){_movs=[];}
+
+  const ingresos=_movs.filter(m=>m.tipo_operacion==='ingreso').reduce((s,m)=>s+parseFloat(m.monto||0),0);
+  const egresos2=_movs.filter(m=>m.tipo_operacion==='egreso').reduce((s,m)=>s+parseFloat(m.monto||0),0);
+  const cliOpts=_cuentas.map(c=>`<option value="${c.id}">${esc(c.nombre)} (${fmtM(c.saldo_actual,c.moneda)})</option>`).join('');
+
+  ge('mainContent').innerHTML=`
+  <div class="kpi-grid">
+    <div class="kpi" style="border-left:4px solid var(--verde)">
+      <div class="kpi-lbl">Ingresos (período)</div>
+      <div class="kpi-val" style="color:var(--verde)">${fmtM(ingresos)}</div></div>
+    <div class="kpi" style="border-left:4px solid var(--rojo)">
+      <div class="kpi-lbl">Egresos (período)</div>
+      <div class="kpi-val" style="color:var(--rojo)">${fmtM(egresos2)}</div></div>
+    <div class="kpi" style="border-left:4px solid var(--azul)">
+      <div class="kpi-lbl">Flujo Neto</div>
+      <div class="kpi-val" style="color:${ingresos-egresos2>=0?'var(--verde)':'var(--rojo)'}">${fmtSign(ingresos-egresos2)}</div></div>
+    <div class="kpi" style="border-left:4px solid #7c3aed">
+      <div class="kpi-lbl">Movimientos</div>
+      <div class="kpi-val" style="color:#7c3aed">${_movs.length}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">Movimientos Bancarios</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="fc" style="width:200px;padding:6px 9px" id="filtCuenta" onchange="renderMovimientos(this.value||null)">
+          <option value="">Todas las cuentas</option>${cliOpts}</select>
+        <select class="fc" style="width:130px;padding:6px 9px" id="filtTipo" onchange="filtrarMovs()">
+          <option value="">Todo</option><option value="ingreso">Ingresos</option><option value="egreso">Egresos</option></select>
+        <input class="fc" style="width:180px;padding:6px 9px" placeholder="🔍 Buscar..." oninput="buscarMovs(this.value)">
+      </div>
+    </div>
+    <div class="tw">
+      <table id="tblMovs">
+        <thead><tr>
+          <th>Fecha</th><th>Cuenta</th><th>Concepto</th><th>Categoría</th><th>Referencia</th>
+          <th style="text-align:right">Monto</th><th style="text-align:right">Saldo Tras</th>
+          <th>Tipo</th><th>Conc.</th><th style="width:44px"></th>
+        </tr></thead>
+        <tbody id="movsBody">${renderMovsRows(_movs)}</tbody>
+      </table>
+    </div>
+    ${_movs.length===0?`<div style="padding:40px;text-align:center;color:#94a3b8">
+      <div style="font-size:2rem;margin-bottom:10px">↕️</div>
+      <div style="font-weight:600;color:#64748b;margin-bottom:8px">Sin movimientos registrados</div>
+      <button class="btn btn-primary" onclick="formMovimiento()">➕ Registrar movimiento</button>
+    </div>`:''}
+  </div>`;
+}
+
+function renderMovsRows(movs){
+  return movs.map(m=>{
+    const esIng=m.tipo_operacion==='ingreso';
+    const color=esIng?'var(--verde)':'var(--rojo)';
+    return `<tr>
+      <td style="white-space:nowrap;font-size:.78rem">${fmt(m.fecha)}</td>
+      <td style="font-size:.78rem;color:#64748b">${esc(m.cuenta_nombre||'—')}</td>
+      <td><div style="font-weight:600">${esc(m.concepto||'—')}</div>
+          ${m.beneficiario?`<div style="font-size:.72rem;color:#94a3b8">${esc(m.beneficiario)}</div>`:''}</td>
+      <td><span class="tag" style="background:#f1f5f9;color:#475569">${esc(m.categoria||'—')}</span></td>
+      <td style="font-family:monospace;font-size:.75rem;color:#94a3b8">${esc(m.referencia||'—')}</td>
+      <td style="text-align:right;font-weight:700;color:${color}">${esIng?'+':'-'}${fmtM(m.monto,m.moneda)}</td>
+      <td style="text-align:right;font-size:.78rem;color:#64748b">${m.saldo_posterior?fmtM(m.saldo_posterior,m.moneda):'—'}</td>
+      <td><span class="tag" style="background:${esIng?'#f0fdf4':'#fef2f2'};color:${color}">${esIng?'↑ Ingreso':'↓ Egreso'}</span></td>
+      <td style="text-align:center">${m.conciliado?'<span style="color:var(--verde)">✅</span>':'<span style="color:#94a3b8">—</span>'}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <button onclick="movEliminar(${m.id},event,!!${m.conciliado})" title="${m.conciliado?'Eliminar (está conciliado)':'Eliminar movimiento'}"
+          style="background:none;border:1px solid ${m.conciliado?'#e2e8f0':'#fecaca'};border-radius:6px;padding:3px 8px;cursor:pointer;color:${m.conciliado?'#94a3b8':'#dc2626'};font-size:.78rem;transition:.2s"
+          onmouseover="this.style.background='${m.conciliado?'#f8fafc':'#fef2f2'}'" onmouseout="this.style.background='none'">🗑</button>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="9" style="padding:24px;text-align:center;color:#94a3b8">Sin movimientos</td></tr>';
+}
+
+function filtrarMovs(){
+  const tipo=ge('filtTipo')?.value;
+  ge('movsBody').innerHTML=renderMovsRows(tipo?_movs.filter(m=>m.tipo_operacion===tipo):_movs);
+}
+function buscarMovs(q){
+  q=q.toLowerCase();
+  ge('movsBody').innerHTML=renderMovsRows(!q?_movs:_movs.filter(m=>[m.concepto,m.beneficiario,m.referencia,m.categoria].some(v=>(v||'').toLowerCase().includes(q))));
+}
+
+async function movEliminar(id, evt, esConciliado){
+  evt && evt.stopPropagation();
+  const mov = _movs.find(m=>m.id===id);
+  const desc = mov ? (mov.concepto||'').slice(0,50) : 'este movimiento';
+  const monto = mov ? fmtM(mov.monto, mov.moneda) : '';
+  let msg = esConciliado
+    ? '⚠️ ESTE MOVIMIENTO ESTÁ CONCILIADO\n\n¿Seguro que deseas eliminarlo?\n"'+desc+'" ('+monto+')\n\nEsto revertirá el saldo y desconciliará el registro.'
+    : '¿Eliminar el movimiento "'+desc+'" ('+monto+')?\n\nEsto revertirá el saldo de la cuenta bancaria.';
+  if(!confirm(msg)) return;
+  try{
+    const _tok = sessionStorage.getItem('vef_token')||localStorage.getItem('vef_token')||'';
+    const url = '/api/tesoreria/movimientos/'+id+(esConciliado?'?force=true':'');
+    const _r = await fetch(url,{method:'DELETE',headers:{'Authorization':'Bearer '+_tok,'Content-Type':'application/json'}});
+    const _d = await _r.json().catch(()=>({}));
+    if(!_r.ok) throw new Error(_d.error||'Error '+_r.status);
+    toast('✅ Movimiento eliminado y saldo revertido');
+    _movs = _movs.filter(m=>m.id!==id);
+    ge('movsBody').innerHTML = renderMovsRows(_movs);
+    renderMovimientos();
+  }catch(e){
+    toast(e.message||'Error al eliminar','err');
+  }
+}
+function verMovCuenta(id){showTab('movimientos');setTimeout(()=>{const s=ge('filtCuenta');if(s){s.value=id;renderMovimientos(id);}},200);}
+
+async function cargarOCsParaMovimiento(){
+  if(_ocs.length) return;
+  try{_ocs=await api('/api/ordenes-proveedor');}catch(e){_ocs=[];}
+}
+
+function ocOpts(){
+  // Only aprobada/recibida OCs that make sense as payments
+  return (_ocs||[])
+    .filter(o=>['aprobada','recibida','pendiente','enviada'].includes(o.estatus))
+    .map(o=>{
+      const lbl=`${o.numero_op} — ${esc(o.proveedor_nombre||'—')} — ${fmtM(o.total,o.moneda||'MXN')}`;
+      return `<option value="${o.id}" 
+        data-monto="${o.total}"
+        data-moneda="${o.moneda||'MXN'}"
+        data-proveedor="${esc(o.proveedor_nombre||'')}"
+        data-concepto="${esc('Pago OC '+o.numero_op+' — '+(o.proveedor_nombre||''))}"
+        data-ref="${esc(o.numero_op||'')}"
+        data-cond="${esc(o.condiciones_pago||'')}"
+        data-proyecto="${esc(o.proyecto_nombre||o.notas||'')}">
+        ${lbl}
+      </option>`;
+    }).join('');
+}
+
+function llenarDesdeOC(){
+  const sel=ge('mv_oc');
+  if(!sel||!sel.value)return;
+  const opt=sel.options[sel.selectedIndex];
+  const d=opt.dataset;
+  // Auto-fill all fields from OC
+  if(ge('mv_monto'))  ge('mv_monto').value  = parseFloat(d.monto||0).toFixed(2);
+  if(ge('mv_concepto'))ge('mv_concepto').value= d.concepto||'';
+  if(ge('mv_ref'))    ge('mv_ref').value    = d.ref||'';
+  if(ge('mv_benef'))  ge('mv_benef').value  = d.proveedor||'';
+  if(ge('mv_tipo'))   ge('mv_tipo').value   = 'egreso';
+  if(ge('mv_cat'))    ge('mv_cat').value    = 'Gastos operativos';
+  // Show proyecto info if present
+  const proyDiv=ge('mv_proy_info');
+  if(proyDiv&&d.proyecto){
+    proyDiv.style.display='block';
+    proyDiv.innerHTML='<span style="font-size:.78rem;color:#1e40af">📁 Proyecto: <b>'+esc(d.proyecto)+'</b></span>';
+  } else if(proyDiv){proyDiv.style.display='none';}
+  // Flash fields to indicate auto-fill
+  ['mv_monto','mv_concepto','mv_ref','mv_benef'].forEach(id=>{
+    const el=ge(id);
+    if(el){el.style.background='#fffbeb';setTimeout(()=>el.style.background='',800);}
+  });
+}
+
+function fromOCModal(){
+  // Called from OC — pass ocId to pre-select
+}
+
+async function formMovimiento(id=null){
+  await cargarOCsParaMovimiento();
+  const cliOpts=_cuentas.map(c=>`<option value="${c.id}">${esc(c.nombre)} (${fmtM(c.saldo_actual,c.moneda)})</option>`).join('');
+  const ocOptsHtml = ocOpts();
+  openModal('➕ Nuevo Movimiento Bancario',`
+  <div class="fg">
+
+    <div class="slabel">🔗 Vincular a Orden de Compra (opcional)</div>
+    <div class="field ff" style="background:#fffbeb;border-radius:8px;padding:10px 12px;border:1px solid #fde68a">
+      <label style="color:#92400e;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px">
+        📦 Seleccionar OC de Proveedor</label>
+      <select id="mv_oc" class="fc" style="margin-top:4px;border-color:#f59e0b" onchange="llenarDesdeOC()">
+        <option value="">— Sin OC / Llenar manualmente —</option>
+        ${ocOptsHtml}
+      </select>
+      <div id="mv_proy_info" style="margin-top:6px;padding:5px 8px;background:#eff6ff;border-radius:6px;display:none"></div>
+      <div style="font-size:.72rem;color:#92400e;margin-top:4px">
+        💡 Al seleccionar una OC se auto-rellenan: monto, proveedor, concepto y referencia
+      </div>
+    </div>
+
+    <div class="slabel">📋 Datos del Movimiento</div>
+    <div class="field ff"><label class="req">Cuenta Bancaria</label>
+      <select id="mv_cuenta" class="fc"><option value="">— Seleccionar —</option>${cliOpts}</select></div>
+    <div class="field"><label class="req">Tipo</label>
+      <select id="mv_tipo" class="fc">
+        <option value="ingreso">↑ Ingreso / Depósito</option>
+        <option value="egreso" selected>↓ Egreso / Retiro</option>
+        <option value="transferencia">↔ Transferencia</option>
+      </select></div>
+    <div class="field"><label class="req">Fecha</label>
+      <input id="mv_fecha" type="date" class="fc" value="${new Date().toISOString().slice(0,10)}"></div>
+    <div class="field ff"><label class="req">Concepto</label>
+      <input id="mv_concepto" class="fc" placeholder="Ej: Pago factura FC-2026-001, Cobro cliente, etc."></div>
+    <div class="field"><label class="req">Monto</label>
+      <input id="mv_monto" type="number" step="0.01" class="fc" placeholder="0.00"></div>
+    <div class="field"><label>Categoría</label>
+      <select id="mv_cat" class="fc"><option value="">Sin categoría</option>
+        ${CATEGORIAS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+    <div class="field"><label>Beneficiario / Proveedor</label>
+      <input id="mv_benef" class="fc" placeholder="Nombre del proveedor o quien recibe"></div>
+    <div class="field"><label>Referencia / No. OC</label>
+      <input id="mv_ref" class="fc" placeholder="Ej: OC-2026-001"></div>
+    <div class="field"><label>Cheque / SPEI No.</label>
+      <input id="mv_chq" class="fc" placeholder="Número de cheque o SPEI"></div>
+    <div class="field"><label>Cuenta Destino (transferencias)</label>
+      <select id="mv_dest" class="fc"><option value="">— Ninguna —</option>${cliOpts}</select></div>
+    <div class="field ff"><label>Notas</label>
+      <textarea id="mv_notas" class="fc" rows="2" placeholder="Información adicional..."></textarea></div>
+  </div>`,
+  `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+   <button class="btn btn-primary" onclick="guardarMovimiento()">💾 Guardar</button>`);
+}
+
+async function guardarMovimiento(){
+  const ocId=parseInt(ge('mv_oc')?.value)||null;
+  const b={cuenta_id:parseInt(ge('mv_cuenta').value)||null,tipo_operacion:ge('mv_tipo').value,
+    fecha:ge('mv_fecha').value,concepto:ge('mv_concepto').value.trim(),
+    monto:toNum(ge('mv_monto').value),categoria:ge('mv_cat').value||null,
+    beneficiario:ge('mv_benef').value.trim()||null,referencia:ge('mv_ref').value.trim()||null,
+    numero_cheque:ge('mv_chq').value.trim()||null,cuenta_destino_id:parseInt(ge('mv_dest').value)||null,
+    notas:ge('mv_notas').value.trim()||null,
+    orden_compra_id:ocId||null};
+  if(!b.cuenta_id){toast('Selecciona una cuenta','err');return;}
+  if(!b.concepto){toast('El concepto es requerido','err');return;}
+  if(!b.monto||b.monto<=0){toast('El monto debe ser mayor a 0','err');return;}
+  try{
+    await api('/api/tesoreria/movimientos','POST',b);
+    toast('✅ Movimiento registrado');closeModal();renderMovimientos();
+  }catch(e){toast(e.message,'err');}
+}
+
+/* ═══ CONCILIACIÓN ═════════════════════════════════════════ */
+async function renderConciliacion(){
+  ge('mainContent').innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8">⏳</div>';
+  try{[_cuentas,_movs]=await Promise.all([api('/api/tesoreria/cuentas').catch(()=>[]),api('/api/tesoreria/movimientos').catch(()=>[])]);}catch(e){}
+
+  const noConcil=_movs.filter(m=>!m.conciliado).length;
+  const cliOpts=_cuentas.map(c=>`<option value="${c.id}">${esc(c.nombre)}</option>`).join('');
+  const movsNoConcil=_movs.filter(m=>!m.conciliado).slice(0,30);
+
+  ge('mainContent').innerHTML=`
+  <div class="alert alert-info" style="margin-bottom:16px">
+    📋 <strong>Conciliación Bancaria</strong> — Confirma que los movimientos registrados en el sistema coincidan con tu extracto bancario. 
+    Marca como conciliados los movimientos verificados.
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi" style="border-left:4px solid ${noConcil>0?'var(--naranja)':'var(--verde)'}">
+      <div class="kpi-lbl">Sin Conciliar</div>
+      <div class="kpi-val" style="color:${noConcil>0?'var(--naranja)':'var(--verde)'}">${noConcil}</div>
+      <div class="kpi-sub">${_movs.length-noConcil} conciliados</div></div>
+    <div class="kpi" style="border-left:4px solid var(--verde)">
+      <div class="kpi-lbl">Conciliados</div>
+      <div class="kpi-val" style="color:var(--verde)">${_movs.length-noConcil}</div></div>
+    <div class="kpi" style="border-left:4px solid var(--azul)">
+      <div class="kpi-lbl">Total Movimientos</div>
+      <div class="kpi-val">${_movs.length}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">Movimientos Pendientes de Conciliar (${noConcil})</div>
+      <div style="display:flex;gap:8px">
+        <select class="fc" style="width:200px;padding:6px 9px" onchange="filtrarConcil(this.value)">
+          <option value="">Todas las cuentas</option>${cliOpts}</select>
+        <button class="btn btn-success btn-sm" onclick="conciliarTodos()">✅ Conciliar todos</button>
+      </div>
+    </div>
+    ${movsNoConcil.length===0?
+      '<div style="padding:40px;text-align:center;color:#059669"><div style="font-size:2rem">✅</div><div style="font-weight:600;margin-top:8px">¡Todo conciliado!</div></div>':
+      '<div id="concilBody">'+renderConcilRows(movsNoConcil)+'</div>'}
+  </div>`;
+}
+
+function renderConcilRows(movs){
+  return movs.map(m=>{
+    const esIng=m.tipo_operacion==='ingreso';
+    return `<div class="concil-row">
+      <input type="checkbox" class="concil-check" data-id="${m.id}" onchange="toggleConcil(${m.id},this.checked)">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.concepto||'—')}</div>
+        <div style="font-size:.72rem;color:#94a3b8">${esc(m.cuenta_nombre||'—')} · ${fmt(m.fecha)}</div>
+      </div>
+      <div style="font-size:.78rem;color:#64748b;white-space:nowrap">${esc(m.referencia||'—')}</div>
+      <div class="${esIng?'ing':'egr'}" style="white-space:nowrap">${esIng?'+':'-'}${fmtM(m.monto,m.moneda||'MXN')}</div>
+    </div>`;
+  }).join('');
+}
+function filtrarConcil(cid){
+  const movs=_movs.filter(m=>!m.conciliado&&(!cid||m.cuenta_id==cid));
+  if(ge('concilBody'))ge('concilBody').innerHTML=renderConcilRows(movs.slice(0,30));
+}
+async function toggleConcil(id,val){
+  try{await api('/api/tesoreria/movimientos/'+id+'/conciliar','PUT',{conciliado:val});
+    if(val)toast('✅ Movimiento conciliado');}catch(e){toast(e.message,'err');}
+}
+async function conciliarTodos(){
+  if(!confirm('¿Marcar todos los movimientos visibles como conciliados?'))return;
+  const ids=document.querySelectorAll('.concil-check:not(:checked)');
+  for(const el of ids){await toggleConcil(parseInt(el.dataset.id),true);}
+  toast('✅ Todos conciliados');renderConciliacion();
+}
+
+/* ═══ FLUJO DE CAJA ══════════════════════════════════════════ */
+async function renderFlujo(){
+  ge('mainContent').innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8">⏳</div>';
+  let flujo=[], factPend=[], ocPend=[];
+  try{[_cuentas,flujo,factPend,ocPend]=await Promise.all([
+    api('/api/tesoreria/cuentas').catch(()=>[]),
+    api('/api/tesoreria/flujo').catch(()=>[]),
+    api('/api/facturas?estatus=pendiente').catch(()=>[]),
+    api('/api/ordenes-proveedor?estatus=aprobada').catch(()=>[]),
+  ]);}catch(e){}
+
+  const saldoTotal=_cuentas.reduce((s,c)=>s+parseFloat(c.saldo_actual||0),0);
+  const porCobrar=factPend.reduce((s,f)=>s+parseFloat(f.total||0)-parseFloat(f.pagado||0),0);
+  const porPagar=ocPend.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const flujoProyectado=saldoTotal+porCobrar-porPagar;
+
+  // Build monthly data from movimientos
+  const meses={};
+  (_movs||[]).forEach(m=>{
+    const mes=new Date(m.fecha).toLocaleDateString('es-MX',{month:'short',year:'2-digit'});
+    if(!meses[mes])meses[mes]={ing:0,egr:0,label:mes};
+    if(m.tipo_operacion==='ingreso')meses[mes].ing+=parseFloat(m.monto||0);
+    else meses[mes].egr+=parseFloat(m.monto||0);
+  });
+  const mesData=Object.values(meses).slice(-6);
+  const maxVal=Math.max(...mesData.map(m=>Math.max(m.ing,m.egr)),1);
+
+  ge('mainContent').innerHTML=`
+  <div class="kpi-grid">
+    <div class="kpi" style="border-left:4px solid var(--azul);grid-column:span 2">
+      <div class="kpi-lbl">Saldo Disponible Hoy</div>
+      <div class="kpi-val" style="font-size:1.8rem;color:var(--azul)">${fmtM(saldoTotal)}</div>
+      <div class="kpi-sub">${_cuentas.length} cuentas consolidadas</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid var(--verde)">
+      <div class="kpi-lbl">Por Cobrar</div>
+      <div class="kpi-val" style="color:var(--verde)">${fmtM(porCobrar)}</div>
+      <div class="kpi-sub">${factPend.length} facturas pendientes</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid var(--rojo)">
+      <div class="kpi-lbl">Por Pagar (OC)</div>
+      <div class="kpi-val" style="color:var(--rojo)">${fmtM(porPagar)}</div>
+      <div class="kpi-sub">${ocPend.length} órdenes aprobadas</div>
+    </div>
+    <div class="kpi" style="border-left:4px solid ${flujoProyectado>=0?'var(--verde)':'var(--rojo)'}">
+      <div class="kpi-lbl">Flujo Proyectado</div>
+      <div class="kpi-val" style="color:${flujoProyectado>=0?'var(--verde)':'var(--rojo)'}">${fmtM(flujoProyectado)}</div>
+      <div class="kpi-sub">Saldo + Cobros − Pagos</div>
+    </div>
+  </div>
+
+  <!-- Gráfica mensual -->
+  ${mesData.length>0?`
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-hdr"><div class="card-title">📊 Flujo Mensual (últimos 6 meses)</div></div>
+    <div style="padding:16px 20px">
+      <div style="display:flex;align-items:flex-end;gap:8px;height:140px;margin-bottom:6px">
+        ${mesData.map(m=>`
+          <div style="flex:1;display:flex;flex-direction:column;gap:3px;align-items:center">
+            <div style="width:100%;display:flex;gap:2px;align-items:flex-end;height:120px">
+              <div style="flex:1;background:var(--verde);border-radius:4px 4px 0 0;opacity:.85;height:${Math.round(m.ing/maxVal*100)}%;min-height:2px" title="Ingresos: ${fmtM(m.ing)}"></div>
+              <div style="flex:1;background:var(--rojo);border-radius:4px 4px 0 0;opacity:.85;height:${Math.round(m.egr/maxVal*100)}%;min-height:2px" title="Egresos: ${fmtM(m.egr)}"></div>
+            </div>
+            <div style="font-size:.65rem;color:#94a3b8;white-space:nowrap">${m.label}</div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:16px;font-size:.75rem;color:#64748b;margin-top:4px">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:8px;background:var(--verde);border-radius:2px;opacity:.85;display:inline-block"></span>Ingresos</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:8px;background:var(--rojo);border-radius:2px;opacity:.85;display:inline-block"></span>Egresos</span>
+      </div>
+    </div>
+  </div>`:''}
+
+  <!-- Por cobrar -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">💰 Por Cobrar</div></div>
+      ${factPend.slice(0,6).map(f=>{
+        const saldo=parseFloat(f.total||0)-parseFloat(f.pagado||0);
+        const venc=f.fecha_vencimiento&&new Date(f.fecha_vencimiento)<new Date();
+        return `<div style="padding:9px 14px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:.8rem;font-weight:600">${esc(f.numero_factura||'—')}</div>
+            <div style="font-size:.72rem;color:#94a3b8">${esc(f.cliente_nombre||'—')}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;color:var(--verde)">${fmtM(saldo,f.moneda)}</div>
+            <div style="font-size:.7rem;color:${venc?'var(--rojo)':'#94a3b8'}">${venc?'⚠️ Vencida':fmt(f.fecha_vencimiento)}</div>
+          </div>
+        </div>`;
+      }).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.82rem">✅ Sin facturas pendientes</div>'}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">💸 Por Pagar (OC)</div></div>
+      ${ocPend.slice(0,6).map(o=>`
+        <div style="padding:9px 14px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:.8rem;font-weight:600">${esc(o.numero_op||'—')}</div>
+            <div style="font-size:.72rem;color:#94a3b8">${esc(o.proveedor_nombre||'—')}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;color:var(--rojo)">${fmtM(o.total,o.moneda)}</div>
+            <div style="font-size:.7rem;color:#94a3b8">${fmt(o.fecha_entrega)||'Sin fecha'}</div>
+          </div>
+        </div>`).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.82rem">✅ Sin OC pendientes de pago</div>'}
+    </div>
+  </div>`;
+}
+
+/* ═══ INIT ══════════════════════════════════════════════════ */
+(async function(){
+  if(!TOKEN){window.location.href='/';return;}
+  await showTab('cuentas');
+})();
+</script>
+</body>
+</html>
